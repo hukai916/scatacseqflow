@@ -84,7 +84,7 @@ workflow PREPROCESS {
 
     // Module: prepare fastq folder
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
-    CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger, params.cellranger_atac_executor)
+    CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
     // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
     // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
 

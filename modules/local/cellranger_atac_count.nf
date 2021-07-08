@@ -27,7 +27,7 @@ process CELLRANGER_ATAC_COUNT {
     input:
     path fastq_folder
     path reference
-    val jobmode
+    // val jobmode
 
     output:
     path "cellranger_atac_count_*", emit: cellranger_atac_count
@@ -39,7 +39,6 @@ process CELLRANGER_ATAC_COUNT {
     --id cellranger_atac_count_$fastq_folder \
     --fastqs $fastq_folder \
     --reference $reference \
-    --jobmode $jobmode
 
     """
 }

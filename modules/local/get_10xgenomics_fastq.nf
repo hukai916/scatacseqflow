@@ -28,14 +28,14 @@ process GET_10XGENOMICS_FASTQ {
     tuple val(sample_name), val(path_fastq_1), val(path_fastq_2), val(path_barcode)
 
     output:
-    path "fastq", emit: fastq
-    path "fastq/*S1_L000_R1_001.fastq.gz"
-    path "fastq/*S1_L000_R2_001.fastq.gz"
-    path "fastq/*S1_L000_R3_001.fastq.gz"
+    path "fastq_*", emit: fastq_folder
+    path "fastq_*/*S1_L000_R1_001.fastq.gz"
+    path "fastq_*/*S1_L000_R2_001.fastq.gz"
+    path "fastq_*/*S1_L000_R3_001.fastq.gz"
 
     script:
     """
-    mkdir fastq
+    mkdir fastq_$sample_name
 
     fastq1=(`echo "$path_fastq_1" | tr ';' ' '`)
     fastq2=(`echo "$path_fastq_2" | tr ';' ' '`)
@@ -43,17 +43,17 @@ process GET_10XGENOMICS_FASTQ {
 
     for i in "\${fastq1[@]}"
     do
-      cat "\$i" >> fastq/${sample_name}_S1_L000_R1_001.fastq.gz
+      cat "\$i" >> fastq_$sample_name/${sample_name}_S1_L000_R1_001.fastq.gz
     done
 
     for i in "\${fastq2[@]}"
     do
-      cat "\$i" >> fastq/${sample_name}_S1_L000_R3_001.fastq.gz
+      cat "\$i" >> fastq_$sample_name/${sample_name}_S1_L000_R3_001.fastq.gz
     done
 
     for i in "\${barcode[@]}"
     do
-      cat "\$i" >> fastq/${sample_name}_S1_L000_R2_001.fastq.gz
+      cat "\$i" >> fastq_$sample_name/${sample_name}_S1_L000_R2_001.fastq.gz
     done
 
     """

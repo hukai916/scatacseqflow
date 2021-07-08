@@ -39,6 +39,8 @@ def modules = params.modules.clone()
 // Modules: local
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'   addParams( options: [publish_files : ['csv':'']] )
 include { GET_10XGENOMICS_FASTQ } from '../modules/local/get_10xgenomics_fastq'   addParams( options: modules['get_10xgenomics_fastq'] )
+include { CELLRANGER_COUNT      } from '../modules/local/cellranger_count'        addParams( options: modules['cellranger_count'] )
+
 
 
 // // Modules: nf-core/modules
@@ -76,9 +78,15 @@ workflow PREPROCESS {
 
   } else if (params.preprocess == "10xgenomics") {
     log.info "INFO: --preprocess: 10xgenomics"
+    if (params.ref_cellranger == "") {
+      exit 1, 'Parameter --ref_cellranger: pls supply full path to reference!'
+    }
+
     // Module: prepare fastq folder
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
-    // CELLRANGER_COUNT ()
+    CELLRANGER_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
+    // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
+    // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
 
   } else if (params.preprocess == "biorad") {
     log.info "INFO: --preprocess: biorad"

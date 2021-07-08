@@ -20,7 +20,7 @@ log.info Utils.logo(workflow, params.monochrome_logs)
 def json_schema = "$projectDir/nextflow_schema.json"
 if (params.help) {
     // TODO nf-core: Update typical command used to run pipeline
-    def command = "nextflow run nf-core/scatacseqflow --input samplesheet.csv --genome GRCh37 -profile docker"
+    def command = "nextflow run main.nf --input samplesheet.csv --preprocess 10xgenomics --genome GRCh37 -profile docker"
     log.info NfcoreSchema.paramsHelp(workflow, params, json_schema, command)
     log.info Workflow.citation(workflow)
     log.info Utils.dashedLine(params.monochrome_logs)
@@ -46,15 +46,22 @@ log.info Utils.dashedLine(params.monochrome_logs)
 /* --         VALIDATE PARAMETERS              -- */
 ////////////////////////////////////////////////////
 
-Workflow.validateMainParams(workflow, params, json_schema, log)
+// Workflow.validateMainParams(workflow, params, json_schema, log)
 
 ////////////////////////////////////////////////////
 /* --            RUN WORKFLOW(S)               -- */
 ////////////////////////////////////////////////////
+include { PREPROCESS } from './workflows/pipeline' addParams( summary_params: summary_params )
+include { SCATACSEQFLOW } from './workflows/pipeline' addParams( summary_params: summary_params )
+
 
 workflow  NFCORE_SCATACSEQFLOW {
-    include { SCATACSEQFLOW } from './workflows/pipeline' addParams( summary_params: summary_params )
+  if (params.preprocess) {
+    log.info "Running preprocess ..."
+    PREPROCESS ()
+  } else {
     SCATACSEQFLOW ()
+  }
 }
 
 workflow {

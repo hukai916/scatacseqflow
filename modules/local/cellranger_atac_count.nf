@@ -6,8 +6,8 @@ params.options = [:]
 /*
  * Parse software version numbers
  */
-process CELLRANGER_COUNT {
-    label 'process_low'
+process CELLRANGER_ATAC_COUNT {
+    label 'process_medium'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'cellranger_count', publish_id:'') }
@@ -29,14 +29,15 @@ process CELLRANGER_COUNT {
     path reference
 
     output:
-    path "cellranger_count_*", emit: cellranger_count
+    path "cellranger_atac_count_*", emit: cellranger_atac_count
 
     script:
     """
     cellranger-atac count \
-    --id cellranger_count_$fastq_folder \
+    --id cellranger_atac_count_$fastq_folder \
     --fastqs $fastq_folder \
-    --reference $reference
+    --reference $reference \
+    --jobmode $process.executor
 
     """
 }

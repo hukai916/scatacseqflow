@@ -39,7 +39,7 @@ def modules = params.modules.clone()
 // Modules: local
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'   addParams( options: [publish_files : ['csv':'']] )
 include { GET_10XGENOMICS_FASTQ } from '../modules/local/get_10xgenomics_fastq'   addParams( options: modules['get_10xgenomics_fastq'] )
-include { CELLRANGER_COUNT      } from '../modules/local/cellranger_count'        addParams( options: modules['cellranger_count'] )
+include { CELLRANGER_ATAC_COUNT } from '../modules/local/cellranger_atac_count'   addParams( options: modules['cellranger_atac_count'] )
 
 
 
@@ -84,7 +84,7 @@ workflow PREPROCESS {
 
     // Module: prepare fastq folder
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
-    CELLRANGER_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
+    CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
     // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
     // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
 

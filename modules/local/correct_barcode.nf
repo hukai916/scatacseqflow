@@ -30,7 +30,7 @@ process CORRECT_BARCODE {
 
     output:
     path "barcode_*", emit: corrected_barcode
-    path "summary.txt", emit: corrected_barcode_summary
+    path "summary_*.txt", emit: corrected_barcode_summary
 
     script:
 

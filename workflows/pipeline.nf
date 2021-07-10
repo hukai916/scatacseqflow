@@ -82,6 +82,8 @@ workflow PREPROCESS {
       log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
     } else {
       CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist)
+      // module: match read1 and read2
+      
     }
 
     // module: match pair for read1 and read2 fastq against corrected barcode fastq

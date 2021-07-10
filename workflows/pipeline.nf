@@ -41,7 +41,7 @@ include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' 
 include { GET_10XGENOMICS_FASTQ } from '../modules/local/get_10xgenomics_fastq'   addParams( options: modules['get_10xgenomics_fastq'] )
 include { CELLRANGER_ATAC_COUNT } from '../modules/local/cellranger_atac_count'   addParams( options: modules['cellranger_atac_count'] )
 include { CORRECT_BARCODE       } from '../modules/local/correct_barcode'       addParams( options: modules['correct_barcode'] )
-// include { MATCH_READS           } from '../modules/local/match_reads'           addParams( options: modules['match_reads'] )
+include { MATCH_READS           } from '../modules/local/match_reads'           addParams( options: modules['match_reads'] )
 
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
@@ -82,7 +82,7 @@ workflow PREPROCESS {
     } else {
       CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist)
       // module: match read1 and read2
-      // MATCH_READS (CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+      MATCH_READS (CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
     }
 
     // module: match pair for read1 and read2 fastq against corrected barcode fastq

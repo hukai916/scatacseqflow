@@ -40,6 +40,7 @@ def modules = params.modules.clone()
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'   addParams( options: [publish_files : ['csv':'']] )
 include { GET_10XGENOMICS_FASTQ } from '../modules/local/get_10xgenomics_fastq'   addParams( options: modules['get_10xgenomics_fastq'] )
 include { CELLRANGER_ATAC_COUNT } from '../modules/local/cellranger_atac_count'   addParams( options: modules['cellranger_atac_count'] )
+include { CORRECT_BARCODE       } from '../modules/local/correct_barcode'       addParams( options: modules['correct_barcode'] )
 
 
 
@@ -75,6 +76,23 @@ workflow PREPROCESS {
   // Module: prepare 10xgenomics folder structure
   if (params.preprocess == "default") {
     log.info "INFO: --preprocess: default"
+    GET_10XGENOMICS_FASTQ (ch_samplesheet)
+    // module: barcode correction: correct barcode fastq given whitelist and barcode fastq file
+    if (!(params.barcode_whitelist)) {
+      log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
+    } else {
+      CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist)
+    }
+
+    // module: match pair for read1 and read2 fastq against corrected barcode fastq
+
+    // module: debarcode: add barcode sequence to the beginning of the fastq sequence identifier with sinto
+
+    // module: trimming
+
+    // module: mapping with bwa or minimap2: mark duplicate
+
+    // module: generate fragement file with sinto
 
   } else if (params.preprocess == "10xgenomics") {
     log.info "INFO: --preprocess: 10xgenomics"

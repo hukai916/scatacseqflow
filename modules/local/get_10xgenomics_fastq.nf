@@ -29,9 +29,9 @@ process GET_10XGENOMICS_FASTQ {
 
     output:
     path "fastq_*", emit: fastq_folder
-    path "fastq_*/*S1_L000_R1_001.fastq.gz"
-    path "fastq_*/*S1_L000_R2_001.fastq.gz"
-    path "fastq_*/*S1_L000_R3_001.fastq.gz"
+    path "fastq_*/*S1_L000_R1_001.fastq.gz", emit: read1_fastq
+    path "fastq_*/*S1_L000_R2_001.fastq.gz", emit: barcode_fastq
+    path "fastq_*/*S1_L000_R3_001.fastq.gz", emit: read2_fastq
 
     script:
     """

@@ -159,18 +159,18 @@ correct_barcode <- function(barcode_file, whitelist_file, reads_per_chunk, path_
 				keep[i]  <- 2 # indicate barcode 1 mismatch away from whitelist barcode.
 				reads[i] <- dict_invalid_1mismatch$get(reads[i])
 			} else {
-				keep[i] <- 3 # indicate barcode more than 2 mismatches from whitelist, should be discarded.
+				keep[i] <- -1 # indicate barcode more than 2 mismatches from whitelist, should be discarded.
 			}
 		}
 		
-		fq@quality <- fq@quality[which(as.logical(keep))]
-		fq@sread   <- reads[which(as.logical(keep))] %>% DNAStringSet()
-		fq@id      <- fq@id[which(as.logical(keep))]
+		fq@quality <- fq@quality[which(keep > 0)]
+		fq@sread   <- reads[which(keep > 0)] %>% DNAStringSet()
+		fq@id      <- fq@id[which(keep > 0)]
 		
 		read_chunk <- read_chunk + 1
 		valid_count <- sum(keep == 1)
 		mismatch1_count <- sum(keep == 2)
-		others_count <- sum(keep == 3)
+		others_count <- sum(keep == -1)
 		
 		total_valid <- total_valid + valid_count
 		total_1mismatch <- total_1mismatch + mismatch1_count

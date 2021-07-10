@@ -6,7 +6,7 @@ params.options = [:]
 /*
  * Parse software version numbers
  */
-process CORRECT_BARCODE {
+process MATCH_READS {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,

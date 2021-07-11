@@ -32,7 +32,8 @@ process GET_10XGENOMICS_FASTQ {
     path "fastq_*/*S1_L000_R1_001.fastq.gz", emit: read1_fastq
     path "fastq_*/*S1_L000_R2_001.fastq.gz", emit: barcode_fastq
     path "fastq_*/*S1_L000_R3_001.fastq.gz", emit: read2_fastq
-
+    val sample_name, emit: sample_name
+    
     script:
     """
     mkdir fastq_$sample_name

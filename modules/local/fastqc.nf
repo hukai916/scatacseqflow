@@ -6,11 +6,11 @@ params.options = [:]
 /*
  * Parse software version numbers
  */
-process CORRECT_BARCODE {
-    label 'process_medium'
+process FASTQC {
+    label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'correct_barcode', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'fastqc', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -20,27 +20,24 @@ process CORRECT_BARCODE {
     // }
 
     // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/r_sc_atac:0.1"
-
+    container "hukai916/fastqc_0.11.9:0.1"
     // cache false
 
     input:
-    val sample_name
-    path barcode_fastq
-    path barcode_whitelist
+    path corrected_barcode_fastq
+    path read1_fastq
+    path read2_fastq
 
     output:
-    val sample_name, emit: sample_name
-    path "barcode_*", emit: corrected_barcode
-    path "summary_*.txt", emit: corrected_barcode_summary
+    path "R2/barcode_corrected*fastq.gz", emit: barcode_fastq
+    path "R1/*.fastq.gz", emit: read1_fastq
+    path "R2/*.fastq.gz", emit: read2_fastq
 
     script:
 
     """
-    correct_barcode.R \
-    --barcode_file=$barcode_fastq \
-    --whitelist_file=$barcode_whitelist \
-    --path_output_fq=./
+    seqkit pair -1 $corrected_barcode_fastq -2 $read1_fastq -O R1
+    seqkit pair -1 $corrected_barcode_fastq -2 $read2_fastq -O R2
 
     """
 }

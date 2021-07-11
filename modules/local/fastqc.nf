@@ -24,20 +24,19 @@ process FASTQC {
     // cache false
 
     input:
-    path corrected_barcode_fastq
+    val sample_name
     path read1_fastq
     path read2_fastq
 
     output:
-    path "R2/barcode_corrected*fastq.gz", emit: barcode_fastq
-    path "R1/*.fastq.gz", emit: read1_fastq
-    path "R2/*.fastq.gz", emit: read2_fastq
+    path "*.html", emit: html
+    path "*.zip", emit: zip
+    val sample_name, emit: sample_name
 
     script:
 
     """
-    seqkit pair -1 $corrected_barcode_fastq -2 $read1_fastq -O R1
-    seqkit pair -1 $corrected_barcode_fastq -2 $read2_fastq -O R2
+    fastqc --threads $task.cpus $read1_fastq $read2_fastq
 
     """
 }

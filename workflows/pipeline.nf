@@ -43,6 +43,7 @@ include { CELLRANGER_ATAC_COUNT } from '../modules/local/cellranger_atac_count' 
 include { CORRECT_BARCODE       } from '../modules/local/correct_barcode'       addParams( options: modules['correct_barcode'] )
 include { MATCH_READS           } from '../modules/local/match_reads'           addParams( options: modules['match_reads'] )
 
+
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
 // include { MULTIQC               } from '../modules/nf-core/software/multiqc/main' addParams( options: multiqc_options              )
@@ -77,7 +78,7 @@ workflow PREPROCESS {
     log.info "INFO: --preprocess: default"
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
     // module: fastQC
-    // FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+    FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
 
     // module: barcode correction: correct barcode fastq given whitelist and barcode fastq file
     if (!(params.barcode_whitelist)) {
@@ -85,7 +86,7 @@ workflow PREPROCESS {
     } else {
       CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist)
       // module: match read1 and read2
-      MATCH_READS (GET_10XGENOMICS_FASTQ.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+      MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
     }
 
     // module: debarcode: add barcode sequence to the beginning of the fastq sequence identifier with sinto

@@ -42,6 +42,7 @@ include { GET_10XGENOMICS_FASTQ } from '../modules/local/get_10xgenomics_fastq' 
 include { CELLRANGER_ATAC_COUNT } from '../modules/local/cellranger_atac_count'   addParams( options: modules['cellranger_atac_count'] )
 include { CORRECT_BARCODE       } from '../modules/local/correct_barcode'       addParams( options: modules['correct_barcode'] )
 include { MATCH_READS           } from '../modules/local/match_reads'           addParams( options: modules['match_reads'] )
+include { FASTQC                } from '../modules/local/fastqc'                addParams( options: modules['fastqc'] )
 
 
 // // Modules: nf-core/modules

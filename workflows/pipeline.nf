@@ -76,16 +76,17 @@ workflow PREPROCESS {
   if (params.preprocess == "default") {
     log.info "INFO: --preprocess: default"
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
+    // module: fastQC
+    // FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+
     // module: barcode correction: correct barcode fastq given whitelist and barcode fastq file
     if (!(params.barcode_whitelist)) {
       log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
     } else {
-      CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist)
+      CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist)
       // module: match read1 and read2
-      MATCH_READS (CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+      MATCH_READS (GET_10XGENOMICS_FASTQ.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
     }
-
-    // module: match pair for read1 and read2 fastq against corrected barcode fastq
 
     // module: debarcode: add barcode sequence to the beginning of the fastq sequence identifier with sinto
 

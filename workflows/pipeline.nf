@@ -119,7 +119,7 @@ workflow PREPROCESS {
     log.info "INFO: must use biorad compatible sequencing results!"
     GET_BIORAD_FASTQ (ch_samplesheet)
     BIORAD_FASTQC (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
-    BIORAD_TRIM_READS (BIORAD_FASTQC.out.sample_name, BIORAD_FASTQC.out.fastqc_results)
+    BIORAD_ATAC_SEQ_TRIM_READS (BIORAD_FASTQC.out.sample_name, BIORAD_FASTQC.out.fastqc_results)
 
   } else {
     log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."

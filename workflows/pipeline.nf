@@ -47,7 +47,7 @@ include { MATCH_READS           } from '../modules/local/match_reads'           
 include { FASTQC                } from '../modules/local/fastqc'                  addParams( options: modules['fastqc'] )
 
 include { BIORAD_FASTQC         } from '../modules/local/biorad_fastqc'           addParams( options: modules['biorad_fastqc'] )
-
+include { BIORAD_TRIM_READS     } from '../modules/local/biorad_trim_reads'       addParams( options: modules['biorad_trim_reads'] )
 
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
@@ -119,7 +119,7 @@ workflow PREPROCESS {
     log.info "INFO: must use biorad compatible sequencing results!"
     GET_BIORAD_FASTQ (ch_samplesheet)
     BIORAD_FASTQC (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
-
+    BIORAD_TRIM_READS (BIORAD_FASTQC.out.sample_name, BIORAD_FASTQC.out.fastqc_results)
 
   } else {
     log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."

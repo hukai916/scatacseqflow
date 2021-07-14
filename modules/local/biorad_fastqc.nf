@@ -28,7 +28,7 @@ process BIORAD_FASTQC {
     path fastq_folder
 
     output:
-    path "*fastqc_results", emit: fastqc_results
+    path "\*fastqc_results", emit: fastqc_results
     val sample_name, emit: sample_name
 
     script:

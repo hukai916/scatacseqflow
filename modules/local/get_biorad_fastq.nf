@@ -43,12 +43,12 @@ process GET_BIORAD_FASTQ {
 
     for i in "\${fastq1[@]}"
     do
-      ln -s "\$i" >> fastq_$sample_name/
+      ln -s "\$i" fastq_$sample_name/
     done
 
     for i in "\${fastq2[@]}"
     do
-      ln -s "\$i" >> fastq_$sample_name/
+      ln -s "\$i" fastq_$sample_name/
     done
 
     """

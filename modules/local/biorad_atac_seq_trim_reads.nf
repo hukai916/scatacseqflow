@@ -6,7 +6,7 @@ params.options = [:]
 /*
  * Parse software version numbers
  */
-process BIORAD_FASTQC {
+process BIORAD_ATAC_SEQ_TRIM_READS {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,

@@ -39,10 +39,14 @@ def modules = params.modules.clone()
 // Modules: local
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'   addParams( options: [publish_files : ['csv':'']] )
 include { GET_10XGENOMICS_FASTQ } from '../modules/local/get_10xgenomics_fastq'   addParams( options: modules['get_10xgenomics_fastq'] )
+include { GET_BIORAD_FASTQ      } from '../modules/local/get_biorad_fastq'        addParams( options: modules['get_biorad_fastq'] )
+
 include { CELLRANGER_ATAC_COUNT } from '../modules/local/cellranger_atac_count'   addParams( options: modules['cellranger_atac_count'] )
-include { CORRECT_BARCODE       } from '../modules/local/correct_barcode'       addParams( options: modules['correct_barcode'] )
-include { MATCH_READS           } from '../modules/local/match_reads'           addParams( options: modules['match_reads'] )
-include { FASTQC                } from '../modules/local/fastqc'                addParams( options: modules['fastqc'] )
+include { CORRECT_BARCODE       } from '../modules/local/correct_barcode'         addParams( options: modules['correct_barcode'] )
+include { MATCH_READS           } from '../modules/local/match_reads'             addParams( options: modules['match_reads'] )
+include { FASTQC                } from '../modules/local/fastqc'                  addParams( options: modules['fastqc'] )
+
+include { BIORAD_FASTQC         } from '../modules/local/biorad_fastqc'           addParams( options: modules['biorad_fastqc'] )
 
 
 // // Modules: nf-core/modules
@@ -112,6 +116,10 @@ workflow PREPROCESS {
 
   } else if (params.preprocess == "biorad") {
     log.info "INFO: --preprocess: biorad"
+    log.info "INFO: must use biorad compatible sequencing results!"
+    GET_BIORAD_FASTQ (ch_samplesheet)
+    BIORAD_FASTQC (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
+
 
   } else {
     log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."

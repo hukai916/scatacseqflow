@@ -1,0 +1,2 @@
+task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem	rchar	wchar
+1	6d/578701	37173	NFCORE_SCATACSEQFLOW:PREPROCESS:GET_BIORAD_FASTQ (1)	COMPLETED	0	2021-07-14 10:10:36.387	161ms	0ms	-	-	-	-	-

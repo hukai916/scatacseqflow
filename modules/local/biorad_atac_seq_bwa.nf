@@ -6,11 +6,11 @@ params.options = [:]
 /*
  * Parse software version numbers
  */
-process BIORAD_ATAC_SEQ_TRIM_READS {
+process BIORAD_ATAC_SEQ_BWA {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'biorad_trim_reads', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'biorad_alignments', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -20,7 +20,7 @@ process BIORAD_ATAC_SEQ_TRIM_READS {
     // }
 
     // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/biorad_atac_seq_trim_reads:0.1"
+    container "hukai916/biorad_atac_seq_bwa:0.1"
     // cache false
 
     input:
@@ -28,7 +28,7 @@ process BIORAD_ATAC_SEQ_TRIM_READS {
     path fastq_folder
 
     output:
-    path "trimmed_reads", emit: trimmed_reads
+    path "alignments", emit: alignments
     val sample_name, emit: sample_name
 
     script:

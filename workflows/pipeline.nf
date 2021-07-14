@@ -119,7 +119,7 @@ workflow PREPROCESS {
     log.info "INFO: must use biorad compatible sequencing results!"
     GET_BIORAD_FASTQ (ch_samplesheet)
     BIORAD_FASTQC (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
-    BIORAD_ATAC_SEQ_TRIM_READS (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastqc_results)
+    BIORAD_ATAC_SEQ_TRIM_READS (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
     // BIORAD_ATAC_SEQ_BWA (BIORAD_ATAC_SEQ_TRIM_READS.out.sample_name, BIORAD_ATAC_SEQ_TRIM_READS.out.trimmed_reads)
 
   } else {

@@ -48,10 +48,11 @@ include { FASTQC                } from '../modules/local/fastqc'                
 
 include { BIORAD_FASTQC         } from '../modules/local/biorad_fastqc'           addParams( options: modules['biorad_fastqc'] )
 include { BIORAD_ATAC_SEQ_DEBARCODE } from '../modules/local/biorad_atac_seq_debarcode'           addParams( options: modules['biorad_atac_seq_debarcode'] )
-
-
-
 include { BIORAD_ATAC_SEQ_TRIM_READS } from '../modules/local/biorad_atac_seq_trim_reads'       addParams( options: modules['biorad_atac_seq_trim_reads'] )
+include { BIORAD_ATAC_SEQ_BWA   } from '../modules/local/biorad_atac_seq_bwa'     addParams( options: modules['biorad_atac_seq_bwa'] )
+include { BIORAD_ATAC_SEQ_ALIGNMENT_QC   } from '../modules/local/biorad_atac_seq_alignment_qc'     addParams( options: modules['biorad_atac_seq_alignment_qc'] )
+// include { BIORAD_ATAC_SEQ_FILTER_BEADS   } from '../modules/local/biorad_atac_seq_filter_beads'     addParams( options: modules['biorad_atac_seq_filter_beads'] )
+
 
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
@@ -121,12 +122,20 @@ workflow PREPROCESS {
   } else if (params.preprocess == "biorad") {
     log.info "INFO: --preprocess: biorad"
     log.info "INFO: must use biorad compatible sequencing results!"
+    if (params.ref_bwa_index == "") {
+      exit 1, 'Parameter --ref_bwa_index: pls supply full path to bwa index folder!'
+    }
+    if (params.ref_bwa_fasta == "") {
+      exit 1, 'Parameter --ref_bwa_fasta: pls supply full path to reference fasta file!'
+    }
+
     GET_BIORAD_FASTQ (ch_samplesheet)
     BIORAD_FASTQC (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
     BIORAD_ATAC_SEQ_DEBARCODE (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
     // Note that BIORAD_ATAC_SEQ_TRIM_READS must be performed after debarcode.
     BIORAD_ATAC_SEQ_TRIM_READS (BIORAD_ATAC_SEQ_DEBARCODE.out.sample_name, BIORAD_ATAC_SEQ_DEBARCODE.out.debarcoded_reads)
-    // BIORAD_ATAC_SEQ_BWA (BIORAD_ATAC_SEQ_TRIM_READS.out.sample_name, BIORAD_ATAC_SEQ_TRIM_READS.out.trimmed_reads)
+    BIORAD_ATAC_SEQ_BWA (BIORAD_ATAC_SEQ_TRIM_READS.out.sample_name, BIORAD_ATAC_SEQ_TRIM_READS.out.trimmed_reads, params.ref_bwa_index)
+    BIORAD_ATAC_SEQ_ALIGNMENT_QC (BIORAD_ATAC_SEQ_BWA.out.sample_name, BIORAD_ATAC_SEQ_BWA.out.alignments, params.ref_bwa_fasta)
 
   } else {
     log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."

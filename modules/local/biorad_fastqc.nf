@@ -34,7 +34,7 @@ process BIORAD_FASTQC {
     script:
 
     """
-    /bin/runFastQC.sh -i $fastq_folder -o fastqc_results
+    bash /bin/runFastQC.sh -i $fastq_folder -o fastqc_results
 
     """
 }

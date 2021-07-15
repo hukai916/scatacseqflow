@@ -35,7 +35,7 @@ process BIORAD_ATAC_SEQ_BWA {
     script:
 
     """
-    /runBWA.sh -i $fastq_folder -o alignments -r $bwa_index
+    /runBwa.sh -i $fastq_folder -o alignments -r $bwa_index
 
     """
 }

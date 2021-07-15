@@ -47,6 +47,10 @@ include { MATCH_READS           } from '../modules/local/match_reads'           
 include { FASTQC                } from '../modules/local/fastqc'                  addParams( options: modules['fastqc'] )
 
 include { BIORAD_FASTQC         } from '../modules/local/biorad_fastqc'           addParams( options: modules['biorad_fastqc'] )
+include { BIORAD_ATAC_SEQ_DEBARCODE } from '../modules/local/biorad_atac_seq_debarcode'           addParams( options: modules['biorad_atac_seq_debarcode'] )
+
+
+
 include { BIORAD_ATAC_SEQ_TRIM_READS } from '../modules/local/biorad_atac_seq_trim_reads'       addParams( options: modules['biorad_atac_seq_trim_reads'] )
 
 // // Modules: nf-core/modules
@@ -119,6 +123,8 @@ workflow PREPROCESS {
     log.info "INFO: must use biorad compatible sequencing results!"
     GET_BIORAD_FASTQ (ch_samplesheet)
     BIORAD_FASTQC (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
+    BIORAD_ATAC_SEQ_DEBARCODE (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
+    // Note that BIORAD_ATAC_SEQ_TRIM_READS must be performed after debarcode.
     BIORAD_ATAC_SEQ_TRIM_READS (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
     // BIORAD_ATAC_SEQ_BWA (BIORAD_ATAC_SEQ_TRIM_READS.out.sample_name, BIORAD_ATAC_SEQ_TRIM_READS.out.trimmed_reads)
 

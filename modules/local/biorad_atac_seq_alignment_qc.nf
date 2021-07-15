@@ -35,7 +35,7 @@ process BIORAD_ATAC_SEQ_ALIGNMENT_QC {
     script:
 
     """
-    runAlignmentQC.sh -i $alignments -r $bwa_fasta -o alignment_qc
+    /runAlignmentQC.sh -i $alignments -r $bwa_fasta -o alignment_qc
 
     """
 }

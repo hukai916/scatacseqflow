@@ -52,6 +52,7 @@ include { BIORAD_ATAC_SEQ_TRIM_READS } from '../modules/local/biorad_atac_seq_tr
 include { BIORAD_ATAC_SEQ_BWA   } from '../modules/local/biorad_atac_seq_bwa'     addParams( options: modules['biorad_atac_seq_bwa'] )
 include { BIORAD_ATAC_SEQ_ALIGNMENT_QC   } from '../modules/local/biorad_atac_seq_alignment_qc'     addParams( options: modules['biorad_atac_seq_alignment_qc'] )
 include { BIORAD_ATAC_SEQ_FILTER_BEADS   } from '../modules/local/biorad_atac_seq_filter_beads'     addParams( options: modules['biorad_atac_seq_filter_beads'] )
+include { ADD_BARCODE_TO_READS       } from '../modules/local/add_barcode_to_reads'    addParams( options: modules['add_barcode_to_reads'] )
 
 
 // // Modules: nf-core/modules
@@ -93,10 +94,14 @@ workflow PREPROCESS {
     // module: barcode correction: correct barcode fastq given whitelist and barcode fastq file
     if (!(params.barcode_whitelist)) {
       log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
+
+      ADD_BARCODE_TO_READS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
     } else {
       CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist)
       // module: match read1 and read2
       MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+
+      ADD_BARCODE_TO_READS (MATCH_READS.out.sample_name, MATCH_READS.out.barcode_fastq, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq)
     }
 
     // module: debarcode: add barcode sequence to the beginning of the fastq sequence identifier with sinto
@@ -121,7 +126,7 @@ workflow PREPROCESS {
 
   } else if (params.preprocess == "biorad") {
     log.info "INFO: --preprocess: biorad"
-    log.info "INFO: must use biorad compatible sequencing results!"
+    log.info "INFO: must use biorad compatible sequencing data!"
     if (params.ref_bwa_index == "") {
       exit 1, 'Parameter --ref_bwa_index: pls supply full path to bwa index folder!'
     }

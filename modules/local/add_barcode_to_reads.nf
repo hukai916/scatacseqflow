@@ -40,8 +40,8 @@ process ADD_BARCODE_TO_READS {
 
     """
     echo "I am here!"
-    mkdir -p R1/barcoded
-    mkdir -p R2/barcoded
+    # mkdir -p R1/barcoded
+    # mkdir -p R2/barcoded
 
     mkdir R1
     ln $barcode_fastq R1/ # must be hard link

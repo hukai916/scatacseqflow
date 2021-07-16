@@ -56,10 +56,10 @@ process ADD_BARCODE_TO_READS {
     ln $read1_fastq R1/
     sinto barcode --barcode_fastq R1/$barcode_fastq --read1 R1/$read1_fastq -b \${barcode_length}
 
-    mkidr R2
-    ln $barcode_fastq R2/ # must be hard link
-    ln $read2_fastq R2/
-    sinto barcode --barcode_fastq R2/$barcode_fastq --read2 R2/$read2_fastq -b \${barcode_length}
+    # mkidr R2
+    # ln $barcode_fastq R2/ # must be hard link
+    # ln $read2_fastq R2/
+    # sinto barcode --barcode_fastq R2/$barcode_fastq --read2 R2/$read2_fastq -b \${barcode_length}
 
     """
 }

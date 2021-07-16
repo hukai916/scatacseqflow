@@ -44,7 +44,7 @@ process ADD_BARCODE_TO_READS {
     mkdir -p R2/barcoded
 
     # use the first read length from fastq file to determine the length since -b is required by sinto.
-    zcat < $sample_name | head
+    zcat < $barcode_fastq | head
 
     """
 }

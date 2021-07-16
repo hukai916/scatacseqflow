@@ -47,6 +47,7 @@ process ADD_BARCODE_TO_READS {
     filename=\$(basename -- "$barcode_fastq")
     extension="\${filename##*.}"
 
+    filename2=\$(basename -- "$barcode_fastq")
 
     """
 }

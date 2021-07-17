@@ -47,12 +47,13 @@ process ADD_BARCODE_TO_READS {
     echo "before"
     barcode_length=\$(cat < $barcode_fastq | awk '{if(NR%4==2) print length(\$1)}' | head -n 1)
 
-    echo "after"
+    echo "after1"
     echo \$barcode_length
-
+    echo "after11"
 
     barcode_length=\$(zcat < $barcode_fastq | awk '{if(NR%4==2) print length(\$1)}' | head -n 1)
     echo \$barcode_length
+    echo "afer12"
 
     mkdir R1
     ln $barcode_fastq R1/ # must be hard link

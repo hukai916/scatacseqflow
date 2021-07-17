@@ -39,8 +39,8 @@ process ADD_BARCODE_TO_READS {
 
     """
     # use the first read length from fastq file to determine the length since -b is required by sinto.
-    filename=\$(basename -- "$barcode_fastq")
-    extension="\${filename##*.}"
+    # filename=\$(basename -- "$barcode_fastq")
+    # extension="\${filename##*.}"
 
     echo \$extension
     # barcode_length=1000

@@ -42,7 +42,7 @@ process ADD_BARCODE_TO_READS {
     # filename=\$(basename -- "$barcode_fastq")
     # extension="\${filename##*.}"
 
-    echo \$extension
+    # echo \$extension
     # barcode_length=1000
     echo "before"
     # echo \$barcode_length

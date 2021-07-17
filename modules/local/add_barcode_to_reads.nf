@@ -33,8 +33,8 @@ process ADD_BARCODE_TO_READS {
     output:
     val sample_name, emit: sample_name
 
-    path "R1/*barcoded*", emit: read1_fastq
-    path "R2/*barcoded*", emit: read2_fastq
+    path "R1", emit: read1_fastq
+    path "R2", emit: read2_fastq
 
     script:
 

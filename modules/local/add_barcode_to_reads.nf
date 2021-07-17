@@ -26,7 +26,7 @@ process ADD_BARCODE_TO_READS {
 
     input:
     val sample_name
-    // path barcode_fastq
+    path barcode_fastq
     path read1_fastq
     path read2_fastq
 
@@ -44,7 +44,7 @@ process ADD_BARCODE_TO_READS {
     # mkdir -p R2/barcoded
 
     mkdir R1
-    # ln \$barcode_fastq R1/ # must be hard link
+    ln $barcode_fastq R1/ # must be hard link
     ln $read1_fastq R1/
     # sinto barcode --barcode_fastq R1/\$barcode_fastq --read1 R1/\$read1_fastq -b 10
 

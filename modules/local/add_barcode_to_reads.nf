@@ -49,8 +49,7 @@ process ADD_BARCODE_TO_READS {
     then
       barcode_length=\$(zcat < $barcode_fastq | awk '{if(NR%4==2) print length(\$1)}' | head -n 1)
     else
-      barcode_length=\$(cat < $barcode_fastq | awk '{if(NR%4==2)
-      print length(\$1)}' | head -n 1)
+      barcode_length=\$(cat < $barcode_fastq | awk '{if(NR%4==2) print length(\$1)}' | head -n 1)
     fi
     echo "after"
     echo \$barcode_length

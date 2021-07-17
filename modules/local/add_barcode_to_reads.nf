@@ -38,7 +38,7 @@ process ADD_BARCODE_TO_READS {
     script:
 
     """
-    zcat $barcode_fastq | awk '{ if(NR%4==2) { print length(\$1); exit } }' 
+    zcat $barcode_fastq | awk '{ if(NR%4==2) { print length(\$1) } }'
     barcode_length=3
 
     mkdir R1

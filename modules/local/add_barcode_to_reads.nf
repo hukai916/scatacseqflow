@@ -45,7 +45,8 @@ process ADD_BARCODE_TO_READS {
     if [[ "\$extension" == "gz" ]]
     then
       barcode_length=\$(zcat $barcode_fastq | awk '{if(NR==2) print length(\$1)}')
-      barcode_length=\$(zcat $barcode_fastq | awk '{if(NR%4==2) print length(\$1)}' | tail -n 1)
+      # Below works too, but not with head -n 1, since head breaks the pipe and exit with 141.
+      # barcode_length=\$(zcat $barcode_fastq | awk '{if(NR%4==2) print length(\$1)}' | tail -n 1)
     else
       barcode_length=\$(cat $barcode_fastq | awk '{if(NR==2)
       print length(\$1)}')

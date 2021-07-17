@@ -28,11 +28,15 @@ process CORRECT_BARCODE {
     val sample_name
     path barcode_fastq
     path barcode_whitelist
+    path read1_fastq
+    path read2_fastq
 
     output:
     val sample_name, emit: sample_name
     path "barcode_*", emit: corrected_barcode
     path "summary_*.txt", emit: corrected_barcode_summary
+    path read1_fastq, emit: read1_fastq
+    path read2_fastq, emit: read2_fastq
 
     script:
 

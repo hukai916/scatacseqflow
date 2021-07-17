@@ -38,25 +38,8 @@ process ADD_BARCODE_TO_READS {
     script:
 
     """
-    # use the first read length from fastq file to determine the length since -b is required by sinto.
-    # filename=\$(basename -- "$barcode_fastq")
-    # extension="\${filename##*.}"
-
-    # echo \$extension
-    # barcode_length=1000
-    echo "before"
-    # echo \$barcode_length
     barcode_length=\$(zcat < $barcode_fastq | awk '{if(NR%4==2) print length(\$1)}' | head -n 1)
-    echo "after0"
     echo \$barcode_length
-
-    echo "after1"
-    echo \$barcode_length
-    echo "after11"
-
-    barcode_length=\$(cat $barcode_fastq | awk '{if(NR%4==2) print length(\$1)}' | head -n 1)
-    echo \$barcode_length
-    echo "afer12"
 
     mkdir R1
     ln $barcode_fastq R1/ # must be hard link

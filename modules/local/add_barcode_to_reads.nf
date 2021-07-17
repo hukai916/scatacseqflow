@@ -32,17 +32,12 @@ process ADD_BARCODE_TO_READS {
 
     output:
     val sample_name, emit: sample_name
-
-    path "R1", emit: read1_fastq
-    path "R2", emit: read2_fastq
+    path "R1/*barcoded*", emit: read1_fastq
+    path "R2/*barcoded*", emit: read2_fastq
 
     script:
 
     """
-    echo "I am here!"
-    # mkdir -p R1/barcoded
-    # mkdir -p R2/barcoded
-
     mkdir R1
     ln $barcode_fastq R1/ # must be hard link
     ln $read1_fastq R1/

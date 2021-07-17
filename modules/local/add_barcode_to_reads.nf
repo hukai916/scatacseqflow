@@ -43,8 +43,10 @@ process ADD_BARCODE_TO_READS {
     extension="\${filename##*.}"
 
     echo \$extension
-
+    barcode_length=1000
     echo "before"
+    # barcode_length=\$(zcat < $barcode_fastq | awk '{if(NR%4==2) print length(\$1)}' | head -n 1)
+
     echo "after1"
     echo \$barcode_length
     echo "after11"

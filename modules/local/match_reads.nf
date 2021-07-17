@@ -41,7 +41,8 @@ process MATCH_READS {
 
     """
     seqkit pair -1 $corrected_barcode_fastq -2 $read1_fastq -O R1
+    rm R1/$corrected_barcode_fastq
     seqkit pair -1 $corrected_barcode_fastq -2 $read2_fastq -O R2
-
+    rm R2/$corrected_barcode_fastq
     """
 }

@@ -92,7 +92,7 @@ workflow PREPROCESS {
     // module: fastQC
     FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
 
-    // module: barcode correction: correct barcode fastq given whitelist and barcode fastq file
+    // module: barcode correction (optional) and add barcode: correct barcode fastq given whitelist and barcode fastq file
     if (!(params.barcode_whitelist)) {
       log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
 
@@ -106,13 +106,11 @@ workflow PREPROCESS {
       MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, CORRECT_BARCODE.out.read1_fastq, CORRECT_BARCODE.out.read2_fastq)
 
       ADD_BARCODE_TO_READS (MATCH_READS.out.sample_name, MATCH_READS.out.barcode_fastq, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq)
-
-      // Trimming module
-      CUTADAPT (ADD_BARCODE_TO_READS.out.samples_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
-
     }
 
-    // module: debarcode: add barcode sequence to the beginning of the fastq sequence identifier with sinto
+    // module: trimming off adapter
+    CUTADAPT (ADD_BARCODE_TO_READS.out.samples_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
+    
 
     // module: trimming
 

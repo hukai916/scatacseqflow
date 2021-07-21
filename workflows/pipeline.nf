@@ -85,16 +85,32 @@ if (params.input) {
 
 
 workflow PREPROCESS {
-  // Module: prepare 10xgenomics folder structure
+  // Check to see if parameter modules are specified or not
   if (params.preprocess == "default") {
     log.info "INFO: --preprocess: default"
+  } else if (params.preprocess == "10xgenomics") {
+    log.info "INFO: --preprocess: 10xgenomics"
+  } else if (params.preprocess == "biorad") {
+    log.info "INFO: --preprocess: biorad"
+    log.info "INFO: must use biorad compatible sequencing data!"
+  } else {
+    log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."
+  }
+
+  if (!(params.barcode_whitelist)) {
+    log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
+  }
+
+  // Module: prepare 10xgenomics folder structure
+  if (params.preprocess == "default") {
+    // log.info "INFO: --preprocess: default"
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
     // module: fastQC
     FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
 
     // module: barcode correction (optional) and add barcode: correct barcode fastq given whitelist and barcode fastq file
     if (!(params.barcode_whitelist)) {
-      log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
+      // log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
 
       ADD_BARCODE_TO_READS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
     } else {
@@ -111,14 +127,44 @@ workflow PREPROCESS {
     // module: trimming off adapter
     CUTADAPT (ADD_BARCODE_TO_READS.out.sample_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
 
-    // module: trimming
-
     // module: mapping with bwa or minimap2: mark duplicate
+    // bwa or minimap2
+    if (params.mapper == 'bwa') {
+      log.info "INFO: --mapper: bwa"
+
+      if (!params.ref_bwa_index) {
+        log.info "INFO: --ref_bwa_index not provided, check --ref_fasta ..."
+
+        if (params.ref_fasta) {
+          log.info "INFO: --ref_fasta not provided, check --ref_fasta_name ..."
+
+          // build bwa index
+          // mapping with the built index
+        } else if (params.ref_fasta_name) {
+          log.info "INFO: --ref_fasta_name provided, will download, build index, and map with bwa ..."
+
+          // retrive the download link
+          // download the reference
+          // module : download_from_ucsc
+          DOWNLOAD_FROM_UCSC (params.ref_fasta_name)
+          // build bwa index
+          // mapping
+        }
+      } else {
+        // use user provided bwa index for mapping
+      }
+
+    } else if (params.mapper == "minimap2") {
+      log.info "INFO: --mapper: minimap2"
+
+    } else {
+      exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
+    }
 
     // module: generate fragement file with sinto
 
   } else if (params.preprocess == "10xgenomics") {
-    log.info "INFO: --preprocess: 10xgenomics"
+    // log.info "INFO: --preprocess: 10xgenomics"
     if (params.ref_cellranger == "") {
       exit 1, 'Parameter --ref_cellranger: pls supply full path to reference!'
     }
@@ -130,13 +176,14 @@ workflow PREPROCESS {
     // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
 
   } else if (params.preprocess == "biorad") {
-    log.info "INFO: --preprocess: biorad"
-    log.info "INFO: must use biorad compatible sequencing data!"
+    // log.info "INFO: --preprocess: biorad"
+    // log.info "INFO: must use biorad compatible sequencing data!"
     if (params.ref_bwa_index == "") {
       exit 1, 'Parameter --ref_bwa_index: pls supply full path to bwa index folder!'
     }
-    if (params.ref_bwa_fasta == "") {
-      exit 1, 'Parameter --ref_bwa_fasta: pls supply full path to reference fasta file!'
+    // if (params.ref_bwa_fasta == "") {
+    if (params.ref_fasta == "") {
+      exit 1, 'Parameter --ref_fasta: pls supply full path to reference fasta file!'
     }
     if (params.biorad_genome == "") {
       exit 1, 'Parameter --biorad_genome: pls choose from "hg19", "hg38","mm10", or "hg19-mm10"!'
@@ -148,11 +195,11 @@ workflow PREPROCESS {
     // Note that BIORAD_ATAC_SEQ_TRIM_READS must be performed after debarcode.
     BIORAD_ATAC_SEQ_TRIM_READS (BIORAD_ATAC_SEQ_DEBARCODE.out.sample_name, BIORAD_ATAC_SEQ_DEBARCODE.out.debarcoded_reads)
     BIORAD_ATAC_SEQ_BWA (BIORAD_ATAC_SEQ_TRIM_READS.out.sample_name, BIORAD_ATAC_SEQ_TRIM_READS.out.trimmed_reads, params.ref_bwa_index)
-    BIORAD_ATAC_SEQ_ALIGNMENT_QC (BIORAD_ATAC_SEQ_BWA.out.sample_name, BIORAD_ATAC_SEQ_BWA.out.alignments, params.ref_bwa_fasta)
+    BIORAD_ATAC_SEQ_ALIGNMENT_QC (BIORAD_ATAC_SEQ_BWA.out.sample_name, BIORAD_ATAC_SEQ_BWA.out.alignments, params.ref_fasta)
     BIORAD_ATAC_SEQ_FILTER_BEADS (BIORAD_ATAC_SEQ_BWA.out.sample_name, BIORAD_ATAC_SEQ_BWA.out.alignments, params.biorad_genome)
 
   } else {
-    log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."
+    // log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."
   }
 }
 

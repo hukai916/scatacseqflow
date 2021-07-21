@@ -109,8 +109,7 @@ workflow PREPROCESS {
     }
 
     // module: trimming off adapter
-    CUTADAPT (ADD_BARCODE_TO_READS.out.samples_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
-    
+    CUTADAPT (ADD_BARCODE_TO_READS.out.sample_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
 
     // module: trimming
 

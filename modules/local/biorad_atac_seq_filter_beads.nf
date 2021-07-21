@@ -7,7 +7,7 @@ params.options = [:]
  * Parse software version numbers
  */
 process BIORAD_ATAC_SEQ_FILTER_BEADS {
-    label 'process_medium'
+    label 'process_long'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'biorad_bead_filtration', publish_id:'') }

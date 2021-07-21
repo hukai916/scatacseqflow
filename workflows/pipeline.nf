@@ -53,6 +53,7 @@ include { BIORAD_ATAC_SEQ_BWA   } from '../modules/local/biorad_atac_seq_bwa'   
 include { BIORAD_ATAC_SEQ_ALIGNMENT_QC   } from '../modules/local/biorad_atac_seq_alignment_qc'     addParams( options: modules['biorad_atac_seq_alignment_qc'] )
 include { BIORAD_ATAC_SEQ_FILTER_BEADS   } from '../modules/local/biorad_atac_seq_filter_beads'     addParams( options: modules['biorad_atac_seq_filter_beads'] )
 include { ADD_BARCODE_TO_READS       } from '../modules/local/add_barcode_to_reads'    addParams( options: modules['add_barcode_to_reads'] )
+include { CUTADAPT       } from '../modules/local/cutadapt'    addParams( options: modules['cutadapt'] )
 
 
 // // Modules: nf-core/modules
@@ -106,7 +107,9 @@ workflow PREPROCESS {
 
       ADD_BARCODE_TO_READS (MATCH_READS.out.sample_name, MATCH_READS.out.barcode_fastq, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq)
 
-      
+      // Trimming module
+      CUTADAPT (ADD_BARCODE_TO_READS.out.samples_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
+
     }
 
     // module: debarcode: add barcode sequence to the beginning of the fastq sequence identifier with sinto

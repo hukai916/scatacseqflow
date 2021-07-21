@@ -6,7 +6,7 @@ params.options = [:]
 /*
  * Parse software version numbers
  */
-process MATCH_READS {
+process CUTADAPT {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,

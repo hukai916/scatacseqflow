@@ -59,6 +59,9 @@ include { DOWNLOAD_FROM_UCSC        } from '../modules/local/download_from_ucsc'
 include { BWA_INDEX        } from '../modules/local/bwa_index'    addParams( options: modules['bwa_index'] )
 include { BWA_MAP          } from '../modules/local/bwa_map'    addParams( options: modules['bwa_map'] )
 
+include { MINIMAP2_INDEX        } from '../modules/local/minimap2_index'    addParams( options: modules['minimap2_index'] )
+// include { BWA_MAP          } from '../modules/local/bwa_map'    addParams( options: modules['bwa_map'] )
+
 
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
@@ -137,10 +140,10 @@ workflow PREPROCESS {
       log.info "INFO: --mapper: bwa"
 
       if (!params.ref_bwa_index) {
-        log.info "INFO: --ref_bwa_index not provided, check --ref_fasta ..."
+        log.info "INFO: --ref_bwa_index not provided, check --ref_fasta and --ref_fasta_name ..."
 
         if (params.ref_fasta) {
-          log.info "INFO: --ref_fasta not provided, check --ref_fasta_name ..."
+          log.info "INFO: --ref_fasta provided, use it for building bwa index."
 
           // module : bwa_index
           BWA_INDEX (params.ref_fasta)
@@ -166,32 +169,32 @@ workflow PREPROCESS {
     } else if (params.mapper == "minimap2") {
       log.info "INFO: --mapper: minimap2"
 
-      // if (!params.ref_minimap2_index) {
-      //   log.info "INFO: --ref_minimap2_index not provided, check --ref_fasta ..."
-      //
-      //   if (params.ref_fasta) {
-      //     log.info "INFO: --ref_fasta not provided, check --ref_fasta_name ..."
-      //
-      //     // module : bwa_index
-      //     MINIMAP2_INDEX (params.ref_fasta)
-      //     // mapping with the built index
-      //   } else if (params.ref_fasta_name) {
-      //     log.info "INFO: --ref_fasta_name provided, will download genome, and then build bwa index, and map with bwa ..."
-      //
-      //     // module : download_from_ucsc
-      //     DOWNLOAD_FROM_UCSC (params.ref_fasta_name)
-      //     // module : bwa_index
-      //     MINIMAP2_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta)
-      //   } else {
-      //     exit 1, 'Parameter --ref_fasta_name: pls supply a genome name, like hg19, mm10, or so!'
-      //   }
-      //   // module : bwa_map
-      //   MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, BWA_INDEX.out.bwa_index_folder)
-      // } else {
-      //   // use user provided bwa index for mapping
-      //   // module : bwa_map
-      //   MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_bwa_index)
-      // }
+      if (!params.ref_minimap2_index) {
+        log.info "INFO: --ref_minimap2_index not provided, check --ref_fasta and --ref_fasta_name ..."
+
+        if (params.ref_fasta) {
+          log.info "INFO: --ref_fasta provided, use it to build minimap2 index."
+
+          // module : bwa_index
+          MINIMAP2_INDEX (params.ref_fasta)
+          // mapping with the built index
+        } else if (params.ref_fasta_name) {
+          log.info "INFO: --ref_fasta_name provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+
+          // module : download_from_ucsc
+          DOWNLOAD_FROM_UCSC (params.ref_fasta_name)
+          // module : bwa_index
+          MINIMAP2_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+        } else {
+          exit 1, 'Parameter --ref_fasta_name: pls supply a genome name, like hg19, mm10, or so!'
+        }
+        // module : bwa_map
+        MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, MINIMAP2_INDEX.out.minimap2_index)
+      } else {
+        // use user provided bwa index for mapping
+        // module : bwa_map
+        MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_minimap2_index)
+      }
 
 
     } else {

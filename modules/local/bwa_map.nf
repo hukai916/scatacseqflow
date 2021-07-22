@@ -25,20 +25,22 @@ process BWA_MAP {
     // cache false
 
     input:
+    val sample_name
     path read1_fastq
     path read2_fastq
     path bwa_index_folder
 
     output:
-    path "*.bam", emit: bam
+    val sample_name, emit: sample_name
+    path "*.sorted.bam", emit: bam
 
     script:
-    genome_basename = genome_fasta.getName()
 
     """
-    mkdir bwa_index
-    ln $genome_fasta bwa_index/
-    bwa index -a bwtsw bwa_index/$genome_basename
+    index_name=\$(basename $bwa_index_folder/*.bwt)
+    index_name="\${filename%.*}"
+
+    bwa mem -t $task.cpus $bwa_index_folder/\$index_name $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_name}.sorted.bam
 
     """
 }

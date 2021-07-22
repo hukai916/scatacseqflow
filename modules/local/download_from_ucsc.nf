@@ -41,6 +41,5 @@ process DOWNLOAD_FROM_UCSC {
 
     cat \$(basename $md5_link) | grep \$( basename $download_link) || true > md5_to_check.txt
 
-
     """
 }

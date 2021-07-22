@@ -28,7 +28,7 @@ process DOWNLOAD_FROM_UCSC {
     val genome_name
 
     output:
-    path "*.fa.gz", emit: genome_fasta
+    // path "*.fa.gz", emit: genome_fasta
     path "md5sum.txt", emit: genome_md5
 
     script:

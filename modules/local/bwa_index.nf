@@ -25,7 +25,7 @@ process DOWNLOAD_FROM_UCSC {
     // cache false
 
     input:
-    val genome_name
+    path genome_fasta
 
     output:
     path "*.fa.gz", emit: genome_fasta

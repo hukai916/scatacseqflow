@@ -39,7 +39,7 @@ process DOWNLOAD_FROM_UCSC {
     wget $download_link
     wget $md5_link
 
-    cat $md5_link | grep \$( basename $download_link) > md5_to_check.txt
+    cat \$(basename $md5_link) | grep \$( basename $download_link) > md5_to_check.txt
 
     if [ -s md5_to_check ]
     then

@@ -60,7 +60,7 @@ include { BWA_INDEX        } from '../modules/local/bwa_index'    addParams( opt
 include { BWA_MAP          } from '../modules/local/bwa_map'    addParams( options: modules['bwa_map'] )
 
 include { MINIMAP2_INDEX        } from '../modules/local/minimap2_index'    addParams( options: modules['minimap2_index'] )
-// include { BWA_MAP          } from '../modules/local/bwa_map'    addParams( options: modules['bwa_map'] )
+include { MINIMAP2_MAP          } from '../modules/local/minimap2_map'    addParams( options: modules['minimap2_map'] )
 
 
 // // Modules: nf-core/modules

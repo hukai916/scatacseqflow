@@ -56,6 +56,7 @@ include { ADD_BARCODE_TO_READS       } from '../modules/local/add_barcode_to_rea
 include { CUTADAPT       } from '../modules/local/cutadapt'    addParams( options: modules['cutadapt'] )
 
 include { DOWNLOAD_FROM_UCSC        } from '../modules/local/download_from_ucsc'    addParams( options: modules['download_from_ucsc'] )
+include { BWA_INDEX        } from '../modules/local/bwa_index'    addParams( options: modules['bwa_index'] )
 
 
 // // Modules: nf-core/modules
@@ -149,9 +150,9 @@ workflow PREPROCESS {
           // download the reference
           // module : download_from_ucsc
           DOWNLOAD_FROM_UCSC (params.ref_fasta_name)
-          // build bwa index
-          // BWA_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta)
-          // mapping
+          // module : bwa_index
+          BWA_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+          // module : bwa_map
           // BWA_MAP ()
         } else {
           exit 1, 'Parameter --ref_fasta_name: pls supply a genome name, like hg19, mm10, or so!'

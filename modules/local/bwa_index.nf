@@ -6,7 +6,7 @@ params.options = [:]
 /*
  * Parse software version numbers
  */
-process DOWNLOAD_FROM_UCSC {
+process BWA_INDEX {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
@@ -20,7 +20,7 @@ process DOWNLOAD_FROM_UCSC {
     // }
 
     // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/miniconda3_xenial:0.1"
+    container "hukai916/bwa_xenial:0.1"
 
     // cache false
 
@@ -28,17 +28,15 @@ process DOWNLOAD_FROM_UCSC {
     path genome_fasta
 
     output:
-    path "*.fa.gz", emit: genome_fasta
-    path "md5sum.txt", emit: genome_md5
+    path "bwa_index", emit: bwa_index_folder
 
     script:
-    download_link = "https://hgdownload.soe.ucsc.edu/goldenPath/" + genome_name + "/bigZips/" + genome_name + ".fa.gz"
-    md5_link = "https://hgdownload.soe.ucsc.edu/goldenPath/" + genome_name + "/bigZips/md5sum.txt"
+    genome_basename = genome_fasta.getName()
 
     """
-    wget $download_link
-    wget $md5_link
+    mkdir bwa_index
+    ln $genome_fasta bwa_index/
+    bwa index -a bwtsw bwa_index/$genome_basename
 
-    md5sum -c md5sum.txt
     """
 }

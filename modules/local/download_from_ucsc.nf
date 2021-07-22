@@ -36,8 +36,8 @@ process DOWNLOAD_FROM_UCSC {
     md5_link = "https://hgdownload.soe.ucsc.edu/goldenPath/" + genome_name + "/bigZips/md5sum.txt"
 
     """
-    wget $download_link
-    wget $md5_link
+    wget $download_link -o logfile.genome.txt
+    wget $md5_link -o logfile.md5.txt
 
     cat \$(basename $md5_link) | grep \$( basename $download_link) > md5_to_check.txt
 

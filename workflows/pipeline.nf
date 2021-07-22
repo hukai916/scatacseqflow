@@ -151,7 +151,7 @@ workflow PREPROCESS {
           // module : download_from_ucsc
           DOWNLOAD_FROM_UCSC (params.ref_fasta_name)
           // module : bwa_index
-          BWA_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+          // BWA_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta)
           // module : bwa_map
           // BWA_MAP ()
         } else {

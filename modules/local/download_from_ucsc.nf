@@ -41,5 +41,10 @@ process DOWNLOAD_FROM_UCSC {
 
     cat \$(basename $md5_link) | grep \$( basename $download_link) || true > md5_to_check.txt
 
+    if [ -s md5_to_check.txt ]
+    then
+      md5sum -c md5_to_check.txt
+    fi
+
     """
 }

@@ -35,13 +35,12 @@ process BWA_MAP {
     path "*.sorted.bam", emit: bam
 
     script:
-    sample_basename = sample_name.getName()
 
     """
     filename=\$(basename $bwa_index_folder/*.bwt)
     index_name="\${filename%.*}"
 
-    bwa mem -t $task.cpus $bwa_index_folder/\$index_name $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_basename}.sorted.bam
+    bwa mem -t $task.cpus $bwa_index_folder/\$index_name $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_name}.sorted.bam
 
     """
 }

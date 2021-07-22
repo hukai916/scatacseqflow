@@ -37,7 +37,7 @@ process MINIMAP2_MAP {
     sample_basename = sample_name.getName()
 
     """
-    minimap2 -ax sr $minimap2_index_file ${genome_basename}.mmi $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_basename}.sorted.bam
+    minimap2 -ax sr $minimap2_index_file $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_basename}.sorted.bam
 
     """
 }

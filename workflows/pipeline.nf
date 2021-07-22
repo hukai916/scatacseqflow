@@ -55,6 +55,8 @@ include { BIORAD_ATAC_SEQ_FILTER_BEADS   } from '../modules/local/biorad_atac_se
 include { ADD_BARCODE_TO_READS       } from '../modules/local/add_barcode_to_reads'    addParams( options: modules['add_barcode_to_reads'] )
 include { CUTADAPT       } from '../modules/local/cutadapt'    addParams( options: modules['cutadapt'] )
 
+include { DOWNLOAD_FROM_UCSC        } from '../modules/local/download_from_ucsc'    addParams( options: modules['download_from_ucsc'] )
+
 
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
@@ -149,6 +151,8 @@ workflow PREPROCESS {
           DOWNLOAD_FROM_UCSC (params.ref_fasta_name)
           // build bwa index
           // mapping
+        } else {
+          exit 1, 'Parameter --ref_fasta_name: pls supply a genome name, like hg19, mm10, or so!'
         }
       } else {
         // use user provided bwa index for mapping

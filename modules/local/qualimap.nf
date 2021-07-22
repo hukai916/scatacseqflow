@@ -35,7 +35,7 @@ process QUALIMAP {
     script:
 
     """
-    qualimap bamqc -bam $bam -outdir bamqc
+    qualimap bamqc --java-mem-size=$task.memory -bam $bam -outdir bamqc
 
     """
 }

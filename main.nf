@@ -52,15 +52,24 @@ log.info Utils.dashedLine(params.monochrome_logs)
 /* --            RUN WORKFLOW(S)               -- */
 ////////////////////////////////////////////////////
 include { PREPROCESS } from './workflows/pipeline' addParams( summary_params: summary_params )
-include { SCATACSEQFLOW } from './workflows/pipeline' addParams( summary_params: summary_params )
+include { DOWNSTREAM } from './workflows/pipeline' addParams( summary_params: summary_params )
 
 
 workflow  NFCORE_SCATACSEQFLOW {
   if (params.preprocess) {
     log.info "Running preprocess ..."
     PREPROCESS ()
+
+    if (params.preprocess == "default") {
+      // DOWNSTREAM (PREPROCESS.out.bam, PREPROCESS.out.fragments)
+    } else if (params.preprocess == "10xgenomics") {
+
+    } else if (params.preprocess == "biorad") {
+
+    }
+    // DOWNSTREAM ()
   } else {
-    SCATACSEQFLOW ()
+    DOWNSTREAM ()
   }
 }
 

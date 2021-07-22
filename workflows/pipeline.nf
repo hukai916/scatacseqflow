@@ -63,7 +63,7 @@ include { MINIMAP2_INDEX   } from '../modules/local/minimap2_index'    addParams
 include { MINIMAP2_MAP     } from '../modules/local/minimap2_map'    addParams( options: modules['minimap2_map'] )
 
 include { QUALIMAP         } from '../modules/local/qualimap'    addParams( options: modules['qualimap'] )
-include { GET_FRAGMENT         } from '../modules/local/get_fragment'    addParams( options: modules['get_fragment'] )
+include { GET_FRAGMENTS         } from '../modules/local/get_fragments'    addParams( options: modules['get_fragments'] )
 
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
@@ -209,9 +209,9 @@ workflow PREPROCESS {
 
     // module: generate fragment file with sinto
     if (params.mapper == 'bwa') {
-      GET_FRAGMENT (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
+      GET_FRAGMENTS (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
     } else if (params.mapper == "minimap2") {
-      GET_FRAGMENT (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
+      GET_FRAGMENTS (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
     }
 
     // module: generate fragement file with sinto
@@ -253,7 +253,7 @@ workflow PREPROCESS {
   }
 }
 
-workflow SCATACSEQFLOW {
+workflow DOWNSTREAM {
 
     ch_software_versions = Channel.empty()
 

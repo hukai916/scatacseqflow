@@ -6,11 +6,11 @@ params.options = [:]
 /*
  * Parse software version numbers
  */
-process GET_FRAGMENT {
+process GET_FRAGMENTS {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'fragment', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'fragments', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -38,8 +38,8 @@ process GET_FRAGMENT {
     # first index the bam file
     samtools index $bam
 
-    # then, generate the fragment file
-    sinto --nproc $task.cpus -bam $bam -f fragments
+    # then, generate the fragments file
+    sinto fragments --nproc $task.cpus --bam $bam -f fragments
 
     """
 }

@@ -37,7 +37,7 @@ process BWA_MAP {
     script:
 
     """
-    index_name=\$(basename $bwa_index_folder/*.bwt)
+    filename=\$(basename $bwa_index_folder/*.bwt)
     index_name="\${filename%.*}"
 
     bwa mem -t $task.cpus $bwa_index_folder/\$index_name $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_name}.sorted.bam

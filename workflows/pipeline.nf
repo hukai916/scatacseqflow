@@ -166,6 +166,34 @@ workflow PREPROCESS {
     } else if (params.mapper == "minimap2") {
       log.info "INFO: --mapper: minimap2"
 
+      // if (!params.ref_minimap2_index) {
+      //   log.info "INFO: --ref_minimap2_index not provided, check --ref_fasta ..."
+      //
+      //   if (params.ref_fasta) {
+      //     log.info "INFO: --ref_fasta not provided, check --ref_fasta_name ..."
+      //
+      //     // module : bwa_index
+      //     MINIMAP2_INDEX (params.ref_fasta)
+      //     // mapping with the built index
+      //   } else if (params.ref_fasta_name) {
+      //     log.info "INFO: --ref_fasta_name provided, will download genome, and then build bwa index, and map with bwa ..."
+      //
+      //     // module : download_from_ucsc
+      //     DOWNLOAD_FROM_UCSC (params.ref_fasta_name)
+      //     // module : bwa_index
+      //     MINIMAP2_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+      //   } else {
+      //     exit 1, 'Parameter --ref_fasta_name: pls supply a genome name, like hg19, mm10, or so!'
+      //   }
+      //   // module : bwa_map
+      //   MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, BWA_INDEX.out.bwa_index_folder)
+      // } else {
+      //   // use user provided bwa index for mapping
+      //   // module : bwa_map
+      //   MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_bwa_index)
+      // }
+
+
     } else {
       exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
     }

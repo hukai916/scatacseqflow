@@ -34,10 +34,9 @@ process MINIMAP2_MAP {
     path "*.sorted.bam", emit: bam
 
     script:
-    sample_basename = sample_name.getName()
 
     """
-    minimap2 -ax sr $minimap2_index_file $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_basename}.sorted.bam
+    minimap2 -ax sr $minimap2_index_file $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_name}.sorted.bam
 
     """
 }

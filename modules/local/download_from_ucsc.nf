@@ -28,6 +28,7 @@ process DOWNLOAD_FROM_UCSC {
     val genome_name
 
     output:
+    path "*.fa.gz", emit: genome_fasta
     path "md5sum.txt", emit: genome_md5
 
     script:
@@ -36,6 +37,9 @@ process DOWNLOAD_FROM_UCSC {
 
     """
     wget $md5_link -o logfile.md5.txt
+    wget $md5_link -o logfile.md5.txt
+
+    # cat \$(basename $md5_link) | grep \$( basename $download_link) > md5_to_check.txt
 
 
     """

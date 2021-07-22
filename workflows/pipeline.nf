@@ -57,6 +57,7 @@ include { CUTADAPT       } from '../modules/local/cutadapt'    addParams( option
 
 include { DOWNLOAD_FROM_UCSC        } from '../modules/local/download_from_ucsc'    addParams( options: modules['download_from_ucsc'] )
 include { BWA_INDEX        } from '../modules/local/bwa_index'    addParams( options: modules['bwa_index'] )
+include { BWA_MAP          } from '../modules/local/bwa_map'    addParams( options: modules['bwa_map'] )
 
 
 // // Modules: nf-core/modules

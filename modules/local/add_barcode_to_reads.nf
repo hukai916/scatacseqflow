@@ -18,9 +18,8 @@ process ADD_BARCODE_TO_READS {
     // } else {
     //     container "quay.io/biocontainers/python:3.8.3"
     // }
-
-    // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/add_barcode_to_reads:0.1"
+    // container "hukai916/add_barcode_to_reads:0.1"
+    container "hukai916/sinto_xenial:0.1"
 
     // cache false
 

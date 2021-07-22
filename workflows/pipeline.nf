@@ -114,7 +114,7 @@ workflow PREPROCESS {
 
     // module: barcode correction (optional) and add barcode: correct barcode fastq given whitelist and barcode fastq file
     if (!(params.barcode_whitelist)) {
-      // log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
+      log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
 
       ADD_BARCODE_TO_READS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
     } else {
@@ -199,7 +199,6 @@ workflow PREPROCESS {
     }
 
     // module: generate fragement file with sinto
-
   } else if (params.preprocess == "10xgenomics") {
     // log.info "INFO: --preprocess: 10xgenomics"
     if (params.ref_cellranger == "") {
@@ -211,7 +210,6 @@ workflow PREPROCESS {
     CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
     // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
     // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
-
   } else if (params.preprocess == "biorad") {
     // log.info "INFO: --preprocess: biorad"
     // log.info "INFO: must use biorad compatible sequencing data!"
@@ -234,7 +232,6 @@ workflow PREPROCESS {
     BIORAD_ATAC_SEQ_BWA (BIORAD_ATAC_SEQ_TRIM_READS.out.sample_name, BIORAD_ATAC_SEQ_TRIM_READS.out.trimmed_reads, params.ref_bwa_index)
     BIORAD_ATAC_SEQ_ALIGNMENT_QC (BIORAD_ATAC_SEQ_BWA.out.sample_name, BIORAD_ATAC_SEQ_BWA.out.alignments, params.ref_fasta)
     BIORAD_ATAC_SEQ_FILTER_BEADS (BIORAD_ATAC_SEQ_BWA.out.sample_name, BIORAD_ATAC_SEQ_BWA.out.alignments, params.biorad_genome)
-
   } else {
     // log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."
   }

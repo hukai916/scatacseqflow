@@ -6,11 +6,11 @@ params.options = [:]
 /*
  * Parse software version numbers
  */
-process MINIMAP2_MAP {
+process QUALIMAP {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'minimap2_map', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'qualimap', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -20,24 +20,22 @@ process MINIMAP2_MAP {
     // }
 
     // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/minimap2_xenial:0.1"
+    container "hukai916/qualimap_xenial:0.1"
 
     // cache false
 
     input:
     val sample_name
-    path read1_fastq
-    path read2_fastq
-    path minimap2_index_file
+    path bam
 
     output:
     val sample_name, emit: sample_name
-    path "*.sorted.bam", emit: bam
+    path "bamqc", emit: bamqc
 
     script:
 
     """
-    minimap2 -a $minimap2_index_file $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_name}.sorted.bam
-    # note that -ax sr pops error for test dataset.
+    qualimap -bam $bam -outdir bamqc
+
     """
 }

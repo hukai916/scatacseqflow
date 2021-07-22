@@ -53,15 +53,16 @@ include { BIORAD_ATAC_SEQ_BWA   } from '../modules/local/biorad_atac_seq_bwa'   
 include { BIORAD_ATAC_SEQ_ALIGNMENT_QC   } from '../modules/local/biorad_atac_seq_alignment_qc'     addParams( options: modules['biorad_atac_seq_alignment_qc'] )
 include { BIORAD_ATAC_SEQ_FILTER_BEADS   } from '../modules/local/biorad_atac_seq_filter_beads'     addParams( options: modules['biorad_atac_seq_filter_beads'] )
 include { ADD_BARCODE_TO_READS       } from '../modules/local/add_barcode_to_reads'    addParams( options: modules['add_barcode_to_reads'] )
-include { CUTADAPT       } from '../modules/local/cutadapt'    addParams( options: modules['cutadapt'] )
+include { CUTADAPT         } from '../modules/local/cutadapt'    addParams( options: modules['cutadapt'] )
 
 include { DOWNLOAD_FROM_UCSC        } from '../modules/local/download_from_ucsc'    addParams( options: modules['download_from_ucsc'] )
 include { BWA_INDEX        } from '../modules/local/bwa_index'    addParams( options: modules['bwa_index'] )
 include { BWA_MAP          } from '../modules/local/bwa_map'    addParams( options: modules['bwa_map'] )
 
-include { MINIMAP2_INDEX        } from '../modules/local/minimap2_index'    addParams( options: modules['minimap2_index'] )
-include { MINIMAP2_MAP          } from '../modules/local/minimap2_map'    addParams( options: modules['minimap2_map'] )
+include { MINIMAP2_INDEX   } from '../modules/local/minimap2_index'    addParams( options: modules['minimap2_index'] )
+include { MINIMAP2_MAP     } from '../modules/local/minimap2_map'    addParams( options: modules['minimap2_map'] )
 
+include { QUALIMAP         } from '../modules/local/qualimap'    addParams( options: modules['qualimap'] )
 
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
@@ -165,7 +166,6 @@ workflow PREPROCESS {
         // module : bwa_map
         BWA_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_bwa_index)
       }
-
     } else if (params.mapper == "minimap2") {
       log.info "INFO: --mapper: minimap2"
 
@@ -195,11 +195,18 @@ workflow PREPROCESS {
         // module : bwa_map
         MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_minimap2_index)
       }
-
-
     } else {
       exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
     }
+
+    // module: bamqc with qualimap
+    if (params.mapper == 'bwa') {
+      QUALIMAP (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
+    } else if (params.mapper == "minimap2") {
+      QUALIMAP (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
+    }
+
+    // module: generate fragment file with sinto
 
     // module: generate fragement file with sinto
   } else if (params.preprocess == "10xgenomics") {

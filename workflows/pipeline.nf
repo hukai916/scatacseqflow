@@ -143,14 +143,16 @@ workflow PREPROCESS {
           // build bwa index
           // mapping with the built index
         } else if (params.ref_fasta_name) {
-          log.info "INFO: --ref_fasta_name provided, will download, build index, and map with bwa ..."
+          log.info "INFO: --ref_fasta_name provided, will download genome, and then build bwa index, and map with bwa ..."
 
           // retrive the download link
           // download the reference
           // module : download_from_ucsc
           DOWNLOAD_FROM_UCSC (params.ref_fasta_name)
           // build bwa index
+          // BWA_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta)
           // mapping
+          // BWA_MAP ()
         } else {
           exit 1, 'Parameter --ref_fasta_name: pls supply a genome name, like hg19, mm10, or so!'
         }

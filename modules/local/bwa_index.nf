@@ -10,7 +10,7 @@ process DOWNLOAD_FROM_UCSC {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'download_from_ucsc', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'bwa_index', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -39,12 +39,6 @@ process DOWNLOAD_FROM_UCSC {
     wget $download_link
     wget $md5_link
 
-    cat $md5_link | grep \$( basename $download_link) > md5_to_check.txt
-
-    if [ -s md5_to_check ]
-    then
-      md5sum -c md5_to_check.txt
-    fi
-
+    md5sum -c md5sum.txt
     """
 }

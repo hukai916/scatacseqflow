@@ -1,7 +1,8 @@
 // Import generic module functions
-include { saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName } from './functions'
 
 params.options = [:]
+options        = initOptions(params.options)
 
 /*
  * Parse software version numbers
@@ -35,6 +36,6 @@ process BIORAD_FASTQC {
 
     """
     runFastQC.sh -i $fastq_folder -o fastqc_results
-    
+
     """
 }

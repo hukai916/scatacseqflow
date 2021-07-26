@@ -165,7 +165,7 @@ workflow PREPROCESS {
           log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
 
           // module : download_from_ucsc
-          DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl)
+          DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
           // module : bwa_index
           BWA_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome)
         } else {
@@ -203,7 +203,7 @@ workflow PREPROCESS {
           log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
 
           // module : download_from_ucsc
-          DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl)
+          DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
           // module : bwa_index
           MINIMAP2_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome)
         } else {

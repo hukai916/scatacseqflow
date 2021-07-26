@@ -33,7 +33,7 @@ process GET_PRIMARY_GENOME {
     gunzip -c $genome_fasta > genome.fa
     samtools faidx genome.fa
 
-    cat genome.fa.fai | cut -f 1 | grep -v "_alt\$" | xargs -n 1 -I {} echo "samtools faidx genome.fa {} >> primary_genome.fa"
+    cat genome.fa.fai | cut -f 1 | grep -v "_alt\$" | xargs -n 1 -I {} samtools faidx genome.fa {} >> primary_genome.fa
     gzip primary_genome.fa
 
     """

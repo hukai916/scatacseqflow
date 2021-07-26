@@ -167,7 +167,7 @@ workflow PREPROCESS {
           // module : download_from_ucsc
           DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
           // module : bwa_index
-          BWA_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome)
+          BWA_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
         } else {
           exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
         }
@@ -205,7 +205,7 @@ workflow PREPROCESS {
           // module : download_from_ucsc
           DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
           // module : bwa_index
-          MINIMAP2_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome)
+          MINIMAP2_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
         } else {
           exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
         }

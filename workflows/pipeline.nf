@@ -56,6 +56,8 @@ include { ADD_BARCODE_TO_READS       } from '../modules/local/add_barcode_to_rea
 include { CUTADAPT         } from '../modules/local/cutadapt'    addParams( options: modules['cutadapt'] )
 
 include { DOWNLOAD_FROM_UCSC        } from '../modules/local/download_from_ucsc'    addParams( options: modules['download_from_ucsc'] )
+include { DOWNLOAD_FROM_ENSEMBL     } from '../modules/local/download_from_ensembl'    addParams( options: modules['download_from_ensembl'] )
+i
 include { GET_PRIMARY_GENOME        } from '../modules/local/get_primary_genome'    addParams( options: modules['get_primary_genome'] )
 include { BWA_INDEX        } from '../modules/local/bwa_index'    addParams( options: modules['bwa_index'] )
 include { BWA_MAP          } from '../modules/local/bwa_map'    addParams( options: modules['bwa_map'] )
@@ -143,7 +145,7 @@ workflow PREPROCESS {
       log.info "INFO: --mapper: bwa"
 
       if (!params.ref_bwa_index) {
-        log.info "INFO: --ref_bwa_index not provided, check --ref_fasta and --ref_fasta_name ..."
+        log.info "INFO: --ref_bwa_index not provided, checking --ref_fasta and --ref_fasta_ucsc/--ref_fasta_ensembl ..."
 
         if (params.ref_fasta) {
           log.info "INFO: --ref_fasta provided, use it for building bwa index."
@@ -161,6 +163,8 @@ workflow PREPROCESS {
           // module : bwa_index
           BWA_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
         } else if (params.ref_fasta_ensembl) {
+          log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+
           // module : download_from_ucsc
           DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl)
           // module : bwa_index
@@ -179,7 +183,7 @@ workflow PREPROCESS {
       log.info "INFO: --mapper: minimap2"
 
       if (!params.ref_minimap2_index) {
-        log.info "INFO: --ref_minimap2_index not provided, check --ref_fasta and --ref_fasta_name ..."
+        log.info "INFO: --ref_minimap2_index not provided, check --ref_fasta and --ref_fasta_uscs/--ref_fasta_ensembl ..."
 
         if (params.ref_fasta) {
           log.info "INFO: --ref_fasta provided, use it to build minimap2 index."
@@ -188,7 +192,7 @@ workflow PREPROCESS {
           MINIMAP2_INDEX (params.ref_fasta)
           // mapping with the built index
         } else if (params.ref_fasta_ucsc) {
-          log.info "INFO: --ref_fasta_name provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+          log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
 
           // module : download_from_ucsc
           DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
@@ -197,6 +201,8 @@ workflow PREPROCESS {
           // module : bwa_index
           MINIMAP2_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
         } else if (params.ref_fasta_ensembl) {
+          log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+
           // module : download_from_ucsc
           DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl)
           // module : bwa_index

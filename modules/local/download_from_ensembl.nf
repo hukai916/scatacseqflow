@@ -43,11 +43,21 @@ process DOWNLOAD_FROM_ENSEMBL {
     wget $md5_link -o logfile.md5.txt
     wget $download_link -o logfile.genome.txt
 
-    cat \$(basename $md5_link) | grep \$( basename $download_link) || true > md5_to_check.txt
+    (cat \$(basename $md5_link) | grep \$( basename $download_link) || true) > md5_to_check.txt
 
     if [ -s md5_to_check.txt ]
     then
-      md5sum -c md5_to_check.txt
+      real=\$(cat md5_to_check.txt | cut -f 1,2 -d " ")
+      measure=\$(sum \$( basename $download_link))
+
+      if [ "\$real" == "\$measure" ]
+      then
+        echo "\$real,\$measure"
+        exit 0
+      else
+        echo "\$real,\$measure"
+        exit 1
+      fi
     fi
 
     """

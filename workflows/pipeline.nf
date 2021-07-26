@@ -56,6 +56,7 @@ include { ADD_BARCODE_TO_READS       } from '../modules/local/add_barcode_to_rea
 include { CUTADAPT         } from '../modules/local/cutadapt'    addParams( options: modules['cutadapt'] )
 
 include { DOWNLOAD_FROM_UCSC        } from '../modules/local/download_from_ucsc'    addParams( options: modules['download_from_ucsc'] )
+include { GET_PRIMARY_GENOME        } from '../modules/local/get_primary_genome'    addParams( options: modules['get_primary_genome'] )
 include { BWA_INDEX        } from '../modules/local/bwa_index'    addParams( options: modules['bwa_index'] )
 include { BWA_MAP          } from '../modules/local/bwa_map'    addParams( options: modules['bwa_map'] )
 
@@ -150,15 +151,22 @@ workflow PREPROCESS {
           // module : bwa_index
           BWA_INDEX (params.ref_fasta)
           // mapping with the built index
-        } else if (params.ref_fasta_name) {
-          log.info "INFO: --ref_fasta_name provided, will download genome, and then build bwa index, and map with bwa ..."
+        } else if (params.ref_fasta_ucsc) {
+          log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build bwa index, and map with bwa ..."
 
           // module : download_from_ucsc
-          DOWNLOAD_FROM_UCSC (params.ref_fasta_name)
+          DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
+          // module : extract primary sequence
+          GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
           // module : bwa_index
-          BWA_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+          BWA_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
+        } else if (params.ref_fasta_ensembl) {
+          // module : download_from_ucsc
+          DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl)
+          // module : bwa_index
+          BWA_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome)
         } else {
-          exit 1, 'Parameter --ref_fasta_name: pls supply a genome name, like hg19, mm10, or so!'
+          exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
         }
         // module : bwa_map
         BWA_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, BWA_INDEX.out.bwa_index_folder)
@@ -179,15 +187,22 @@ workflow PREPROCESS {
           // module : bwa_index
           MINIMAP2_INDEX (params.ref_fasta)
           // mapping with the built index
-        } else if (params.ref_fasta_name) {
+        } else if (params.ref_fasta_ucsc) {
           log.info "INFO: --ref_fasta_name provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
 
           // module : download_from_ucsc
-          DOWNLOAD_FROM_UCSC (params.ref_fasta_name)
+          DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
+          // module : get_primary_genome
+          GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
           // module : bwa_index
-          MINIMAP2_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+          MINIMAP2_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
+        } else if (params.ref_fasta_ensembl) {
+          // module : download_from_ucsc
+          DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl)
+          // module : bwa_index
+          MINIMAP2_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome)
         } else {
-          exit 1, 'Parameter --ref_fasta_name: pls supply a genome name, like hg19, mm10, or so!'
+          exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
         }
         // module : bwa_map
         MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, MINIMAP2_INDEX.out.minimap2_index)

@@ -34,7 +34,7 @@ process MINIMAP2_INDEX {
     genome_basename = genome_fasta.getName()
 
     """
-    minimap2 -d ${genome_basename}.mmi $genome_fasta
+    minimap2 $options.args -d ${genome_basename}.mmi $genome_fasta
 
     """
 }

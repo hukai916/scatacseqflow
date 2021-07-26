@@ -209,11 +209,11 @@ workflow PREPROCESS {
         } else {
           exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
         }
-        // module : bwa_map
+        // module : minimap2_map
         MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, MINIMAP2_INDEX.out.minimap2_index)
       } else {
         // use user provided bwa index for mapping
-        // module : bwa_map
+        // module : minimap2_map
         MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_minimap2_index)
       }
     } else {

@@ -36,7 +36,7 @@ process BWA_INDEX {
     """
     mkdir bwa_index
     ln $genome_fasta bwa_index/
-    bwa index -a bwtsw bwa_index/$genome_basename
+    bwa index $options.args -a bwtsw bwa_index/$genome_basename
 
     """
 }

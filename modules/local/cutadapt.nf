@@ -42,9 +42,9 @@ process CUTADAPT {
 
     """
     mkdir R1
-    cutadapt -a $read1_adapter -o R1/trimmed_$read1_name $read1_fastq
+    cutadapt $options.args -a $read1_adapter -o R1/trimmed_$read1_name $read1_fastq
     mkdir R2
-    cutadapt -a $read2_adapter -o R2/trimmed_$read2_name $read2_fastq
+    cutadapt $options.args -a $read2_adapter -o R2/trimmed_$read2_name $read2_fastq
 
     """
 }

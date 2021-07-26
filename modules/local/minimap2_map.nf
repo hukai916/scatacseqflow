@@ -37,7 +37,7 @@ process MINIMAP2_MAP {
     script:
 
     """
-    minimap2 -a $minimap2_index_file $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_name}.sorted.bam
+    minimap2 $options.args -a $minimap2_index_file $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_name}.sorted.bam
     # note that -ax sr pops error for test dataset.
     """
 }

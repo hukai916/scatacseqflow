@@ -36,10 +36,10 @@ process GET_FRAGMENTS {
 
     """
     # first index the bam file
-    samtools index $bam
+    samtools index $options.args $bam
 
     # then, generate the fragments file
-    sinto fragments --nproc $task.cpus --bam $bam -f fragments
+    sinto fragments $options.args --nproc $task.cpus --bam $bam -f fragments
 
     """
 }

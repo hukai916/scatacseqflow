@@ -36,7 +36,7 @@ process QUALIMAP {
 
     """
     mem=\$(echo '$task.memory' | grep -o -E '[0-9]+')
-    qualimap bamqc --java-mem-size=\${mem}G -bam $bam -outdir bamqc
+    qualimap bamqc $options.args --java-mem-size=\${mem}G -bam $bam -outdir bamqc
 
     """
 }

@@ -35,7 +35,7 @@ process CELLRANGER_ATAC_COUNT {
     script:
 
     """
-    cellranger-atac count \
+    cellranger-atac count $options.args \
     --id cellranger_atac_count_$fastq_folder \
     --fastqs $fastq_folder \
     --reference $reference \

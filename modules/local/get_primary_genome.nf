@@ -36,5 +36,6 @@ process GET_PRIMARY_GENOME {
     cat genome.fa.fai | cut -f 1 | grep -v "_alt\$" | xargs -n 1 -I {} samtools faidx genome.fa {} >> primary_genome.fa
     gzip primary_genome.fa
 
+    rm genome.fa genome.fa.fai
     """
 }

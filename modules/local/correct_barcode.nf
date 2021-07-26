@@ -41,7 +41,7 @@ process CORRECT_BARCODE {
     script:
 
     """
-    correct_barcode.R \
+    correct_barcode.R $options.args \
     --barcode_file=$barcode_fastq \
     --whitelist_file=$barcode_whitelist \
     --path_output_fq=./

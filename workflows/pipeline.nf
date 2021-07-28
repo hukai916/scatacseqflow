@@ -157,6 +157,7 @@ workflow PREPROCESS {
           BWA_INDEX (params.ref_fasta)
           // mapping with the built index
         } else if (params.ref_fasta_ucsc) {
+          exit 1, 'WARNING: --ref_fasta_ucsc is not supported yet, pls use --ref_fasta_ensembl!'
           log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build bwa index, and map with bwa ..."
 
           // module : download_from_ucsc

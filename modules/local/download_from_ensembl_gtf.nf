@@ -30,7 +30,7 @@ process DOWNLOAD_FROM_ENSEMBL_GTF {
     val ensembl_release
 
     output:
-    path "*.fa.gz", emit: gtf
+    path "*.gtf.gz", emit: gtf
     path "CHECKSUMS", emit: genome_md5
     val genome_name, emit: genome_name
 

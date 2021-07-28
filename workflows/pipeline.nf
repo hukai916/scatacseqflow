@@ -67,6 +67,12 @@ include { MINIMAP2_MAP     } from '../modules/local/minimap2_map'    addParams( 
 include { QUALIMAP         } from '../modules/local/qualimap'    addParams( options: modules['qualimap'] )
 include { GET_FRAGMENTS         } from '../modules/local/get_fragments'    addParams( options: modules['get_fragments'] )
 
+include { DOWNLOAD_FROM_UCSC_GTF } from '../modules/local/download_from_ucsc_gtf'    addParams( options: modules['download_from_ucsc_gtf'] )
+include { DOWNLOAD_FROM_ENSEMBL_GTF } from '../modules/local/download_from_ensembl_gtf'    addParams( options: modules['download_from_ensembl_gtf'] )
+include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'             addParams( options: modules['cellranger_index'] )
+
+
+
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
 // include { MULTIQC               } from '../modules/nf-core/software/multiqc/main' addParams( options: multiqc_options              )
@@ -237,16 +243,38 @@ workflow PREPROCESS {
     // module: generate fragement file with sinto
   } else if (params.preprocess == "10xgenomics") {
     // log.info "INFO: --preprocess: 10xgenomics"
-    if (params.ref_cellranger == "") {
-      exit 1, 'Parameter --ref_cellranger: pls supply full path to reference!'
-    }
-
     // Module: prepare fastq folder
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
-    CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
-    // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
-    // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
-  } else if (params.preprocess == "biorad") {
+
+    if (params.ref_cellranger == "") {
+      log.info "Parameter --ref_cellranger not supplied, checking --ref_cellranger_ucsc/--ref_cellranger_ensembl!"
+
+      if (params.ref_cellranger_ucsc) {
+        log.info "Parameter --ref_cellranger_ucsc provided, will download genome, gtf, and build index with cellranger-atac."
+
+        // Module: download ucsc genome
+        DOWNLOAD_FROM_UCSC (params.ref_cellranger_ucsc)
+        // Module: download ucsc gtf
+        DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
+        // Module: prepare cellranger index
+        CELLRANGER_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta, DOWNLOAD_FROM_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
+      } else if (params.ref_cellranger_ensembl) {
+        // Module: download ucsc genome
+
+        // Module: download ucsc gtf
+
+        // Module: prepare cellranger index
+      }
+      // Module: run cellranger-atac count
+
+    } else {
+      log.info "Parameter --ref_cellranger supplied, will use it as index folder."
+      CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
+      // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
+      // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
+    }
+
+} else if (params.preprocess == "biorad") {
     // log.info "INFO: --preprocess: biorad"
     // log.info "INFO: must use biorad compatible sequencing data!"
     if (params.ref_bwa_index == "") {

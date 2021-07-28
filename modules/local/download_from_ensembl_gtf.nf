@@ -7,11 +7,11 @@ options        = initOptions(params.options)
 /*
  * Parse software version numbers
  */
-process DOWNLOAD_FROM_UCSC {
+process DOWNLOAD_FROM_ENSEMBL_GTF {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'download_from_ucsc', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'download_from_ucsc_gtf', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -29,24 +29,13 @@ process DOWNLOAD_FROM_UCSC {
     val genome_name
 
     output:
-    path "*.fa.gz", emit: genome_fasta
-    path "md5sum.txt", emit: genome_md5
-    val genome_name, emit: genome_name
+    path "*.gtf.gz", emit: gtf
 
     script:
-    download_link = "https://hgdownload.soe.ucsc.edu/goldenPath/" + genome_name + "/bigZips/" + genome_name + ".fa.gz"
-    md5_link = "https://hgdownload.soe.ucsc.edu/goldenPath/" + genome_name + "/bigZips/md5sum.txt"
+    download_link = "https://hgdownload.soe.ucsc.edu/goldenPath/" + genome_name + "/bigZips/genes/" + genome_name + ".ncbiRefSeq.gtf.gz"
 
     """
-    wget $md5_link -o logfile.md5.txt
-    wget $download_link -o logfile.genome.txt
-
-    (cat \$(basename $md5_link) | grep \$( basename $download_link) || true) > md5_to_check.txt
-
-    if [ -s md5_to_check.txt ]
-    then
-      md5sum -c md5_to_check.txt
-    fi
+    wget $download_link -o logfile.gtf.txt
 
     """
 }

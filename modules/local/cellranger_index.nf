@@ -50,16 +50,15 @@ process CELLRANGER_INDEX {
     gunzip -c $gtf > annotation.gtf
 
     # Prepare config file:
-    echo '{\n' >> index.config
-    echo ' organism: ' >> index.config
-    echo '\"$genome_name\"\n' >> index.config
-    echo ' genome: [' >> index.config
-    echo '\"genome_index\"]\n' >> index.config
-    echo 'input_fasta: [\"genome.fa\"]\n' >> index.config
-    echo 'input_gtf: [\"annotation.gtf\"]\n' >> index.config
-    echo 'non_nuclear_contigs: [\"chrM\"]\n' >> index.config
-    echo '}\n' >> index.config
-    
+    echo '{' >> index.config
+    echo '    organism: ' >> index.config
+    echo '\"$genome_name\"' >> index.config
+    echo '    genome: [ \"genome_index\"]' >> index.config
+    echo '    input_fasta: [\"genome.fa\"]' >> index.config
+    echo '    input_gtf: [\"annotation.gtf\"]' >> index.config
+    echo '    non_nuclear_contigs: [\"chrM\"]' >> index.config
+    echo '}' >> index.config
+
     # Make ref:
     cellranger-atac mkref --config=index.config
 

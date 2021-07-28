@@ -206,7 +206,7 @@ workflow PREPROCESS {
         } else if (params.ref_fasta_ensembl) {
           log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
 
-          // module : download_from_ucsc
+          // module : download_from_ensembl
           DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
           // module : bwa_index
           MINIMAP2_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
@@ -260,9 +260,9 @@ workflow PREPROCESS {
         CELLRANGER_INDEX (GET_PRIMARY_GENOME.out.genome_fasta, DOWNLOAD_FROM_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
       } else if (params.ref_cellranger_ensembl) {
         // Module: download ensembl genome
-        DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl)
+        DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, params.ensembl_release)
         // Module: download ensembl gtf
-        DOWNLOAD_FROM_ENSEMBL_GTF (params.ref_cellranger_ensembl)
+        DOWNLOAD_FROM_ENSEMBL_GTF (params.ref_cellranger_ensembl, params.ensembl_release)
         // Module: prepare cellranger index
         CELLRANGER_INDEX (DOWNLOAD_FROM_ENSEMBL_GTF.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
       }

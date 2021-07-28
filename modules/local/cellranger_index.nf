@@ -56,7 +56,7 @@ process CELLRANGER_INDEX {
     echo '    genome: [ \"genome_index\"]' >> index.config
     echo '    input_fasta: [\"genome.fa\"]' >> index.config
     echo '    input_gtf: [\"annotation.gtf\"]' >> index.config
-    echo '    non_nuclear_contigs: [\"chrM\"]' >> index.config
+    #echo '    non_nuclear_contigs: [\"MT\"]' >> index.config
     echo '}' >> index.config
 
     # Make ref:

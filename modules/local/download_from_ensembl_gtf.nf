@@ -37,7 +37,7 @@ process DOWNLOAD_FROM_ENSEMBL_GTF {
     script:
     def dict_genome_name = [homo_sapiens: "Homo_sapiens.GRCh38", mus_musculus: "Mus_musculus.GRCm39", danio_rerio: "Danio_rerio.GRCz11"]
 
-    download_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/gtf/" + genome_name + "/" + dict_genome_name[genome_name] + "." + ensembl_release + "." + ".gtf.gz"
+    download_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/gtf/" + genome_name + "/" + dict_genome_name[genome_name] + "." + ensembl_release + ".gtf.gz"
 
     md5_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/gtf/" + genome_name + "/CHECKSUMS"
 

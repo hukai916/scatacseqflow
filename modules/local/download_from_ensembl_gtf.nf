@@ -11,7 +11,7 @@ process DOWNLOAD_FROM_ENSEMBL_GTF {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'download_from_ucsc_gtf', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'download_from_ensembl_gtf', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -27,15 +27,40 @@ process DOWNLOAD_FROM_ENSEMBL_GTF {
 
     input:
     val genome_name
+    val ensembl_release
 
     output:
-    path "*.gtf.gz", emit: gtf
+    path "*.fa.gz", emit: gtf
+    path "CHECKSUMS", emit: genome_md5
+    val genome_name, emit: genome_name
 
     script:
-    download_link = "https://hgdownload.soe.ucsc.edu/goldenPath/" + genome_name + "/bigZips/genes/" + genome_name + ".ncbiRefSeq.gtf.gz"
+    def dict_genome_name = [homo_sapiens: "Homo_sapiens.GRCh38", mus_musculus: "Mus_musculus.GRCm39", danio_rerio: "Danio_rerio.GRCz11"]
+
+    download_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/gtf/" + genome_name + "/" + dict_genome_name[genome_name] + "." + ensembl_release + "." + ".gtf.gz"
+
+    md5_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/gtf/" + genome_name + "/CHECKSUMS"
 
     """
-    wget $download_link -o logfile.gtf.txt
+    wget $md5_link -o logfile.md5.txt
+    wget $download_link -o logfile.genome.txt
+
+    (cat \$(basename $md5_link) | grep \$( basename $download_link) || true) > md5_to_check.txt
+
+    if [ -s md5_to_check.txt ]
+    then
+      real=\$(cat md5_to_check.txt | cut -f 1,2 -d " ")
+      measure=\$(sum \$( basename $download_link))
+
+      if [ "\$real" == "\$measure" ]
+      then
+        echo "\$real,\$measure"
+        exit 0
+      else
+        echo "\$real,\$measure"
+        exit 1
+      fi
+    fi
 
     """
 }

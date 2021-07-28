@@ -71,8 +71,6 @@ include { DOWNLOAD_FROM_UCSC_GTF } from '../modules/local/download_from_ucsc_gtf
 include { DOWNLOAD_FROM_ENSEMBL_GTF } from '../modules/local/download_from_ensembl_gtf'    addParams( options: modules['download_from_ensembl_gtf'] )
 include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'             addParams( options: modules['cellranger_index'] )
 
-
-
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
 // include { MULTIQC               } from '../modules/nf-core/software/multiqc/main' addParams( options: multiqc_options              )
@@ -256,14 +254,17 @@ workflow PREPROCESS {
         DOWNLOAD_FROM_UCSC (params.ref_cellranger_ucsc)
         // Module: download ucsc gtf
         DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
+        // Module: extract primary genome
+        GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
         // Module: prepare cellranger index
-        CELLRANGER_INDEX (DOWNLOAD_FROM_UCSC.out.genome_fasta, DOWNLOAD_FROM_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
+        CELLRANGER_INDEX (GET_PRIMARY_GENOME.out.genome_fasta, DOWNLOAD_FROM_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
       } else if (params.ref_cellranger_ensembl) {
-        // Module: download ucsc genome
-
-        // Module: download ucsc gtf
-
+        // Module: download ensembl genome
+        DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl)
+        // Module: download ensembl gtf
+        DOWNLOAD_FROM_ENSEMBL_GTF (params.ref_cellranger_ensembl)
         // Module: prepare cellranger index
+        CELLRANGER_INDEX (DOWNLOAD_FROM_ENSEMBL_GTF.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
       }
       // Module: run cellranger-atac count
 

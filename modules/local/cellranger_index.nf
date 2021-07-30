@@ -40,7 +40,7 @@ process CELLRANGER_INDEX {
     gunzip -c $gtf > annotation.gtf
 
     # Prepare config file:
-    mem=$(echo \"$task.memory\" | sed "s/ GB//")
+    mem=\$(echo \"$task.memory\" | sed "s/ GB//")
     echo '{' >> index.config
     echo '    organism: \"$genome_name\"' >> index.config
     echo '    genome: [ \"genome_index\"]' >> index.config

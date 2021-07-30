@@ -257,10 +257,12 @@ workflow PREPROCESS {
         DOWNLOAD_FROM_UCSC (params.ref_cellranger_ucsc)
         // Module: download ucsc gtf
         DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
+        // Module: fix gtf
+        // FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf)
         // Module: extract primary genome
         GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
         // Module: prepare cellranger index
-        CELLRANGER_INDEX (GET_PRIMARY_GENOME.out.genome_fasta, DOWNLOAD_FROM_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
+        CELLRANGER_INDEX (GET_PRIMARY_GENOME.out.genome_fasta, FIX_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
       } else if (params.ref_cellranger_ensembl) {
         // Module: download ensembl genome
         DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, params.ensembl_release)

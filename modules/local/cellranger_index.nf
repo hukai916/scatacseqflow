@@ -33,16 +33,6 @@ process CELLRANGER_INDEX {
     path "genome_index", emit: index
 
     script:
-    File file = new File("index.config")
-    file << "{\n"
-    file << " organism: "
-    file << "\"$genome_name\"\n"
-    file << " genome: ["
-    file << "\"genome_index\"]\n"
-    file << "input_fasta: [\"genome.fa\"]\n"
-    file << "input_gtf: [\"annotation.gtf\"]\n"
-    file << "non_nuclear_contigs: [\"chrM\"]\n"
-    file << "}\n"
 
     """
     # Unzip genome_fasta and gtf file
@@ -50,13 +40,16 @@ process CELLRANGER_INDEX {
     gunzip -c $gtf > annotation.gtf
 
     # Prepare config file:
+    mem=$(echo \"$task.memory\" | sed "s/ GB//")
     echo '{' >> index.config
-    echo '    organism: ' >> index.config
-    echo '\"$genome_name\"' >> index.config
+    echo '    organism: \"$genome_name\"' >> index.config
     echo '    genome: [ \"genome_index\"]' >> index.config
     echo '    input_fasta: [\"genome.fa\"]' >> index.config
     echo '    input_gtf: [\"annotation.gtf\"]' >> index.config
     #echo '    non_nuclear_contigs: [\"MT\"]' >> index.config
+    echo 'nthreads: $task.cpus' >> index.config
+    echo 'memgb: \$mem' >> index.config
+
     echo '}' >> index.config
 
     # Make ref:

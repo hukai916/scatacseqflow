@@ -7,7 +7,7 @@ options        = initOptions(params.options)
 /*
  * Parse software version numbers
  */
-process GET_PRIMARY_GENOME {
+process GET_PRIMARY_GTF {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,

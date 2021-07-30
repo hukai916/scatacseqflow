@@ -48,7 +48,7 @@ process CELLRANGER_INDEX {
     echo '    input_gtf: [\"annotation.gtf\"]' >> index.config
     #echo '    non_nuclear_contigs: [\"MT\"]' >> index.config
     echo 'nthreads: $task.cpus' >> index.config
-    echo 'memgb: \$mem' >> index.config
+    echo "memgb: \$mem" >> index.config
 
     echo '}' >> index.config
 

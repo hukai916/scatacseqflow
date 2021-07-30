@@ -29,11 +29,14 @@ process FIX_UCSC_GTF {
     path gtf
 
     output:
-    path "fixed.*", emit: gtf
+    path "fixed.*.gz", emit: gtf
 
     script:
 
     """
-    sort_gtf.py $gtf > fixed.$gtf
+    gunzip -c $gtf > annotation.gtf
+    sort_gtf.py annotation.gtf > fixed.annotation.gtf
+    gzip fixed.annotation.gtf
+
     """
 }

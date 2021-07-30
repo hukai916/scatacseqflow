@@ -112,8 +112,10 @@ workflow PREPROCESS {
     log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."
   }
 
-  if (!(params.barcode_whitelist)) {
-    log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
+  if (params.preprocess == "default") {
+    if (!(params.barcode_whitelist)) {
+      log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
+    }
   }
 
   // Module: prepare 10xgenomics folder structure

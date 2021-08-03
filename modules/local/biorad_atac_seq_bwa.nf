@@ -8,7 +8,7 @@ options        = initOptions(params.options)
  * Parse software version numbers
  */
 process BIORAD_ATAC_SEQ_BWA {
-    label 'process_low'
+    label 'process_long'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'biorad_alignments', publish_id:'') }

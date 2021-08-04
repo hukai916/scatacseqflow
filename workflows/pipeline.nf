@@ -121,7 +121,7 @@ workflow PREPROCESS {
 
   // Module: prepare 10xgenomics folder structure
   if (params.preprocess == "default") {
-    // log.info "INFO: --preprocess: default"
+    log.info "INFO(2): --preprocess: default"
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
     // module: fastQC
     FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)

@@ -128,7 +128,7 @@ workflow PREPROCESS {
 
     // module: barcode correction (optional) and add barcode: correct barcode fastq given whitelist and barcode fastq file
     if (!(params.barcode_whitelist)) {
-      // log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
+      log.info "NOTICE(2): --barcode_whitelist: not supplied, skip barcode correction!"
 
       ADD_BARCODE_TO_READS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
     } else {

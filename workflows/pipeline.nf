@@ -121,14 +121,14 @@ workflow PREPROCESS {
 
   // Module: prepare 10xgenomics folder structure
   if (params.preprocess == "default") {
-    log.info "INFO(2): --preprocess: default"
+    // log.info "INFO(2): --preprocess: default"
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
     // module: fastQC
     FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
 
     // module: barcode correction (optional) and add barcode: correct barcode fastq given whitelist and barcode fastq file
     if (!(params.barcode_whitelist)) {
-      log.info "NOTICE(2): --barcode_whitelist: not supplied, skip barcode correction!"
+      // log.info "NOTICE(2): --barcode_whitelist: not supplied, skip barcode correction!"
 
       ADD_BARCODE_TO_READS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
     } else {
@@ -160,7 +160,7 @@ workflow PREPROCESS {
           BWA_INDEX (params.ref_fasta)
           // mapping with the built index
         } else if (params.ref_fasta_ucsc) {
-          exit 1, 'WARNING: --ref_fasta_ucsc is not supported yet, pls use --ref_fasta_ensembl!'
+          // exit 1, 'WARNING: --ref_fasta_ucsc is not supported yet, pls use --ref_fasta_ensembl!'
           log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build bwa index, and map with bwa ..."
 
           // module : download_from_ucsc

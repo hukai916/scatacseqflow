@@ -81,6 +81,7 @@ include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'           
 
 // For ArchR functions:
 include { ARCHR_CREATE_ARROWFILES } from '../modules/local/archr_create_arrowfiles' addParams( options: modules['archr_create_arrowfiles'] )
+include { ARCHR_ADD_DOUBLETSCORES } from '../modules/local/archr_add_doubletscores' addParams( options: modules['archr_add_doubletscores'] )
 
 
 // // Modules: nf-core/modules

@@ -28,12 +28,13 @@ process ARCHR_ADD_DOUBLETSCORES {
     input:
     val sample_name
     path arrowfile
+    path quality_control
     // val archr_genome
     // val archr_thread
 
     output:
     val sample_name, emit: sample_name
-    path "QualityControl", emit: quality_control
+    path quality_control, emit: quality_control
 
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work

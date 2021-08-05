@@ -80,7 +80,7 @@ include { DOWNLOAD_FROM_ENSEMBL_GTF } from '../modules/local/download_from_ensem
 include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'             addParams( options: modules['cellranger_index'] )
 
 // For ArchR functions:
-include { ArchR_createArrowFiles } from '../modules/local/ArchR_createArrowFiles' addParams( options: modules['ArchR_createArrowFiles'] )
+include { ARCHR_CREATE_ARROWFILES } from '../modules/local/archr_create_arrowfiles' addParams( options: modules['archr_create_arrowfiles'] )
 
 
 // // Modules: nf-core/modules
@@ -324,7 +324,7 @@ workflow DOWNSTREAM {
     ch_software_versions = Channel.empty()
     log.info "INFO: --downstream: ArchR"
     // Module: create ArrowFile
-    ArchR_createArrowFiles(params.sample_name, params.fragment, params.archr_genome, params.archr_thread)
+    ARCHR_CREATE_ARROWFILES(params.sample_name, params.fragment, params.archr_genome, params.archr_thread)
 
 
     /*

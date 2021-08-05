@@ -7,11 +7,11 @@ options        = initOptions(params.options)
 /*
  * Parse software version numbers
  */
-process ArchR_createArrowFiles {
+process ARCHR_CREATE_ARROWFILES {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'ArchR_createArrowFiles', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'archr_create_arrowfiles', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {

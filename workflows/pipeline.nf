@@ -325,6 +325,10 @@ workflow DOWNSTREAM {
     log.info "INFO: --downstream: ArchR"
     // Module: create ArrowFile
     ARCHR_CREATE_ARROWFILES(params.sample_name, params.fragment, params.archr_genome, params.archr_thread)
+    // Module: create
+    ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
+    
+
 
 
     /*

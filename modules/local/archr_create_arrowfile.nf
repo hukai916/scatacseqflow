@@ -38,23 +38,23 @@ process ARCHR_CREATE_ARROWFILE {
     script:
 
     """
-    #!/usr/bin/R
-
+    echo '
     library(ArchR)
     addArchRGenome("hg19")
     addArchRThreads(threads = 4)
 
-    inputFiles <- $fragment
-    names(inputFiles) <- $sample_name
+    inputFiles <- "$fragment"
+    names(inputFiles) <- "$sample_name"
 
     ArrowFiles <- createArrowFiles(
       inputFiles = inputFiles,
       sampleNames = names(inputFiles),
       minTSS = 4, #Dont set this too high because you can always increase later
       minFrags = 1000,
-      addTileMat = TRUE,
-      addGeneScoreMat = TRUE
-    )
+      $options.args
+    )' > run.R
+
+    Rscript run.R
 
     """
 }

@@ -23,7 +23,7 @@ if (params.preprocess) {
   // will perform downstream analysis
   if (params.sample_name) {} else { exit 1, "Input sample_name must be specified!" }
   if (params.fragment) { ch_fragment = file(params.fragment) } else { exit 1, "Input fragment must be provided!" }
-  
+
 }
 
 ////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ include { DOWNLOAD_FROM_ENSEMBL_GTF } from '../modules/local/download_from_ensem
 include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'             addParams( options: modules['cellranger_index'] )
 
 // For ArchR functions:
-include { ARCHR_CREATE_ARROWFILE } from '../modules/local/archr_create_arrowfile' addParams( options: modules['archr_create_arrowfile'] )
+include { ArchR_createArrowFiles } from '../modules/local/ArchR_createArrowFiles' addParams( options: modules['ArchR_createArrowFiles'] )
 
 
 // // Modules: nf-core/modules
@@ -324,7 +324,7 @@ workflow DOWNSTREAM {
     ch_software_versions = Channel.empty()
     log.info "INFO: --downstream: ArchR"
     // Module: create ArrowFile
-    ARCHR_CREATE_ARROWFILE(params.sample_name, params.fragment)
+    ArchR_createArrowFiles(params.sample_name, params.fragment, params.archr_genome, params.archr_thread)
 
 
     /*

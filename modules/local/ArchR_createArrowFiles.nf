@@ -7,11 +7,11 @@ options        = initOptions(params.options)
 /*
  * Parse software version numbers
  */
-process ARCHR_CREATE_ARROWFILE {
+process ArchR_createArrowFiles {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'archr_create_arrowfile', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'ArchR_createArrowFiles', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -27,21 +27,22 @@ process ARCHR_CREATE_ARROWFILE {
 
     input:
     val sample_name
-    // val archr_genome
-    // val archr_thread
     path fragment
+    val archr_genome
+    val archr_thread
 
     output:
     val sample_name, emit: sample_name
-    // obj_arrowfile, emit: obj_arrowfile
+    path "QualityControl", emit: quality_control
+    path "*.arrow", emit: arrowfile
 
     script:
-
+    // for unknown reason, #!/usr/bin/R + direct R codes won't work
     """
     echo '
     library(ArchR)
-    addArchRGenome("hg19")
-    addArchRThreads(threads = 4)
+    addArchRGenome("$archr_genome")
+    addArchRThreads(threads = $archr_thread)
 
     inputFiles <- "$fragment"
     names(inputFiles) <- "$sample_name"
@@ -49,8 +50,6 @@ process ARCHR_CREATE_ARROWFILE {
     ArrowFiles <- createArrowFiles(
       inputFiles = inputFiles,
       sampleNames = names(inputFiles),
-      minTSS = 4, #Dont set this too high because you can always increase later
-      minFrags = 1000,
       $options.args
     )' > run.R
 

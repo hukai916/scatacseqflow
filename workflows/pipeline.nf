@@ -72,6 +72,10 @@ include { FIX_UCSC_GTF } from '../modules/local/fix_ucsc_gtf'    addParams( opti
 include { DOWNLOAD_FROM_ENSEMBL_GTF } from '../modules/local/download_from_ensembl_gtf'    addParams( options: modules['download_from_ensembl_gtf'] )
 include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'             addParams( options: modules['cellranger_index'] )
 
+// For ArchR functions:
+include { ARCHR_CREATE_ARROWFILE } from '../modules/local/archr_create_arrowfile' addParams( options: modules['archr_create_arrowfile'] )
+
+
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
 // include { MULTIQC               } from '../modules/nf-core/software/multiqc/main' addParams( options: multiqc_options              )
@@ -311,6 +315,10 @@ workflow PREPROCESS {
 workflow DOWNSTREAM {
 
     ch_software_versions = Channel.empty()
+    log.info "INFO: --downstream: ArchR"
+    // Module: create ArrowFile
+    ARCHR_CREATE_ARROWFILE(params.sample_name, params.fragment)
+
 
     /*
      * SUBWORKFLOW: Read in samplesheet, validate and stage input files

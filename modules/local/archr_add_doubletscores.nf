@@ -42,7 +42,7 @@ process ARCHR_ADD_DOUBLETSCORES {
     library(ArchR)
 
     addDoubletScores(
-    input = $arrowfile,
+    input = "$arrowfile",
     $options.args)
     ' > run.R
 

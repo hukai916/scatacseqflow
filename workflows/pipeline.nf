@@ -17,7 +17,14 @@ params.summary_params = [:]
 // for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
-if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+if (params.preprocess) {
+  if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+} else {
+  // will perform downstream analysis
+  if (params.sample_name) {} else { exit 1, "Input sample_name must be specified!" }
+  if (params.fragment) { ch_fragment = file(params.fragment) } else { exit 1, "Input fragment must be provided!" }
+  
+}
 
 ////////////////////////////////////////////////////
 /* --          CONFIG FILES                    -- */

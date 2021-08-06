@@ -83,6 +83,7 @@ include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'           
 include { ARCHR_CREATE_ARROWFILES } from '../modules/local/archr_create_arrowfiles' addParams( options: modules['archr_create_arrowfiles'] )
 include { ARCHR_ADD_DOUBLETSCORES } from '../modules/local/archr_add_doubletscores' addParams( options: modules['archr_add_doubletscores'] )
 include { ARCHR_ARCHRPROJECT } from '../modules/local/archr_archrproject' addParams( options: modules['archr_archrproject'] )
+include { ARCHR_ARCHRPROJECT_QC } from '../modules/local/archr_archrproject_qc' addParams( options: modules['archr_archrproject_qc'] )
 
 
 // // Modules: nf-core/modules
@@ -338,7 +339,7 @@ workflow DOWNSTREAM {
     // NOTE: should use collect to collect all samples, and merge them into one ArchRProject.
 
     // Module: ArchRProject QC
-    // ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.sample_name, ARCHR_ARCHRPROJECT.out.archr_project)
+    ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.sample_name, ARCHR_ARCHRPROJECT.out.archr_project)
 
 
 

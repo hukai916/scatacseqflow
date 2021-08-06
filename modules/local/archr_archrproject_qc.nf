@@ -33,7 +33,7 @@ process ARCHR_ARCHRPROJECT_QC {
 
     output:
     val sample_name, emit: sample_name
-    // path "doublet_qc", emit: qc
+    path "test.pdf", emit: pdf
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.
     // This is because the quality_control folder content gets updated after each run, and it will be used as input for itself, so each time, it rerun, the timestamp of this folder is newer.
@@ -43,11 +43,18 @@ process ARCHR_ARCHRPROJECT_QC {
     """
     echo '
     library(ArchR)
+    proj <- readRDS($archr_project, refhook = NULL)
 
-    addDoubletScores(
-    input  = "$arrowfile",
-    outDir = "doublet_qc",
-    $options.args)
+    p1 <- plotGroups(
+      ArchRProject = proj,
+      groupBy = "Sample",
+      colorBy = "cellColData",
+      name = "TSSEnrichment",
+      plotAs = "ridges"
+    )
+
+    plotPDF(p1, name = "test.pdf", ArchRProj = proj, addDOC = FALSE, width = 4, height = 4)
+
     ' > run.R
 
     Rscript run.R

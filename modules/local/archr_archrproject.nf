@@ -46,7 +46,7 @@ process ARCHR_ARCHRPROJECT {
     echo "
     library(ArchR)
 
-    addArchRGenome(\"$archr_genome\")
+    addArchRGenome(\\"$archr_genome\\")
     addArchRThreads(threads = $archr_thread)
 
     proj <- ArchRProject(

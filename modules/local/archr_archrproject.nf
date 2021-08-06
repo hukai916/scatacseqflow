@@ -35,7 +35,7 @@ process ARCHR_ARCHRPROJECT {
 
     output:
     val sample_name, emit: sample_name
-    // path sample_name, emit: output_dir
+    path "ArchRProject", emit: archrproject_dir
     path "proj.rds", emit: archr_project
 
     script:
@@ -49,7 +49,7 @@ process ARCHR_ARCHRPROJECT {
 
     proj <- ArchRProject(
     ArrowFiles = "$arrowfile",
-    outputDirectory = "$sample_name",
+    outputDirectory = "ArchRProject",
     $options.args)
 
     saveRDS(proj, file = "proj.rds")

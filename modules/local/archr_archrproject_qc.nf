@@ -55,7 +55,6 @@ process ARCHR_ARCHRPROJECT_QC {
       ) + geom_hline(yintercept = 4, lty = "dashed") + geom_vline(xintercept = 3, lty = "dashed")
     plotPDF(p, name = "TSS-vs-Frags.pdf", ArchRProj = NULL, addDOC = FALSE)
 
-
     # Create QC plot: some statistics: ridge plot, violin plot for TSS enrichment score, violin plot for log10(unique nuclear fragments)
     p1 <- plotGroups(
       ArchRProj = proj,
@@ -89,8 +88,11 @@ process ARCHR_ARCHRPROJECT_QC {
       alpha = 0.4,
       addBoxPlot = TRUE
       )
+    plotPDF(p1,p2,p3,p4, name = "QC-Sample-Statistics.pdf", ArchRProj = NULL, addDOC = FALSE, width = 4, height = 4)
 
-    plotPDF(p1,p2,p3,p4 name = "QC-Sample-Statistics.pdf", ArchRProj = NULL, addDOC = FALSE, width = 4, height = 4)
+    # Create QC plot: Sample Fragment Size Distribution and TSS Enrichment Profiles
+    #plotFragmentSizes(ArchRProj = projHeme1)
+
 
     ' > run.R
 

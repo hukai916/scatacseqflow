@@ -36,6 +36,7 @@ process ARCHR_ADD_DOUBLETSCORES {
     val sample_name, emit: sample_name
     // path quality_control, emit: quality_control
     path "QualityControl", emit: quality_control
+    // Note that if using above syntax, the -resume option won't work
 
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work

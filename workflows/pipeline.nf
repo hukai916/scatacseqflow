@@ -334,6 +334,8 @@ workflow DOWNSTREAM {
     // Module: create ArchRProject
     ARCHR_ARCHRPROJECT(ARCHR_ADD_DOUBLETSCORES.out.sample_name, params.archr_genome, params.archr_thread, ARCHR_ADD_DOUBLETSCORES.out.arrowfile) // Note, ARCH_ADD_DOUBLETSCORES will modify arrowfile in place, therefore, in ARCHR_ARCHRPROJECT, must use the arrowfile generated from ARCHR_ADD_DOUBLETSCORES, otherwise, ARCHR_CREATE_ARROWFILES generate arrowfile will be updated each time ARCHR_ADD_DOUBLETSCORES, so that the -resume won't work for ARCHR_ARCHRPROJECT as long as ARCHR_ADD_DOUBLETSCORES runs.
 
+    // NOTE: should use collect to collect all samples, and merge them into one ArchRProject. 
+
     // Module: ArchRProject QC
     // ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.sample_name, ARCHR_ARCHRPROJECT.out.archr_project)
 

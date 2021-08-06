@@ -35,7 +35,7 @@ process ARCHR_ADD_DOUBLETSCORES {
     output:
     val sample_name, emit: sample_name
     path "doublet_qc", emit: qc
-    path "arrowfile_doublet.arrow", emit: arrowfile
+    path "*_doublet.arrow", emit: arrowfile
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.
     // This is because the quality_control folder content gets updated after each run, and it will be used as input for itself, so each time, it rerun, the timestamp of this folder is newer.
@@ -45,13 +45,13 @@ process ARCHR_ADD_DOUBLETSCORES {
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
     """
     mkdir -p doublet_qc/$sample_name
-    cp $arrowfile arrowfile_doublet.arrow # so that the original arrowfile doesn't get modified in place, this is to use the -resume option of nextflow
+    cp $arrowfile ${sample_name}_doublet.arrow # so that the original arrowfile doesn't get modified in place, this is to use the -resume option of nextflow
 
     echo '
     library(ArchR)
 
     addDoubletScores(
-    input  = "arrowfile_doublet",
+    input  = "${sample_name}_doublet.arrow",
     outDir = "doublet_qc",
     $options.args)
     ' > run.R

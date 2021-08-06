@@ -87,6 +87,7 @@ include { ARCHR_ARCHRPROJECT } from '../modules/local/archr_archrproject' addPar
 include { ARCHR_ARCHRPROJECT_QC } from '../modules/local/archr_archrproject_qc' addParams( options: modules['archr_archrproject_qc'] )
 include { ARCHR_DIMENSION_REDUCTION } from '../modules/local/archr_dimension_reduction' addParams( options: modules['archr_dimension_reduction'] )
 include { ARCHR_BATCH_CORRECTION } from '../modules/local/archr_batch_correction' addParams( options: modules['archr_batch_correction'] )
+include { ARCHR_CLUSTERING } from '../modules/local/archr_clustering' addParams( options: modules['archr_clustering'] )
 
 
 // // Modules: nf-core/modules
@@ -364,7 +365,7 @@ workflow DOWNSTREAM {
     ARCHR_BATCH_CORRECTION(ARCHR_DIMENSION_REDUCTION.out.archr_project)
 
     // Module: clustering with Seurat's FindClusters() function
-    // ARCHR_CLUSTERING(ARCHR_BATCH_CORRECTION.out.archr_project)
+    ARCHR_CLUSTERING(ARCHR_BATCH_CORRECTION.out.archr_project)
 
 
 

@@ -7,11 +7,11 @@ options        = initOptions(params.options)
 /*
  * Parse software version numbers
  */
-process ARCHR_DIMENSION_REDUCTION {
+process ARCHR_CLUSTERING {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'archr_dimension_reduction', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'archr_clustering', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -29,7 +29,7 @@ process ARCHR_DIMENSION_REDUCTION {
     path archr_project
 
     output:
-    path "proj_lsi.rds", emit: archr_project
+    path "proj_clustering.rds", emit: archr_project
 
     script:
 
@@ -38,14 +38,13 @@ process ARCHR_DIMENSION_REDUCTION {
     library(ArchR)
     proj <- readRDS("$archr_project", refhook = NULL)
 
-    proj2 <- addIterativeLSI(
-      ArchRProj = proj,
-      useMatrix = "TileMatrix",
-      name = "IterativeLSI",
+    proj2 <- addClusters(
+      input = proj,
+      reducedDims = "IterativeLSI",
       $options.args
     )
 
-    saveRDS(proj2, file = "proj_lsi.rds")
+    saveRDS(proj2, file = "proj_clustering.rds")
     ' > run.R
 
     Rscript run.R

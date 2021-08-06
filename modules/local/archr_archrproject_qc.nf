@@ -31,7 +31,8 @@ process ARCHR_ARCHRPROJECT_QC {
     // val archr_thread
 
     output:
-    path "Plots/p1.pdf", emit: pdf_p1
+    path "Plots/TSS-vs-Frags.pdf", emit: pdf_tss_vs_frags
+    path "Plots/QC-Sample-Statistics.pdf", emit: pdf_qc_sample_statistics
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.
     // This is because the quality_control folder content gets updated after each run, and it will be used as input for itself, so each time, it rerun, the timestamp of this folder is newer.
@@ -43,7 +44,19 @@ process ARCHR_ARCHRPROJECT_QC {
     library(ArchR)
     proj <- readRDS("$archr_project", refhook = NULL)
 
-    # Create 
+    # Create QC plot: log10(Unique Fragments) vs TSS enrichment score:
+    df <- getCellColData(proj, select = c("log10(nFrags)","TSSEnrichment"))
+    p <- ggPoint(x = df[,1], y = df[,2], colorDensity = TRUE,
+      continuousSet = "sambaNight",
+      xlabel = "Log10 Unique Fragments",
+      ylabel = "TSS Enrichment",
+      xlim = c(log10(500), quantile(df[,1], probs = 0.99)),
+      ylim = c(0, quantile(df[,2], probs = 0.99))
+      ) + geom_hline(yintercept = 4, lty = "dashed") + geom_vline(xintercept = 3, lty = "dashed")
+    plotPDF(p, name = "TSS-vs-Frags.pdf", ArchRProj = NULL, addDOC = FALSE)
+
+
+    # Create QC plot: some statistics: ridge plot, violin plot for TSS enrichment score, violin plot for log10(unique nuclear fragments)
     p1 <- plotGroups(
       ArchRProj = proj,
       groupBy = "Sample",
@@ -51,8 +64,33 @@ process ARCHR_ARCHRPROJECT_QC {
       name = "TSSEnrichment",
       plotAs = "ridges"
     )
+    p2 <- plotGroups(
+      ArchRProj = proj,
+      groupBy = "Sample",
+      colorBy = "cellColData",
+      name = "TSSEnrichment",
+      plotAs = "violin",
+      alpha = 0.4,
+      addBoxPlot = TRUE
+    )
+    p3 <- plotGroups(
+      ArchRProj = proj,
+      groupBy = "Sample",
+      colorBy = "cellColData",
+      name = "log10(nFrags)",
+      plotAs = "ridges"
+    )
+    p4 <- plotGroups(
+      ArchRProj = proj,
+      groupBy = "Sample",
+      colorBy = "cellColData",
+      name = "log10(nFrags)",
+      plotAs = "violin",
+      alpha = 0.4,
+      addBoxPlot = TRUE
+      )
 
-    plotPDF(p1, name = "p1.pdf", ArchRProj = NULL, addDOC = FALSE, width = 4, height = 4)
+    plotPDF(p1,p2,p3,p4 name = "QC-Sample-Statistics.pdf", ArchRProj = NULL, addDOC = FALSE, width = 4, height = 4)
 
     ' > run.R
 

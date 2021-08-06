@@ -78,7 +78,9 @@ process ARCHR_CLUSTERING {
       color = paletteContinuous("whiteBlue"),
       border_color = "black"
     )
-    plotPDF(p1,p2, name = "Cluster-heatmap.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
+    plotPDF(p1, p2, name = "Cluster-heatmap.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
+
+
 
     ' > run.R
 

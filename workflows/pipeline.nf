@@ -88,6 +88,7 @@ include { ARCHR_ARCHRPROJECT_QC } from '../modules/local/archr_archrproject_qc' 
 include { ARCHR_DIMENSION_REDUCTION } from '../modules/local/archr_dimension_reduction' addParams( options: modules['archr_dimension_reduction'] )
 include { ARCHR_BATCH_CORRECTION } from '../modules/local/archr_batch_correction' addParams( options: modules['archr_batch_correction'] )
 include { ARCHR_CLUSTERING } from '../modules/local/archr_clustering' addParams( options: modules['archr_clustering'] )
+include { ARCHR_EMBEDDING } from '../modules/local/archr_embedding' addParams( options: modules['archr_embedding'] )
 
 
 // // Modules: nf-core/modules
@@ -368,7 +369,7 @@ workflow DOWNSTREAM {
     ARCHR_CLUSTERING(ARCHR_BATCH_CORRECTION.out.archr_project)
 
     // Module: single-cell embeddings
-    // ARCHR_EMBEDDING()
+    ARCHR_EMBEDDING(ARCHR_CLUSTERING.out.archr_project)
 
 
 

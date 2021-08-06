@@ -29,9 +29,13 @@ process ARCHR_EMBEDDING {
     path archr_project
 
     output:
-    path "proj_clustering.rds", emit: archr_project
-    path "Cluster-matrix.csv", emit: csv_cluster_matrix
-    path "Plots/Cluster-heatmap.pdf", emit: pdf_cluster_heatmap
+    path "proj_embedding.rds", emit: archr_project
+    path "Plots/Plot-UMAP-Sample-Clusters.pdf", emit: pdf_umap_sample_clusters
+    path "Plots/Plot-UMAP-Sample-ScranClusters.pdf", emit: pdf_umap_sample_scranclusters
+    path "Plots/Plot-TSNE-Sample-Clusters.pdf", emit: pdf_tsne_sample_clusters
+    path "Plots/Plot-tSNE-Sample-ScranClusters.pdf", emit: pdf_tsne_sample_scranclusters
+    path "Plots/Plot-UMAP2Harmony-Sample-Clusters.pdf", emit: pdf_umap2harmony_sample_clusters
+    path "Plots/Plot-TSNE2Harmony-Sample-Clusters.pdf", emit: pdf_tsne2harmony_sample_clusters
 
     script:
 
@@ -54,21 +58,53 @@ process ARCHR_EMBEDDING {
       $options.args2
     )
 
-
-    saveRDS(proj2, file = "proj_clustering.rds")
-
-    # Save text summary and heatmap summary
-    cM <- confusionMatrix(paste0(proj2\$Clusters), paste0(proj2\$Sample))
-    write.csv(cM,file="Cluster-matrix.csv")
-
-    library(pheatmap)
-    cM <- cM / Matrix::rowSums(cM)
-    p <- pheatmap::pheatmap(
-      mat = as.matrix(cM),
-      color = paletteContinuous("whiteBlue"),
-      border_color = "black"
+    proj2 <- addUMAP(
+      ArchRProj = proj,
+      reducedDims = "Harmony",
+      name = "UMAP",
+      $options.args
     )
-    plotPDF(p, name = "Cluster-heatmap.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
+
+    proj2 <- addTSNE(
+      ArchRProj = proj2,
+      reducedDims = "Harmony",
+      name = "TSNE",
+      $options.args2
+    )
+
+    saveRDS(proj2, file = "proj_embedding.rds")
+
+    # Plotting for UMAP with seurat clustering:
+    p1 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Sample", embedding = "UMAP")
+    p2 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Clusters", embedding = "UMAP")
+    plotPDF(p1, p2, name = "Plot-UMAP-Sample-Clusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
+
+    # Plotting for UMAP with scran clustering:
+    p3 <- plotEmbedding(ArchRProj = projHeme2, colorBy = "cellColData", name = "Sample", embedding = "UMAP")
+    p4 <- plotEmbedding(ArchRProj = projHeme2, colorBy = "cellColData", name = "ScranClusters", embedding = "UMAP")
+    plotPDF(p3, p4, name = "Plot-UMAP-Sample-ScranClusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
+
+
+    # Plotting for tSNE with seurat clustering:
+    p11 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Sample", embedding = "TSNE")
+    p22 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Clusters", embedding = "TSNE")
+    plotPDF(p11, p22, name = "Plot-tSNE-Sample-Clusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
+
+    # Plotting for tSNE with scran clustering:
+    p33 <- plotEmbedding(ArchRProj = projHeme2, colorBy = "cellColData", name = "Sample", embedding = "TSNE")
+    p44 <- plotEmbedding(ArchRProj = projHeme2, colorBy = "cellColData", name = "ScranClusters", embedding = "TSNE")
+    plotPDF(p33, p44, name = "Plot-tSNE-Sample-ScranClusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
+
+
+    # Plotting for batch correctd UMAP with seurat clustering:
+    p3 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Sample", embedding = "UMAPHarmony")
+    p4 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Clusters", embedding = "UMAPHarmony")
+    plotPDF(p1,p2,p3,p4, name = "Plot-UMAP2Harmony-Sample-Clusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
+
+    # Plotting for batch corrected tSNE with seurat clustering:
+    p33 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Sample", embedding = "TSNEHarmony")
+    p44 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Sample", embedding = "TSNEHarmony")
+    plotPDF(p11,p22,p33,p44, name = "Plot-TSNE2Harmony-Sample-Clusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
     ' > run.R
 

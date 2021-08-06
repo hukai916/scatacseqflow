@@ -34,7 +34,7 @@ process ARCHR_ARCHRPROJECT {
 
 
     output:
-    // val sample_name, emit: sample_name
+    val sample_name, emit: sample_name
     // path sample_name, emit: output_dir
     path "proj.rds", emit: archr_project
 

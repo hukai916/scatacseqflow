@@ -330,9 +330,9 @@ workflow DOWNSTREAM {
     // Module: add DoubletScores
     ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
     // Module: create ArchRProject
-    ARCHR_ARCHRPROJECT(ARCHR_CREATE_ARROWFILES.out.sample_name, params.archr_genome, params.archr_thread, ARCHR_CREATE_ARROWFILES.out.arrowfile)
+    ARCHR_ARCHRPROJECT(ARCHR_ADD_DOUBLETSCORES.out.sample_name, params.archr_genome, params.archr_thread, ARCHR_ADD_DOUBLETSCORES.out.arrowfile)
     // Module: ArchRProject QC
-    // ARCHR
+    // ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.sample_name, ARCHR_ARCHRPROJECT.out.archr_project)
 
 
 

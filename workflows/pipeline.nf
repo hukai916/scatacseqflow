@@ -86,6 +86,7 @@ include { ARCHR_ADD_DOUBLETSCORES } from '../modules/local/archr_add_doubletscor
 include { ARCHR_ARCHRPROJECT } from '../modules/local/archr_archrproject' addParams( options: modules['archr_archrproject'] )
 include { ARCHR_ARCHRPROJECT_QC } from '../modules/local/archr_archrproject_qc' addParams( options: modules['archr_archrproject_qc'] )
 include { ARCHR_DIMENSION_REDUCTION } from '../modules/local/archr_dimension_reduction' addParams( options: modules['archr_dimension_reduction'] )
+include { ARCHR_BATCH_CORRECTION } from '../modules/local/archr_batch_correction' addParams( options: modules['archr_batch_correction'] )
 
 
 // // Modules: nf-core/modules
@@ -359,6 +360,11 @@ workflow DOWNSTREAM {
     // Module: dimension reduction
     ARCHR_DIMENSION_REDUCTION(ARCHR_ARCHRPROJECT_QC.out.archr_project)
 
+    // Module: batch correction with harmony
+    ARCHR_BATCH_CORRECTION(ARCHR_DIMENSION_REDUCTION.out.archr_project)
+
+    // Module: clustering with Seurat's FindClusters() function
+    // ARCHR_CLUSTERING(ARCHR_BATCH_CORRECTION.out.archr_project)
 
 
 

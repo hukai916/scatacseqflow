@@ -26,8 +26,9 @@ process ARCHR_CREATE_ARROWFILES {
     // cache false
 
     input:
-    val sample_name
-    path fragment
+    tuple val(sample_name), path(fragment)
+    // val sample_name
+    // path fragment
     val archr_genome
     val archr_thread
 

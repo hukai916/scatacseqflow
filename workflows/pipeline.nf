@@ -21,8 +21,9 @@ if (params.preprocess) {
   if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 } else {
   // will perform downstream analysis
-  if (params.sample_name) {} else { exit 1, "Input sample_name must be specified!" }
-  if (params.fragment) { ch_fragment = file(params.fragment) } else { exit 1, "Input fragment must be provided!" }
+  // if (params.sample_name) {} else { exit 1, "Input sample_name must be specified!" }
+  // if (params.fragment) { ch_fragment = file(params.fragment) } else { exit 1, "Input fragment must be provided!" }
+  if (params.input_archr) {} else { exit 1, "--input_archr samplesheet must be specified!"}
 
 }
 

@@ -82,6 +82,7 @@ include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'           
 // For ArchR functions:
 include { ARCHR_CREATE_ARROWFILES } from '../modules/local/archr_create_arrowfiles' addParams( options: modules['archr_create_arrowfiles'] )
 include { ARCHR_ADD_DOUBLETSCORES } from '../modules/local/archr_add_doubletscores' addParams( options: modules['archr_add_doubletscores'] )
+include { ARCHR_ARCHRPROJECT } from '../modules/local/archr_archrproject' addParams( options: modules['archr_archrproject'] )
 
 
 // // Modules: nf-core/modules
@@ -326,8 +327,10 @@ workflow DOWNSTREAM {
     log.info "INFO: --downstream: ArchR"
     // Module: create ArrowFile
     ARCHR_CREATE_ARROWFILES(params.sample_name, params.fragment, params.archr_genome, params.archr_thread)
-    // Module: create
+    // Module: add DoubletScores
     ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile, ARCHR_CREATE_ARROWFILES.out.quality_control)
+    // Module: create ArchRProject
+    ARCHR_ARCHR_PROJECT(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
 
     /*
      * SUBWORKFLOW: Read in samplesheet, validate and stage input files

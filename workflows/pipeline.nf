@@ -355,7 +355,7 @@ workflow DOWNSTREAM {
     ch_samplename_list.view()
     ch_arrowfile_list.view()
 
-    ch_arrowfile_list.join(",").view()
+    // ch_arrowfile_list.join(",").view()
 
     // ARCHR_ADD_DOUBLETSCORES.out.arrowfile.collect().toSortedList
 

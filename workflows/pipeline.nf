@@ -327,10 +327,13 @@ workflow DOWNSTREAM {
     log.info "INFO: --downstream: ArchR"
     // Module: create ArrowFile
     ARCHR_CREATE_ARROWFILES(params.sample_name, params.fragment, params.archr_genome, params.archr_thread)
+
     // Module: add DoubletScores
     ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
+
     // Module: create ArchRProject
-    ARCHR_ARCHRPROJECT(ARCHR_ADD_DOUBLETSCORES.out.sample_name, params.archr_genome, params.archr_thread, ARCHR_ADD_DOUBLETSCORES.out.arrowfile)
+    ARCHR_ARCHRPROJECT(ARCHR_ADD_DOUBLETSCORES.out.sample_name, params.archr_genome, params.archr_thread, ARCHR_ADD_DOUBLETSCORES.out.arrowfile) // Note, ARCH_ADD_DOUBLETSCORES will modify arrowfile in place, therefore, in ARCHR_ARCHRPROJECT, must use the arrowfile generated from ARCHR_ADD_DOUBLETSCORES, otherwise, ARCHR_CREATE_ARROWFILES generate arrowfile will be updated each time ARCHR_ADD_DOUBLETSCORES, so that the -resume won't work for ARCHR_ARCHRPROJECT as long as ARCHR_ADD_DOUBLETSCORES runs.
+
     // Module: ArchRProject QC
     // ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.sample_name, ARCHR_ARCHRPROJECT.out.archr_project)
 

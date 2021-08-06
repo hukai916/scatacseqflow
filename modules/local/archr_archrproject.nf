@@ -26,14 +26,13 @@ process ARCHR_ARCHRPROJECT {
     // cache false
 
     input:
-    val "*" from ch_samplename_list
-    path "*" from ch_arrowfile_list
+    val "*"
+    path "*"
     // val sample_name
     val archr_genome
     val archr_thread
     // path arrowfile
     // path quality_control
-
 
     output:
     // val sample_name, emit: sample_name

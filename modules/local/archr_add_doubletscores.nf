@@ -42,6 +42,8 @@ process ARCHR_ADD_DOUBLETSCORES {
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
     """
+    mkdir -p doublet_qc/$sample_name
+
     echo '
     library(ArchR)
 

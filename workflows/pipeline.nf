@@ -367,6 +367,8 @@ workflow DOWNSTREAM {
     // Module: clustering with Seurat's FindClusters() function
     ARCHR_CLUSTERING(ARCHR_BATCH_CORRECTION.out.archr_project)
 
+    // Module: single-cell embeddings
+    // ARCHR_ADDUMAP()
 
 
 

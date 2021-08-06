@@ -30,7 +30,7 @@ process ARCHR_CLUSTERING {
 
     output:
     path "proj_clustering.rds", emit: archr_project
-    path "Plots/Cluster-matrix.csv", emit: csv_cluster_matrix
+    path "Cluster-matrix.csv", emit: csv_cluster_matrix
     path "Plots/Cluster-heatmap.pdf", emit: pdf_cluster_heatmap
 
     script:

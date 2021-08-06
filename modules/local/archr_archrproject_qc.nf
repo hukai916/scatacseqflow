@@ -33,7 +33,7 @@ process ARCHR_ARCHRPROJECT_QC {
 
     output:
     val sample_name, emit: sample_name
-    path "test.pdf", emit: pdf
+    path "Plots/p1.pdf", emit: pdf_p1
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.
     // This is because the quality_control folder content gets updated after each run, and it will be used as input for itself, so each time, it rerun, the timestamp of this folder is newer.
@@ -53,7 +53,7 @@ process ARCHR_ARCHRPROJECT_QC {
       plotAs = "ridges"
     )
 
-    plotPDF(p1, name = "test.pdf", ArchRProj = proj, addDOC = FALSE, width = 4, height = 4)
+    plotPDF(p1, name = "p1.pdf", ArchRProj = NULL, addDOC = FALSE, width = 4, height = 4)
 
     ' > run.R
 

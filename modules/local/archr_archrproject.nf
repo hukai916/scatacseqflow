@@ -50,7 +50,7 @@ process ARCHR_ARCHRPROJECT {
     addArchRThreads(threads = $archr_thread)
 
     proj <- ArchRProject(
-    ArrowFiles = c(\"\$arrows\"),
+    ArrowFiles = c(\"\"\$arrows\"\"),
     outputDirectory = \"ArchRProject\",
     $options.args)
 

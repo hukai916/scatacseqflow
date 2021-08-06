@@ -351,15 +351,11 @@ workflow DOWNSTREAM {
 
     ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
     ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
-    //
-    ch_samplename_list.view()
-    ch_arrowfile_list.view()
+    // ch_samplename_list.view()
+    // ch_arrowfile_list.view()
 
     // ARCHR_ARCHRPROJECT(ch_samplename_list, ch_arrowfile_list.out.arrowfile, params.archr_genome, params.archr_thread)
-
-    data = Channel.fromPath("*")
     ARCHR_ARCHRPROJECT(ch_arrowfile_list, params.archr_genome, params.archr_thread)
-
 
     // ARCHR_ADD_DOUBLETSCORES.out.arrowfile.collect().toSortedList
 

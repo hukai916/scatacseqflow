@@ -26,14 +26,9 @@ process ARCHR_ARCHRPROJECT {
     // cache false
 
     input:
-    // val name
-    // path filename
-    // val sample_name
-    // val sample_list
-    path x
+    path arrowfiles // this will prepare all required files from the list into the working dir
     val archr_genome
     val archr_thread
-    // path arrowfile
     // path quality_control
 
     output:
@@ -45,7 +40,8 @@ process ARCHR_ARCHRPROJECT {
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
     """
-    echo $x > test.txt
+    echo $arrowfiles > arrowfiles.txt
+    arrows=\$(cat arrowfiles.txt | sed -e 's/.arrow\s/.arrow", "/g')
 
     echo '
     library(ArchR)
@@ -54,14 +50,14 @@ process ARCHR_ARCHRPROJECT {
     addArchRThreads(threads = $archr_thread)
 
     proj <- ArchRProject(
-    ArrowFiles = "\$arrowfile",
+    ArrowFiles = c("\$arrows"),
     outputDirectory = "ArchRProject",
     $options.args)
 
     saveRDS(proj, file = "proj.rds")
     ' > run.R
 
-    #Rscript run.R
+    Rscript run.R
 
     """
 }

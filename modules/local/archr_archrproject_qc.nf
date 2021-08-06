@@ -43,7 +43,7 @@ process ARCHR_ARCHRPROJECT_QC {
     """
     echo '
     library(ArchR)
-    proj <- readRDS($archr_project, refhook = NULL)
+    proj <- readRDS("$archr_project", refhook = NULL)
 
     p1 <- plotGroups(
       ArchRProject = proj,

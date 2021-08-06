@@ -45,13 +45,6 @@ process ARCHR_BATCH_CORRECTION {
       $options.args
     )
 
-    proj2 <- addIterativeLSI(
-      $options.args,
-      ArchRProj = proj,
-      useMatrix = "TileMatrix",
-      name = "IterativeLSI"
-    )
-
     saveRDS(proj2, file = "proj_batch_correct.rds")
     ' > run.R
 

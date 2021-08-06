@@ -30,6 +30,8 @@ process ARCHR_CLUSTERING {
 
     output:
     path "proj_clustering.rds", emit: archr_project
+    path "Plots/Cluster-matrix.csv", emit: csv_cluster_matrix
+    path "Plots/Cluster-heatmap.pdf", emit: pdf_cluster_heatmap
 
     script:
 
@@ -45,6 +47,20 @@ process ARCHR_CLUSTERING {
     )
 
     saveRDS(proj2, file = "proj_clustering.rds")
+
+    # Save text summary and heatmap summary
+    cM <- confusionMatrix(paste0(proj2\$Clusters), paste0(proj2\$Sample))
+    write.csv(cM,file="Cluster-matrix.csv")
+
+    library(pheatmap)
+    cM <- cM / Matrix::rowSums(cM)
+    p <- pheatmap::pheatmap(
+      mat = as.matrix(cM),
+      color = paletteContinuous("whiteBlue"),
+      border_color = "black"
+    )
+    plotPDF(p, name = "Cluster-heatmap.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
+
     ' > run.R
 
     Rscript run.R

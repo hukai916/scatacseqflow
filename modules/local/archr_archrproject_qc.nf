@@ -26,13 +26,11 @@ process ARCHR_ARCHRPROJECT_QC {
     // cache false
 
     input:
-    val sample_name
     path archr_project
     // val archr_genome
     // val archr_thread
 
     output:
-    val sample_name, emit: sample_name
     path "Plots/p1.pdf", emit: pdf_p1
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.

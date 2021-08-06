@@ -26,18 +26,20 @@ process ARCHR_ARCHRPROJECT {
     // cache false
 
     input:
-    val sample_name
+    val "*" from ch_samplename_list
+    path "*" from ch_arrowfile_list
+    // val sample_name
     val archr_genome
     val archr_thread
-    path arrowfile
+    // path arrowfile
     // path quality_control
 
 
     output:
-    val sample_name, emit: sample_name
-    // path sample_name, emit: output_dir // using this syntax, the -resume won't work
-    path "ArchRProject", emit: archrproject_dir
-    path "proj.rds", emit: archr_project
+    // val sample_name, emit: sample_name
+    // // path sample_name, emit: output_dir // using this syntax, the -resume won't work
+    // path "ArchRProject", emit: archrproject_dir
+    // path "proj.rds", emit: archr_project
 
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
@@ -49,14 +51,14 @@ process ARCHR_ARCHRPROJECT {
     addArchRThreads(threads = $archr_thread)
 
     proj <- ArchRProject(
-    ArrowFiles = "$arrowfile",
+    ArrowFiles = "\$arrowfile",
     outputDirectory = "ArchRProject",
     $options.args)
 
     saveRDS(proj, file = "proj.rds")
     ' > run.R
 
-    Rscript run.R
+    #Rscript run.R
 
     """
 }

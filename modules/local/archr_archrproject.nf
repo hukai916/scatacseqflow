@@ -26,8 +26,8 @@ process ARCHR_ARCHRPROJECT {
     // cache false
 
     input:
-    val "*"
-    path "*"
+    val name
+    path filename
     // val sample_name
     val archr_genome
     val archr_thread

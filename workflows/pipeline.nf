@@ -344,11 +344,20 @@ workflow DOWNSTREAM {
     ARCHR_CREATE_ARROWFILES(ch_samplesheet_archr, params.archr_genome, params.archr_thread)
 
     // Module: add DoubletScores
-    // ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
+    ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
 
     // Module: create ArchRProject
     // ARCHR_ARCHRPROJECT(ARCHR_ADD_DOUBLETSCORES.out.sample_name, params.archr_genome, params.archr_thread, ARCHR_ADD_DOUBLETSCORES.out.arrowfile) // Note, ARCH_ADD_DOUBLETSCORES will modify arrowfile in place, therefore, in ARCHR_ARCHRPROJECT, must use the arrowfile generated from ARCHR_ADD_DOUBLETSCORES, otherwise, ARCHR_CREATE_ARROWFILES generate arrowfile will be updated each time ARCHR_ADD_DOUBLETSCORES, so that the -resume won't work for ARCHR_ARCHRPROJECT as long as ARCHR_ADD_DOUBLETSCORES runs.
     // ARCHR_ARCHRPROJECT(ARCHR_ADD_DOUBLETSCORES.out.sample_name, params.archr_genome, params.archr_thread, ARCHR_ADD_DOUBLETSCORES.out.arrowfile)
+    ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList( { a, b -> a.getName() <=> b.getName() }
+    ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() }
+
+    ch_samplename_list.view()
+    ch_arrowfile_list.view()
+
+    // ARCHR_ADD_DOUBLETSCORES.out.arrowfile.collect().toSortedList
+
+    // ARCHR_ARCHRPROJECT()
 
     // NOTE: should use collect to collect all samples, and merge them into one ArchRProject.
 

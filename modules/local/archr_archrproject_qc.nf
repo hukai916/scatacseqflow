@@ -96,7 +96,7 @@ process ARCHR_ARCHRPROJECT_QC {
     # Create QC plot: Sample Fragment Size Distribution and TSS Enrichment Profiles
     p5 <- plotFragmentSizes(ArchRProj = proj)
     p6 <- plotTSSEnrichment(ArchRProj = proj)
-    plotPDF(p1,p2, name = "QC-Sample-FragSizes-TSSProfile.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
+    plotPDF(p5,p6, name = "QC-Sample-FragSizes-TSSProfile.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
     # Filtering Doublets:
     proj2 <- filterDoublets(proj, filterRatio = $archr_filter_ratio)

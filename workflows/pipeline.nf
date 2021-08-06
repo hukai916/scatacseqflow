@@ -355,7 +355,10 @@ workflow DOWNSTREAM {
     ch_samplename_list.view()
     ch_arrowfile_list.view()
 
-    ARCHR_ARCHRPROJECT(ch_samplename_list, ch_arrowfile_list.out.arrowfile, params.archr_genome, params.archr_thread)
+    // ARCHR_ARCHRPROJECT(ch_samplename_list, ch_arrowfile_list.out.arrowfile, params.archr_genome, params.archr_thread)
+
+
+    ARCHR_ARCHRPROJECT(ch_arrowfile_list.out.arrowfile, params.archr_genome, params.archr_thread)
 
 
     // ARCHR_ADD_DOUBLETSCORES.out.arrowfile.collect().toSortedList

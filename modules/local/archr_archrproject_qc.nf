@@ -43,6 +43,7 @@ process ARCHR_ARCHRPROJECT_QC {
     library(ArchR)
     proj <- readRDS("$archr_project", refhook = NULL)
 
+    # Create 
     p1 <- plotGroups(
       ArchRProj = proj,
       groupBy = "Sample",

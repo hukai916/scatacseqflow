@@ -34,8 +34,8 @@ process ARCHR_ARCHRPROJECT {
     output:
     // val sample_name, emit: sample_name
     // // path sample_name, emit: output_dir // using this syntax, the -resume won't work
-    // path "ArchRProject", emit: archrproject_dir
-    // path "proj.rds", emit: archr_project
+    path "ArchRProject", emit: archrproject_dir
+    path "proj.rds", emit: archr_project
 
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work

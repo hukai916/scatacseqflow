@@ -34,7 +34,8 @@ process ARCHR_ADD_DOUBLETSCORES {
 
     output:
     val sample_name, emit: sample_name
-    path quality_control, emit: quality_control
+    // path quality_control, emit: quality_control
+    path "QualityControl", emit: quality_control
 
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work

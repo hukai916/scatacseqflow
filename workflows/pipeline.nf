@@ -368,7 +368,7 @@ workflow DOWNSTREAM {
     ARCHR_CLUSTERING(ARCHR_BATCH_CORRECTION.out.archr_project)
 
     // Module: single-cell embeddings
-    // ARCHR_ADDUMAP()
+    // ARCHR_EMBEDDING()
 
 
 

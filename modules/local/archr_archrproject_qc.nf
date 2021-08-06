@@ -46,7 +46,7 @@ process ARCHR_ARCHRPROJECT_QC {
     proj <- readRDS("$archr_project", refhook = NULL)
 
     p1 <- plotGroups(
-      ArchRProject = proj,
+      ArchRProj = proj,
       groupBy = "Sample",
       colorBy = "cellColData",
       name = "TSSEnrichment",

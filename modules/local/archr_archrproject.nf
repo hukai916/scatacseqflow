@@ -45,6 +45,8 @@ process ARCHR_ARCHRPROJECT {
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
     """
+    echo $x > test.txt
+
     echo '
     library(ArchR)
 

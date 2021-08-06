@@ -330,7 +330,7 @@ workflow DOWNSTREAM {
     // Module: add DoubletScores
     ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile, ARCHR_CREATE_ARROWFILES.out.quality_control)
     // Module: create ArchRProject
-    ARCHR_ARCHRPROJECT(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
+    ARCHR_ARCHRPROJECT(ARCHR_CREATE_ARROWFILES.out.sample_name, params.fragment, params.archr_genome, ARCHR_CREATE_ARROWFILES.out.arrowfile)
 
     /*
      * SUBWORKFLOW: Read in samplesheet, validate and stage input files

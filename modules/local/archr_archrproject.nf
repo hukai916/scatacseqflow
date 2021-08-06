@@ -27,10 +27,11 @@ process ARCHR_ARCHRPROJECT {
 
     input:
     val sample_name
+    val archr_genome
+    val archr_thread
     path arrowfile
     // path quality_control
-    // val archr_genome
-    // val archr_thread
+
 
     output:
     val sample_name, emit: sample_name
@@ -42,6 +43,9 @@ process ARCHR_ARCHRPROJECT {
     """
     echo '
     library(ArchR)
+
+    addArchRGenome("$archr_genome")
+    addArchRThreads(threads = $archr_thread)
 
     proj <- ArchRProject(
     ArrowFiles = "$arrowfile",

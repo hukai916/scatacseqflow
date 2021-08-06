@@ -46,15 +46,15 @@ process ARCHR_ARCHRPROJECT {
     echo "
     library(ArchR)
 
-    addArchRGenome(\"$archr_genome'"')
+    addArchRGenome(\"$archr_genome\")
     addArchRThreads(threads = $archr_thread)
 
     proj <- ArchRProject(
-    ArrowFiles = c('"'\$arrows'"'),
-    outputDirectory = '"'ArchRProject'"',
+    ArrowFiles = c(\\"\$arrows\\"),
+    outputDirectory = \\"ArchRProject\\",
     $options.args)
 
-    saveRDS(proj, file = '"'proj.rds'"')
+    saveRDS(proj, file = \\"proj.rds\\")
     " > run.R
 
     Rscript run.R

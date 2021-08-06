@@ -80,8 +80,8 @@ process ARCHR_EMBEDDING {
     plotPDF(p1, p2, name = "Plot-UMAP-Sample-Clusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
     # Plotting for UMAP with scran clustering:
-    p3 <- plotEmbedding(ArchRProj = projHeme2, colorBy = "cellColData", name = "Sample", embedding = "UMAP")
-    p4 <- plotEmbedding(ArchRProj = projHeme2, colorBy = "cellColData", name = "ScranClusters", embedding = "UMAP")
+    p3 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Sample", embedding = "UMAP")
+    p4 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "ScranClusters", embedding = "UMAP")
     plotPDF(p3, p4, name = "Plot-UMAP-Sample-ScranClusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
 
@@ -91,8 +91,8 @@ process ARCHR_EMBEDDING {
     plotPDF(p11, p22, name = "Plot-tSNE-Sample-Clusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
     # Plotting for tSNE with scran clustering:
-    p33 <- plotEmbedding(ArchRProj = projHeme2, colorBy = "cellColData", name = "Sample", embedding = "TSNE")
-    p44 <- plotEmbedding(ArchRProj = projHeme2, colorBy = "cellColData", name = "ScranClusters", embedding = "TSNE")
+    p33 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Sample", embedding = "TSNE")
+    p44 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "ScranClusters", embedding = "TSNE")
     plotPDF(p33, p44, name = "Plot-tSNE-Sample-ScranClusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
 

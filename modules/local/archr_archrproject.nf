@@ -43,19 +43,19 @@ process ARCHR_ARCHRPROJECT {
     echo $arrowfiles > arrowfiles.txt
     arrows=\$(cat arrowfiles.txt | sed -e 's/.arrow\s/.arrow", "/g')
 
-    echo '
+    echo "
     library(ArchR)
 
-    addArchRGenome("$archr_genome")
+    addArchRGenome(\"$archr_genome\")
     addArchRThreads(threads = $archr_thread)
 
     proj <- ArchRProject(
-    ArrowFiles = c("\$arrows"),
-    outputDirectory = "ArchRProject",
+    ArrowFiles = c(\"\$arrows\"),
+    outputDirectory = \"ArchRProject\",
     $options.args)
 
-    saveRDS(proj, file = "proj.rds")
-    ' > run.R
+    saveRDS(proj, file = \"proj.rds\")
+    " > run.R
 
     Rscript run.R
 

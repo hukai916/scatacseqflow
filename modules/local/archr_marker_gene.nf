@@ -33,6 +33,7 @@ process ARCHR_MARKER_GENE {
     path "Plots/GeneScores-Marker-Heatmap.pdf", emit: pdf_genescores_marker_heatmap
     path "Plots/Plot-UMAP-Marker-Genes-WO-Imputation.pdf", emit: pdf_umap_markder_genes_wo_imputation
     path "Plots/Plot-UMAP-Marker-Genes-W-Imputation.pdf", emit: pdf_umap_markder_genes_w_imputation
+    path "Plots/Plot-Tracks-Marker-Genes.pdf", emit: pdf_tracks_marker_genes
 
     script:
 
@@ -86,6 +87,7 @@ process ARCHR_MARKER_GENE {
       geneSymbol = markerGenes,
       $options.args3
     )
+    plotPDF(plotList = p, name = "Plot-Tracks-Marker-Genes.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
     ' > run.R
 

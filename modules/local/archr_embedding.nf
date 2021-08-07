@@ -61,14 +61,14 @@ process ARCHR_EMBEDDING {
     proj2 <- addUMAP(
       ArchRProj = proj,
       reducedDims = "Harmony",
-      name = "UMAP",
+      name = "UMAPHarmony",
       $options.args
     )
 
     proj2 <- addTSNE(
       ArchRProj = proj2,
       reducedDims = "Harmony",
-      name = "TSNE",
+      name = "TSNEHarmony",
       $options.args2
     )
 

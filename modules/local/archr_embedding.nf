@@ -59,7 +59,7 @@ process ARCHR_EMBEDDING {
     )
 
     proj2 <- addUMAP(
-      ArchRProj = proj,
+      ArchRProj = proj2,
       reducedDims = "Harmony",
       name = "UMAPHarmony",
       $options.args

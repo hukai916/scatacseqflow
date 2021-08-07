@@ -89,6 +89,7 @@ include { ARCHR_DIMENSION_REDUCTION } from '../modules/local/archr_dimension_red
 include { ARCHR_BATCH_CORRECTION } from '../modules/local/archr_batch_correction' addParams( options: modules['archr_batch_correction'] )
 include { ARCHR_CLUSTERING } from '../modules/local/archr_clustering' addParams( options: modules['archr_clustering'] )
 include { ARCHR_EMBEDDING } from '../modules/local/archr_embedding' addParams( options: modules['archr_embedding'] )
+include { ARCHR_GENE_SCORE } from '../modules/local/archr_gene_score' addParams( options: modules['archr_gene_score'] )
 
 
 // // Modules: nf-core/modules
@@ -371,8 +372,8 @@ workflow DOWNSTREAM {
     // Module: single-cell embeddings
     ARCHR_EMBEDDING(ARCHR_CLUSTERING.out.archr_project)
 
-    // Module: 
-
+    // Module:
+    // ARCHR_GENE_SCORE(ARCHR_EMBEDDING.out.archr_project)
     /*
      * SUBWORKFLOW: Read in samplesheet, validate and stage input files
      */

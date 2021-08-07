@@ -68,7 +68,7 @@ process ARCHR_MARKER_GENE {
     plotPDF(plotList = p, name = "Plot-UMAP-Marker-Genes-WO-Imputation.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
     # Add Marker Genes Imputation and replot:
-    proj2 <- addImputeWeights(proj2)
+    proj2 <- addImputeWeights(proj)
     saveRDS(proj2, file = "proj_marker_gene.rds")
 
     p <- plotEmbedding(

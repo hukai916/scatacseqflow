@@ -97,13 +97,13 @@ process ARCHR_EMBEDDING {
 
 
     # Plotting for batch correctd UMAP with seurat clustering:
-    p3 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Sample", embedding = "UMAPHarmony")
+    p3 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Clusters", embedding = "UMAPHarmony")
     p4 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Clusters", embedding = "UMAPHarmony")
     plotPDF(p1,p2,p3,p4, name = "Plot-UMAP2Harmony-Sample-Clusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
     # Plotting for batch corrected tSNE with seurat clustering:
-    p33 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Sample", embedding = "TSNEHarmony")
-    p44 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Sample", embedding = "TSNEHarmony")
+    p33 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Clusters", embedding = "TSNEHarmony")
+    p44 <- plotEmbedding(ArchRProj = proj2, colorBy = "cellColData", name = "Clusters", embedding = "TSNEHarmony")
     plotPDF(p11,p22,p33,p44, name = "Plot-TSNE2Harmony-Sample-Clusters.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
     ' > run.R

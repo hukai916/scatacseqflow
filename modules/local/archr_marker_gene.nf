@@ -63,6 +63,7 @@ process ARCHR_MARKER_GENE {
     p <- plotEmbedding(
       ArchRProj = proj,
       name = markerGenes,
+      imputeWeights = NULL,
       $options.args2
     )
     plotPDF(plotList = p, name = "Plot-UMAP-Marker-Genes-WO-Imputation.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
@@ -74,8 +75,8 @@ process ARCHR_MARKER_GENE {
     p <- plotEmbedding(
       ArchRProj = proj2,
       name = markerGenes,
-      $options.args2,
-      imputeWeights = getImputeWeights(proj2)
+      imputeWeights = getImputeWeights(proj2),
+      $options.args2
     )
     plotPDF(plotList = p, name = "Plot-UMAP-Marker-Genes-W-Imputation.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 

@@ -32,7 +32,7 @@ process ARCHR_EMBEDDING {
     path "proj_embedding.rds", emit: archr_project
     path "Plots/Plot-UMAP-Sample-Clusters.pdf", emit: pdf_umap_sample_clusters
     path "Plots/Plot-UMAP-Sample-ScranClusters.pdf", emit: pdf_umap_sample_scranclusters
-    path "Plots/Plot-TSNE-Sample-Clusters.pdf", emit: pdf_tsne_sample_clusters
+    path "Plots/Plot-tSNE-Sample-Clusters.pdf", emit: pdf_tsne_sample_clusters
     path "Plots/Plot-tSNE-Sample-ScranClusters.pdf", emit: pdf_tsne_sample_scranclusters
     path "Plots/Plot-UMAP2Harmony-Sample-Clusters.pdf", emit: pdf_umap2harmony_sample_clusters
     path "Plots/Plot-TSNE2Harmony-Sample-Clusters.pdf", emit: pdf_tsne2harmony_sample_clusters

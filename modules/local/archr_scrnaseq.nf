@@ -48,7 +48,7 @@ process ARCHR_SCRNASEQ {
         force = TRUE,
         nameCell = "predictedCell_Un",
         nameGroup = "predictedGroup_Un",
-        nameScore = "predictedScore_Un".
+        nameScore = "predictedScore_Un",
         $options.args
     )
 

@@ -90,6 +90,7 @@ include { ARCHR_BATCH_CORRECTION } from '../modules/local/archr_batch_correction
 include { ARCHR_CLUSTERING } from '../modules/local/archr_clustering' addParams( options: modules['archr_clustering'] )
 include { ARCHR_EMBEDDING } from '../modules/local/archr_embedding' addParams( options: modules['archr_embedding'] )
 include { ARCHR_MARKER_GENE } from '../modules/local/archr_marker_gene' addParams( options: modules['archr_marker_gene'] )
+include { ARCHR_SCRNASEQ } from '../modules/local/archr_scrnaseq' addParams( options: modules['archr_scrnaseq'] )
 
 
 // // Modules: nf-core/modules
@@ -372,8 +373,18 @@ workflow DOWNSTREAM {
     // Module: single-cell embeddings
     ARCHR_EMBEDDING(ARCHR_CLUSTERING.out.archr_project)
 
-    // Module:
+    // Module: find marker gene
     ARCHR_MARKER_GENE(ARCHR_EMBEDDING.out.archr_project)
+
+    // Module: integrate with matching scRNAseq data
+    if (!(params.archr_scrnaseq)) {
+      log.info "NOTICE: --archr_scrnaseq: not supplied, skip integrative analysis with scRNA-seq!"
+    } else {
+      log.info "NOTICE: --archr_scrnaseq: supplied, will perform integrative analysis with scRNA-seq!"
+      ARCHR_CLUSTERING_SCRNASEQ(ARCHR_MARKER_GENE.out.archr_project, params.archr_scrnaseq)
+    }
+
+
     /*
      * SUBWORKFLOW: Read in samplesheet, validate and stage input files
      */

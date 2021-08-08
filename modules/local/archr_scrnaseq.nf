@@ -46,9 +46,9 @@ process ARCHR_SCRNASEQ {
         ArchRProj = proj,
         seRNA = seRNA,
         force = TRUE,
-        nameCell = "predictedCell_Un",
-        nameGroup = "predictedGroup_Un",
-        nameScore = "predictedScore_Un",
+        nameCell = "predictedCell",
+        nameGroup = "predictedGroup",
+        nameScore = "predictedScore",
         $options.args
     )
 

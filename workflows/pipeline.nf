@@ -381,8 +381,9 @@ workflow DOWNSTREAM {
       log.info "NOTICE: --archr_scrnaseq: not supplied, skip integrative analysis with scRNA-seq!"
     } else {
       log.info "NOTICE: --archr_scrnaseq: supplied, will perform integrative analysis with scRNA-seq!"
-      ARCHR_CLUSTERING_SCRNASEQ(ARCHR_MARKER_GENE.out.archr_project, params.archr_scrnaseq)
+      ARCHR_SCRNASEQ(ARCHR_MARKER_GENE.out.archr_project, params.archr_scrnaseq)
     }
+
 
 
     /*

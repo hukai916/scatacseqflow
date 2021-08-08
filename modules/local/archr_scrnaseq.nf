@@ -57,7 +57,7 @@ process ARCHR_SCRNASEQ {
     saveRDS(proj2, file = "proj_scrnaseq.rds")
 
     # UMAP plots overlayed with gene expression values from GeneIntegrationMatrix
-    markerGenes <- c("$options.marker_genes")
+    markerGenes <- c($options.marker_genes)
     p1 <- plotEmbedding(
       ArchRProj = proj2,
       colorBy = "GeneIntegrationMatrix",

@@ -45,7 +45,6 @@ process ARCHR_SCRNASEQ {
     proj2 <- addGeneIntegrationMatrix(
         ArchRProj = proj,
         seRNA = seRNA,
-        force = TRUE,
         nameCell = "predictedCell",
         nameGroup = "predictedGroup",
         nameScore = "predictedScore",

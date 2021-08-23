@@ -36,12 +36,14 @@ process BWA_MAP {
     path "*.sorted.bam", emit: bam
 
     script:
+    def avail_mem = task.memory ? "-m ${task.memory.toBytes().intdiv(task.cpus)}" : ''
+    // Ref: https://gitter.im/nextflow-io/nextflow?at=5a4f8f01ce68c3bc7480d7c5
 
     """
     filename=\$(basename $bwa_index_folder/*.bwt)
     index_name="\${filename%.*}"
 
-    bwa mem $options.args -t $task.cpus $bwa_index_folder/\$index_name $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_name}.sorted.bam
+    bwa mem $options.args -t $task.cpus $bwa_index_folder/\$index_name $read1_fastq $read2_fastq | samtools sort -@ $task.cpus $avail_mem -O bam -o ${sample_name}.sorted.bam
 
     """
 }

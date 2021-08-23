@@ -1,0 +1,3 @@
+task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem	rchar	wchar
+3	87/34dff6	82284	NFCORE_SCATACSEQFLOW:DOWNSTREAM:ARCHR_CREATE_ARROWFILES (3)	FAILED	125	2021-08-10 15:32:44.925	7.3s	7s	-	-	-	-	-
+2	53/b646a4	82327	NFCORE_SCATACSEQFLOW:DOWNSTREAM:ARCHR_CREATE_ARROWFILES (2)	FAILED	125	2021-08-10 15:32:52.359	5.1s	4.5s	-	-	-	-	-

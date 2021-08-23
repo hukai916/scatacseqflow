@@ -21,7 +21,7 @@ process ARCHR_CREATE_ARROWFILES {
     // }
 
     // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/r_sc:0.4"
+    container "hukai916/r_sc:0.5"
 
     // cache false
 

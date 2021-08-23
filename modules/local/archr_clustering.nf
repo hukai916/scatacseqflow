@@ -33,6 +33,7 @@ process ARCHR_CLUSTERING {
     path "Cluster-seurat-matrix.csv", emit: csv_cluster_seurat_matrix
     path "Cluster-scran-matrix.csv", emit: csv_cluster_scran_matrix
     path "Plots/Cluster-heatmap.pdf", emit: pdf_cluster_heatmap
+    path "Plots/Cluster-scran-heatmap.pdf", emit: pdf_cluster_scran_heatmap
 
     script:
 
@@ -68,19 +69,30 @@ process ARCHR_CLUSTERING {
     library(pheatmap)
     cM <- cM / Matrix::rowSums(cM)
     cM_scran <- cM_scran / Matrix::rowSums(cM)
+    cellheight <- 18 # 0.25 inch
+
     p1 <- pheatmap::pheatmap(
       mat = as.matrix(cM),
       color = paletteContinuous("whiteBlue"),
-      border_color = "black"
+      border_color = "black",
+      cellheight = cellheight
     )
     p2 <- pheatmap::pheatmap(
       mat = as.matrix(cM_scran),
       color = paletteContinuous("whiteBlue"),
-      border_color = "black"
+      border_color = "black",
+      cellheight = cellheight
     )
-    plotPDF(p1, p2, name = "Cluster-heatmap.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
+    height <- nrow(cM) * cellheight * 1/72 + 4
+    height <- min(11, height)
+    # 1/72: inches per point, 11.5 inches per page; 8.5 width per page.
 
+    height_scran <- nrow(cM_scran) * cellheight * 1/72 + 4
+    height_scran <- min(11, height_scran)
+
+    plotPDF(p1, name = "Cluster-heatmap.pdf", ArchRProj = NULL, addDOC = FALSE, width = 7, height = height)
+    plotPDF(p2, name = "Cluster-scran-heatmap.pdf", ArchRProj = NULL, addDOC = FALSE, width = 7, height = height_scran)
 
     ' > run.R
 

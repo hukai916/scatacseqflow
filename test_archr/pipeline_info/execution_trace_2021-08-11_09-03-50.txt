@@ -1,0 +1,2 @@
+task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem	rchar	wchar
+3	f5/c2f7e3	86219	NFCORE_SCATACSEQFLOW:DOWNSTREAM:ARCHR_CREATE_ARROWFILES (1)	ABORTED	-	2021-08-11 09:04:00.650	-	-	-	-	-	-	-

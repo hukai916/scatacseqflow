@@ -100,7 +100,7 @@ process ARCHR_MOTIF_DEVIATIONS_CLUSTERS2 {
       name = sort(markerRNA),
       embedding = "UMAP",
       continuousSet = "blueYellow",
-      imputeWeights = getImputeWeights(pro2)
+      imputeWeights = getImputeWeights(proj2)
     )
     plotPDF(p, name = "Plot-Groups-Deviations-w-Imputation-UMAP-Embedding-w-Gene-Expression", width = 5, height = 5, ArchRProj = NULL, addDOC = FALSE)
 

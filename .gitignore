@@ -5,6 +5,7 @@ results/
 .DS_Store
 tests/
 test_run/
+test_archr/
 testing/
 testing*
 test_run_biorad/

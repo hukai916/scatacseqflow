@@ -27,10 +27,11 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
 
     input:
     path archr_project
+    path archr_dir
 
     output:
     path "Plots/Footprints-*-Bias.pdf", emit: footprints
-    path "Plots/TSS-No-Normalization.pdf", emit: tss_no_normalization
+    path "save_archr_project/Plots/TSS-No-Normalization.pdf", emit: tss_no_normalization
 
     script:
 
@@ -49,10 +50,10 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
       positions = motifPositions[markerMotifs],
       groupBy = "Clusters"
       )
-    plotName <- paste0("Footprints", "-", $options.norm_method, "-Bias")
+    plotName <- paste0("Footprints", "-", "$options.norm_method", "-Bias")
     plotFootprints(
       seFoot = seFoot,
-      ArchRProj = NULL,
+      ArchRProj = proj,
       normMethod = "$options.norm_method",
       plotName = plotName,
       $options.args

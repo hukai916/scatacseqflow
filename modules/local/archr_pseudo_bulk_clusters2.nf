@@ -30,6 +30,7 @@ process ARCHR_PSEUDO_BULK_CLUSTERS2 {
 
     output:
     path "archr_project.rds", emit: archr_project
+    path "save_archr_project", emit: archr_dir
 
     script:
 

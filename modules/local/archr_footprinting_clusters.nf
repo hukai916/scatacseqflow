@@ -68,7 +68,7 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
       )
     plotFootprints(
       seFoot = seTSS,
-      ArchRProj = NULL,
+      ArchRProj = proj,
       normMethod = "None",
       plotName = "TSS-No-Normalization",
       addDOC = FALSE,

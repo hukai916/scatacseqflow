@@ -30,7 +30,7 @@ process ARCHR_MOTIF_DEVIATIONS_CLUSTERS2 {
     val custom_peaks
 
     output:
-    path "archr_project.rds", emit: archr_project
+    path "archr_motif_deviation_project.rds", emit: archr_project
     path "Plots/Variable-Motif-Deviation-Scores.pdf", emit: variable_motif_deviation_scores
     path "Plots/Plot-Groups-Deviations-w-Imputation.pdf", emit: plot_groups_deviations_w_imputation
     path "Plots/Plot-Groups-Deviations-w-Imputation-UMAP-Embedding.pdf", emit: plot_groups_deviations_w_imputation_umap_embedding

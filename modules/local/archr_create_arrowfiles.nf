@@ -51,6 +51,8 @@ process ARCHR_CREATE_ARROWFILES {
     ArrowFiles <- createArrowFiles(
       inputFiles = inputFiles,
       sampleNames = names(inputFiles),
+      threads = 1,
+      subThreading = FALSE,
       $options.args
     )' > run.R
 

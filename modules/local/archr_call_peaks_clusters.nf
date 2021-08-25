@@ -35,7 +35,6 @@ process ARCHR_CALL_PEAKS_CLUSTERS {
     def avail_mem = task.memory ? "-m ${task.memory.toBytes().intdiv(task.cpus)}" : ''
     // Ref: https://gitter.im/nextflow-io/nextflow?at=5a4f8f01ce68c3bc7480d7c5
 
-
     """
     echo '
     library(ArchR)

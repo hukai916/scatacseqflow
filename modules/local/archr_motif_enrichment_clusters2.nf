@@ -124,7 +124,7 @@ process ARCHR_MOTIF_ENRICHMENT_CLUSTERS2 {
       plotPDF(heatmapRegions, name = "Regions-Enriched-Marker-Heatmap", width = 8, height = 6, ArchRProj = NULL, addDOC = FALSE)
     }
 
-    saveRDS(proj2, file = "archr_project.rds")
+    saveRDS(proj2, file = "archr_motif_enrichment_project.rds")
 
     ' > run.R
 

@@ -123,7 +123,7 @@ process ARCHR_MOTIF_DEVIATIONS_CLUSTERS {
       plotPDF(p, name = "Plot-Groups-Deviations-w-Imputation-UMAP-Embedding-w-z-scores", width = 5, height = 5, ArchRProj = NULL, addDOC = FALSE)
     }
 
-    saveRDS(proj2, file = "archr_project.rds")
+    saveRDS(proj2, file = "archr_motif_deviation_project.rds")
     ' > run.R
 
     Rscript run.R

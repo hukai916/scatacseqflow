@@ -34,7 +34,7 @@ process ARCHR_MOTIF_ENRICHMENT_CLUSTERS2 {
     val custom_peaks
 
     output:
-    path "archr_project.rds", emit: archr_project
+    path "archr_motif_enrichment_project.rds", emit: archr_project
     path "Plots/*-vs-*-Markers-Motifs-Enriched.pdf", emit: markers_motifs_enriched
     path "Plots/Motifs-Enriched-Marker-Heatmap.pdf", emit: motifs_enriched_marker_heatmap
 

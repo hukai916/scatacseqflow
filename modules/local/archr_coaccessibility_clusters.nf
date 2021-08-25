@@ -29,7 +29,7 @@ process ARCHR_COACCESSIBILITY_CLUSTERS {
     path archr_project
 
     output:
-    path "archr_project.rds", emit: archr_project
+    path "archr_coaccessibility_project.rds", emit: archr_project
     path "Plots/Plot-Tracks-Marker-Genes-with-CoAccessibility.pdf", emit: plot_tracks_marker_genes_with_coaccessibility
 
     script:
@@ -43,7 +43,7 @@ process ARCHR_COACCESSIBILITY_CLUSTERS {
       ArchRProj = proj,
       reducedDims = "IterativeLSI"
       )
-    saveRDS(proj2, file = "archr_project.rds")
+    saveRDS(proj2, file = "archr_coaccessibility_project.rds")
 
     cA <- getCoAccessibility(
       ArchRProj = proj2,

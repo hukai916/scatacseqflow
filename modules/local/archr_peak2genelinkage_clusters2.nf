@@ -7,11 +7,11 @@ options        = initOptions(params.options)
 /*
  * Parse software version numbers
  */
-process ARCHR_COACCESSIBILITY_CLUSTERS2 {
+process ARCHR_PEAK2GENELINKAGE_CLUSTERS2 {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'archr_coaccessibility_clusters2', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'archr_peak2genelinkage_clusters2', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -29,8 +29,9 @@ process ARCHR_COACCESSIBILITY_CLUSTERS2 {
     path archr_project
 
     output:
-    path "archr_coaccessibility_project.rds", emit: archr_project
-    path "Plots/Plot-Tracks-Marker-Genes-with-CoAccessibility.pdf", emit: plot_tracks_marker_genes_with_coaccessibility
+    path "archr_project.rds", emit: archr_project
+    path "Plots/Heatmap-Marker-Genes-with-Peak2GeneLinks.pdf", emit: heatmap_marker_genes_with_peaks2genelinks
+    path "Plots/Plot-Tracks-Marker-Genes-with-Peak2GeneLinks.pdf", emit: plot_tracks_marker_genes_with_peak2genelinks
 
     script:
 
@@ -39,34 +40,36 @@ process ARCHR_COACCESSIBILITY_CLUSTERS2 {
     library(ArchR)
     proj <- readRDS("$archr_project", refhook = NULL)
 
-    proj2 <- addCoAccessibility(
+    proj2 <- addPeak2GeneLinks(
       ArchRProj = proj,
       reducedDims = "IterativeLSI"
       )
-    saveRDS(proj2, file = "archr_coaccessibility_project.rds")
 
-    cA <- getCoAccessibility(
-      ArchRProj = proj2,
-      returnLoops = TRUE,
-      $options.args
-      )
+    p2g <- getPeak2GeneLinks(
+        ArchRProj = proj2,
+        returnLoops = TRUE,
+        $options.args
+    )
 
     markerGenes <- c($options.marker_genes)
-
     p <- plotBrowserTrack(
       ArchRProj = proj2,
       groupBy = "Clusters2",
       geneSymbol = markerGenes,
       upstream = 50000,
       downstream = 50000,
-      loops = getCoAccessibility(proj2)
+      loops = getPeak2GeneLinks(proj2)
       )
+    plotPDF(plotList = p,
+      name = "Plot-Tracks-Marker-Genes-with-Peak2GeneLinks.pdf",
+      ArchRProj = NULL,
+      addDOC = FALSE, width = 5, height = 5)
 
-      plotPDF(plotList = p,
-        name = "Plot-Tracks-Marker-Genes-with-CoAccessibility.pdf",
-        ArchRProj = NULL,
-        addDOC = FALSE, width = 5, height = 5
-        )
+    p <- plotPeak2GeneHeatmap(ArchRProj = proj2, groupBy = "Clusters2")
+    plotPDF(p,
+      name = "Heatmap-Marker-Genes-with-Peak2GeneLinks.pdf",
+      ArchRProj = NULL,
+      addDOC = FALSE, width = 5, height = 12)
 
     ' > run.R
 

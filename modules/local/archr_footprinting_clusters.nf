@@ -30,7 +30,7 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
     path archr_dir
 
     output:
-    path "Plots/Footprints-*-Bias.pdf", emit: footprints
+    path "save_archr_project/Plots/Footprints-*-Bias.pdf", emit: footprints
     path "save_archr_project/Plots/TSS-No-Normalization.pdf", emit: tss_no_normalization
 
     script:

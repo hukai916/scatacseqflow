@@ -25,6 +25,7 @@ def initOptions(Map args) {
     options.norm_method   = args.norm_method ?: ''
     options.tss_flank     = args.tss_flank ?: ''
     options.flank_norm    = args.flank_norm ?: ''
+    options.gene_to_color = args.gene_to_color ?: ''
     options.publish_by_id = args.publish_by_id ?: false
     options.publish_dir   = args.publish_dir ?: ''
     options.publish_files = args.publish_files

@@ -29,7 +29,6 @@ process ARCHR_PEAK2GENELINKAGE_CLUSTERS2 {
     path archr_project
 
     output:
-    path "archr_project.rds", emit: archr_project
     path "Plots/Heatmap-Marker-Genes-with-Peak2GeneLinks.pdf", emit: heatmap_marker_genes_with_peaks2genelinks
     path "Plots/Plot-Tracks-Marker-Genes-with-Peak2GeneLinks.pdf", emit: plot_tracks_marker_genes_with_peak2genelinks
 

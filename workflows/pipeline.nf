@@ -114,6 +114,8 @@ include { ARCHR_COACCESSIBILITY_CLUSTERS } from '../modules/local/archr_coaccess
 include { ARCHR_COACCESSIBILITY_CLUSTERS2 } from '../modules/local/archr_coaccessibility_clusters2' addParams( options: modules['archr_coaccessibility_clusters2'] )
 include { ARCHR_PEAK2GENELINKAGE_CLUSTERS2 } from '../modules/local/archr_peak2genelinkage_clusters2' addParams( options: modules['archr_peak2genelinkage_clusters2'] )
 include { ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS } from '../modules/local/archr_get_positive_tf_regulator_clusters' addParams( options: modules['archr_get_positive_tf_regulator_clusters'] )
+include { ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2 } from '../modules/local/archr_get_positive_tf_regulator_clusters2' addParams( options: modules['archr_get_positive_tf_regulator_clusters2'] )
+include { ARCHR_TRAJECTORY_CLUSTERS2 } from '../modules/local/archr_trajectory_clusters2' addParams( options: modules['archr_trajectory_clusters2'] )
 
 
 // // Modules: nf-core/modules
@@ -594,12 +596,23 @@ workflow DOWNSTREAM {
 
     // Module: identify "positive" TF-regulators
     if (params.groupby_cluster == "Clusters") {
-      // ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
+      ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
     } else if (params.groupby_cluster == "Clusters2") {
       ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
-      // ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
+      ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
       }
 
+    // Module: trajectory analysis: for Clusters2 only
+    if (params.groupby_cluster == "Clusters2") {
+      if (params.trajectory_groups = "") {
+        log.info "Parameter --trajectory_groups not supplied, checking trajectory analysis!"
+      } else {
+        log.info "Parameter --trajectory_groups supplied, will perform trajectory analysis!"
+        ARCHR_TRAJECTORY_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project, params.trajectory_groups)
+      }
+    } else {
+      log.info "Parameter --scrnaseq not supplied, skip trajectory analysis!"
+    }
 
     // Module: peak2genelinkage (for clusters2)
     // if (params.groupby_cluster == "Clusters") {

@@ -30,7 +30,7 @@ process CELLRANGER_INDEX {
     val genome_name
 
     output:
-    path "genome_index", emit: index
+    path "genome_index", emit: index_folder
 
     script:
 

@@ -150,23 +150,23 @@ workflow PREPROCESS {
   // Check to see if parameter modules are specified or not
   if (params.preprocess == "default") {
     log.info "INFO: --preprocess: default"
-  } else if (params.preprocess == "10xgenomics") {
+  }
+  else if (params.preprocess == "10xgenomics") {
     log.info "INFO: --preprocess: 10xgenomics"
-  } else if (params.preprocess == "biorad") {
+  }
+  else if (params.preprocess == "biorad") {
     log.info "INFO: --preprocess: biorad"
     log.info "INFO: must use biorad compatible sequencing data!"
-  } else {
+  }
+  else {
     log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."
   }
 
+  // Perform preprocess accordingly
   if (params.preprocess == "default") {
     if (!(params.barcode_whitelist)) {
       log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
     }
-  }
-
-  // Module: prepare 10xgenomics folder structure
-  if (params.preprocess == "default") {
     // log.info "INFO(2): --preprocess: default"
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
     // module: fastQC
@@ -175,9 +175,9 @@ workflow PREPROCESS {
     // module: barcode correction (optional) and add barcode: correct barcode fastq given whitelist and barcode fastq file
     if (!(params.barcode_whitelist)) {
       // log.info "NOTICE(2): --barcode_whitelist: not supplied, skip barcode correction!"
-
       ADD_BARCODE_TO_READS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
-    } else {
+    }
+    else {
       CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
       // module: match read1 and read2
       // MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
@@ -232,7 +232,7 @@ workflow PREPROCESS {
         // module : bwa_map
         BWA_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_bwa_index)
       }
-    } else if (params.mapper == "minimap2") {
+      } else if (params.mapper == "minimap2") {
       log.info "INFO: --mapper: minimap2"
 
       if (!params.ref_minimap2_index) {
@@ -270,33 +270,30 @@ workflow PREPROCESS {
         // module : minimap2_map
         MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_minimap2_index)
       }
-    } else {
-      exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
-    }
+          } else {
+              exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
+            }
 
     // module: bamqc with qualimap
     if (params.mapper == 'bwa') {
       QUALIMAP (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
-    } else if (params.mapper == "minimap2") {
+      } else if (params.mapper == "minimap2") {
       QUALIMAP (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
-    }
+          }
 
     // module: generate fragment file with sinto
     if (params.mapper == 'bwa') {
       GET_FRAGMENTS (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
-    } else if (params.mapper == "minimap2") {
+      } else if (params.mapper == "minimap2") {
       GET_FRAGMENTS (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
-    }
+          }
 
     // module: generate fragement file with sinto
-  } else if (params.preprocess == "10xgenomics") {
-    // log.info "INFO: --preprocess: 10xgenomics"
-    // Module: prepare fastq folder
-    GET_10XGENOMICS_FASTQ (ch_samplesheet)
-
+  }
+  else if (params.preprocess == "10xgenomics") {
+    // log.info "INFO: --preprocess: 10xgenomics(2)"
     if (params.ref_cellranger == "") {
       log.info "Parameter --ref_cellranger not supplied, checking --ref_cellranger_ucsc/--ref_cellranger_ensembl!"
-
       if (params.ref_cellranger_ucsc) {
         log.info "Parameter --ref_cellranger_ucsc provided, will download genome, gtf, and build index with cellranger-atac."
 
@@ -310,24 +307,36 @@ workflow PREPROCESS {
         GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
         // Module: prepare cellranger index
         CELLRANGER_INDEX (GET_PRIMARY_GENOME.out.genome_fasta, FIX_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
-      } else if (params.ref_cellranger_ensembl) {
+        // Module: prepare fastq folder
+        GET_10XGENOMICS_FASTQ (ch_samplesheet)
+        // Module: run cellranger-atac count
+        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+      }
+      else if (params.ref_cellranger_ensembl) {
         // Module: download ensembl genome
         DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, params.ensembl_release)
         // Module: download ensembl gtf
         DOWNLOAD_FROM_ENSEMBL_GTF (params.ref_cellranger_ensembl, params.ensembl_release)
         // Module: prepare cellranger index
         CELLRANGER_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
+        // Module: prepare fastq folder
+        GET_10XGENOMICS_FASTQ (ch_samplesheet)
+        // Module: run cellranger-atac count
+        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
       }
-      // Module: run cellranger-atac count
-      CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
-    } else {
+      else {
+        exit 1, "--ref_cellranger_ucsc/--ref_cellranger_ensembl must be specified!"
+      }
+    }
+    else {
       log.info "Parameter --ref_cellranger supplied, will use it as index folder."
+      GET_10XGENOMICS_FASTQ (ch_samplesheet)
       CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
       // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
       // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
     }
-
-} else if (params.preprocess == "biorad") {
+  }
+  else if (params.preprocess == "biorad") {
     // log.info "INFO: --preprocess: biorad"
     // log.info "INFO: must use biorad compatible sequencing data!"
     if (params.ref_bwa_index == "") {
@@ -349,10 +358,9 @@ workflow PREPROCESS {
     BIORAD_ATAC_SEQ_BWA (BIORAD_ATAC_SEQ_TRIM_READS.out.sample_name, BIORAD_ATAC_SEQ_TRIM_READS.out.trimmed_reads, params.ref_bwa_index)
     BIORAD_ATAC_SEQ_ALIGNMENT_QC (BIORAD_ATAC_SEQ_BWA.out.sample_name, BIORAD_ATAC_SEQ_BWA.out.alignments, params.ref_fasta)
     BIORAD_ATAC_SEQ_FILTER_BEADS (BIORAD_ATAC_SEQ_BWA.out.sample_name, BIORAD_ATAC_SEQ_BWA.out.alignments, params.biorad_genome)
-  } else {
-    // log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."
   }
 }
+
 
 if (params.input_archr) {
   Channel
@@ -364,7 +372,7 @@ if (params.input_archr) {
   }
   .unique()
   .set { ch_samplesheet_archr }
-}
+  }
 
 workflow DOWNSTREAM {
     ch_software_versions = Channel.empty()

@@ -45,7 +45,7 @@ process ADD_BARCODE_TO_READS {
     if [[ "\$extension" == "gz" ]]
     then
       # barcode_length=\$(zcat $barcode_fastq | awk '{if(NR==2) print length(\$1)}')
-      # Below is more efficient:
+      # Below is more efficient: but also exit 141 when running on NF.
       # barcode_length=\$(zcat $barcode_fastq | awk 'NR==2 { print length(\$1); exit }')
       # Below works too, but not with head -n 1, since head breaks the pipe and exit with 141.
       barcode_length=\$(zcat $barcode_fastq | awk '{if(NR%4==2) print length(\$1)}' | tail -n 1)
@@ -54,13 +54,19 @@ process ADD_BARCODE_TO_READS {
     fi
 
     mkdir R1
-    ln $barcode_fastq R1/ # must be hard link
-    ln $read1_fastq R1/
+    # ln $barcode_fastq R1/ # must be hard link, note hard link won't be created with docker, so use cp instead
+    # ln $read1_fastq R1/
+    cp $barcode_fastq R1/
+    cp $read1_fastq R1/
     sinto barcode $options.args --barcode_fastq R1/$barcode_fastq --read1 R1/$read1_fastq -b \$barcode_length
+    rm R1/$barcode_fastq R1/$read1_fastq
 
     mkdir R2
-    ln $barcode_fastq R2/ # must be hard link
-    ln $read2_fastq R2/
+    # ln $barcode_fastq R2/ # must be hard link
+    # ln $read2_fastq R2/
+    cp $barcode_fastq R2/
+    cp $read2_fastq R2/
     sinto barcode $options.args --barcode_fastq R2/$barcode_fastq --read1 R2/$read2_fastq -b \$barcode_length
+    rm R2/$read2_fastq R2/$barcode_fastq
     """
 }

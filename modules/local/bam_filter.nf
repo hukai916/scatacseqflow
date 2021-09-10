@@ -7,11 +7,11 @@ options        = initOptions(params.options)
 /*
  * Parse software version numbers
  */
-process QUALIMAP {
+process BAM_FILTER {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'qualimap', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'bam_filter', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -21,7 +21,7 @@ process QUALIMAP {
     // }
 
     // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/qualimap_xenial:0.1"
+    container "hukai916/bwa_xenial:0.1"
 
     // cache false
 
@@ -31,13 +31,14 @@ process QUALIMAP {
 
     output:
     val sample_name, emit: sample_name
-    path "bamqc_$sample_name", emit: bamqc
+    path "*.filtered.bam", emit: bam
 
     script:
+    def avail_mem = task.memory ? "-m ${task.memory.toBytes().intdiv(task.cpus)}" : ''
+    // Ref: https://gitter.im/nextflow-io/nextflow?at=5a4f8f01ce68c3bc7480d7c5
 
     """
-    mem=\$(echo '$task.memory' | grep -o -E '[0-9]+')
-    qualimap bamqc $options.args --java-mem-size=\${mem}G -bam $bam -outdir ${sample_name}
+    samtools view -@ $task.cpus $avail_mem $options.args -b $bamfile -o ${bam.baseName}.filtered.bam
 
     """
 }

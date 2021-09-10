@@ -72,8 +72,9 @@ include { BWA_MAP          } from '../modules/local/bwa_map'    addParams( optio
 include { MINIMAP2_INDEX   } from '../modules/local/minimap2_index'    addParams( options: modules['minimap2_index'] )
 include { MINIMAP2_MAP     } from '../modules/local/minimap2_map'    addParams( options: modules['minimap2_map'] )
 
+include { BAM_FILTER       } from '../modules/local/bam_filter'    addParams( options: modules['bam_filter'] )
 include { QUALIMAP         } from '../modules/local/qualimap'    addParams( options: modules['qualimap'] )
-include { GET_FRAGMENTS         } from '../modules/local/get_fragments'    addParams( options: modules['get_fragments'] )
+include { GET_FRAGMENTS    } from '../modules/local/get_fragments'    addParams( options: modules['get_fragments'] )
 
 include { DOWNLOAD_FROM_UCSC_GTF } from '../modules/local/download_from_ucsc_gtf'    addParams( options: modules['download_from_ucsc_gtf'] )
 include { FIX_UCSC_GTF } from '../modules/local/fix_ucsc_gtf'    addParams( options: modules['fix_ucsc_gtf'] )
@@ -274,19 +275,31 @@ workflow PREPROCESS {
               exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
             }
 
-    // module: bamqc with qualimap
+    // module: filter out poorly mapped reads
     if (params.mapper == 'bwa') {
-      QUALIMAP (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
-      } else if (params.mapper == "minimap2") {
-      QUALIMAP (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
-          }
+      BAM_FILTER (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
+    } else if (params.mapper == "minimap2") {
+        BAM_FILTER (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
+      }
+
+    // module: bamqc with qualimap for raw bam files
+    QUALIMAP (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
 
     // module: generate fragment file with sinto
-    if (params.mapper == 'bwa') {
-      GET_FRAGMENTS (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
-      } else if (params.mapper == "minimap2") {
-      GET_FRAGMENTS (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
-          }
+    GET_FRAGMENTS (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
+
+    // TO BE DELETED:
+    // if (params.mapper == 'bwa') {
+    //   QUALIMAP (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
+    // } else if (params.mapper == "minimap2") {
+    //     QUALIMAP (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
+    //   }
+    // module: generate fragment file with sinto
+    // if (params.mapper == 'bwa') {
+    //   GET_FRAGMENTS (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
+    //   } else if (params.mapper == "minimap2") {
+    //   GET_FRAGMENTS (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
+    //       }
 
     // module: generate fragement file with sinto
   }

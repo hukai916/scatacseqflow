@@ -34,6 +34,7 @@ process ARCHR_MARKER_GENE {
     path "Plots/Plot-UMAP-Marker-Genes-WO-Imputation.pdf", emit: pdf_umap_markder_genes_wo_imputation
     path "Plots/Plot-UMAP-Marker-Genes-W-Imputation.pdf", emit: pdf_umap_markder_genes_w_imputation
     path "Plots/Plot-Tracks-Marker-Genes.pdf", emit: pdf_tracks_marker_genes
+    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
 
@@ -92,6 +93,18 @@ process ARCHR_MARKER_GENE {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

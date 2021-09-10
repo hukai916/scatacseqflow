@@ -33,6 +33,7 @@ process ARCHR_PAIRWISE_TEST_CLUSTERS {
     output:
     path "Plots/*-Markers-MA-Volcano.pdf", emit: archr_markers_ma_volcano
     path "markerTest.rds", emit: archr_marker_test
+    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
 
@@ -60,6 +61,18 @@ process ARCHR_PAIRWISE_TEST_CLUSTERS {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

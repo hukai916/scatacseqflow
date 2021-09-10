@@ -34,6 +34,7 @@ process ARCHR_SCRNASEQ_CONSTRAINED {
     path "proj_scrnaseq_constrained.rds", emit: archr_project
     path "Plots/Plot-UMAP-Marker-Genes-RNA-W-Imputation.pdf", emit: pdf_umap_marker_genes_rna_w_imputation
     path "Plots/Plot-UMAP-Remap-Clusters.pdf", emit: pdf_umap_remap_clusters
+    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
 
@@ -149,6 +150,18 @@ process ARCHR_SCRNASEQ_CONSTRAINED {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

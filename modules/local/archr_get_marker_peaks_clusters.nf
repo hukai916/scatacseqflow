@@ -32,6 +32,8 @@ process ARCHR_GET_MARKER_PEAKS_CLUSTERS {
     path "marker_peaks.rds", emit: archr_marker_peaks
     path "Plots/Peak-Marker-Heatmap.pdf", emit: archr_peak_marker_heatmap
     path "group_names.txt", emit: group_names
+    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+
 
     script:
 
@@ -74,6 +76,18 @@ process ARCHR_GET_MARKER_PEAKS_CLUSTERS {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

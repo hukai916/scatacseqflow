@@ -36,6 +36,7 @@ process ARCHR_EMBEDDING {
     path "Plots/Plot-tSNE-Sample-ScranClusters.pdf", emit: pdf_tsne_sample_scranclusters
     path "Plots/Plot-UMAP2Harmony-Sample-Clusters.pdf", emit: pdf_umap2harmony_sample_clusters
     path "Plots/Plot-TSNE2Harmony-Sample-Clusters.pdf", emit: pdf_tsne2harmony_sample_clusters
+    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
 
@@ -109,6 +110,18 @@ process ARCHR_EMBEDDING {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

@@ -34,6 +34,7 @@ process ARCHR_CLUSTERING {
     path "Cluster-scran-matrix.csv", emit: csv_cluster_scran_matrix
     path "Plots/Cluster-heatmap.pdf", emit: pdf_cluster_heatmap
     path "Plots/Cluster-scran-heatmap.pdf", emit: pdf_cluster_scran_heatmap
+    path "Plots/jpeg", emit: jpeg
 
     script:
 
@@ -97,6 +98,18 @@ process ARCHR_CLUSTERING {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

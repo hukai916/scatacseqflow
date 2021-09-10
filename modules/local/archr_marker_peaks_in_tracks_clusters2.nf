@@ -33,6 +33,7 @@ process ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS2 {
 
     output:
     path "Plots/Plot-Tracks-With-Features.pdf", emit: archr_tracks_with_features
+    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
 
@@ -55,6 +56,18 @@ process ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS2 {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

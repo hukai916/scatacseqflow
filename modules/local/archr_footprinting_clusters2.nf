@@ -32,6 +32,7 @@ process ARCHR_FOOTPRINTING_CLUSTERS2 {
     output:
     path "save_archr_project/Plots/Footprints-*-Bias.pdf", emit: footprints
     path "save_archr_project/Plots/TSS-No-Normalization.pdf", emit: tss_no_normalization
+    path "save_archr_project/Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
 
@@ -79,6 +80,19 @@ process ARCHR_FOOTPRINTING_CLUSTERS2 {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    rm -rf save_archr_project/Plots/jpeg
+    mkdir save_archr_project/Plots/jpeg
+    x=( \$(find ./save_archr_project/Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./save_archr_project/Plots/jpeg/\$filename
+      convert -append ./save_archr_project/Plots/jpeg/\${filename}* ./save_archr_project/Plots/jpeg/\${filename}.jpg
+      rm ./save_archr_project/Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

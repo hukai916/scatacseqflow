@@ -34,7 +34,7 @@ process ARCHR_CREATE_ARROWFILES {
 
     output:
     val sample_name, emit: sample_name
-    path "QualityControl", emit: quality_control
+    path "QualityControl_*", emit: quality_control
     path "*.arrow", emit: arrowfile
 
     script:
@@ -52,11 +52,24 @@ process ARCHR_CREATE_ARROWFILES {
       inputFiles = inputFiles,
       sampleNames = names(inputFiles),
       threads = 1,
+      QCDir = paste0("QualityControl_", "$sample_name"),
       subThreading = FALSE,
       $options.args
     )' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir QualityControl_$sample_name/jpeg
+    x=( \$(find ./QualityControl_$sample_name -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./QualityControl_$sample_name/jpeg/\$filename
+      convert -append ./QualityControl_$sample_name/jpeg/\${filename}* ./QualityControl_$sample_name/jpeg/\${filename}.jpg
+      rm ./QualityControl_$sample_name/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

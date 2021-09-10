@@ -38,6 +38,7 @@ process ARCHR_MOTIF_DEVIATIONS_CLUSTERS2 {
     path "Plots/Plot-Groups-Deviations-w-Imputation-UMAP-Embedding-w-Gene-Expression.pdf", emit: plot_groups_deviations_w_imputation_umap_embedding_w_gene_expression
     path "Plots/Variable-Custom-Deviation-Scores.pdf", emit: variable_custom_deviation_scores
     path "Plots/Plot-Groups-Deviations-w-Imputation-UMAP-Embedding-w-z-scores.pdf", emit: plot_groups_deviations_w_imputation_umap_embedding_w_z_scores
+    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
 
@@ -137,6 +138,18 @@ process ARCHR_MOTIF_DEVIATIONS_CLUSTERS2 {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

@@ -31,6 +31,7 @@ process ARCHR_PEAK2GENELINKAGE_CLUSTERS2 {
     output:
     path "Plots/Heatmap-Marker-Genes-with-Peak2GeneLinks.pdf", emit: heatmap_marker_genes_with_peaks2genelinks
     path "Plots/Plot-Tracks-Marker-Genes-with-Peak2GeneLinks.pdf", emit: plot_tracks_marker_genes_with_peak2genelinks
+    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
 
@@ -73,6 +74,18 @@ process ARCHR_PEAK2GENELINKAGE_CLUSTERS2 {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

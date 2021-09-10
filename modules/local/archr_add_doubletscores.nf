@@ -34,7 +34,7 @@ process ARCHR_ADD_DOUBLETSCORES {
 
     output:
     val sample_name, emit: sample_name
-    path "doublet_qc", emit: qc
+    path "doublet_qc_*", emit: qc
     path "*_doublet.arrow", emit: arrowfile
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.
@@ -44,7 +44,7 @@ process ARCHR_ADD_DOUBLETSCORES {
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
     """
-    mkdir -p doublet_qc/$sample_name
+    mkdir -p doublet_qc_$sample_name
     cp $arrowfile ${sample_name}_doublet.arrow # so that the original arrowfile doesn't get modified in place, this is to use the -resume option of nextflow
 
     echo '
@@ -52,11 +52,23 @@ process ARCHR_ADD_DOUBLETSCORES {
 
     addDoubletScores(
     input  = "${sample_name}_doublet.arrow",
-    outDir = "doublet_qc",
+    outDir = paste0("doublet_qc_", "$sample_name"),
     $options.args)
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir doublet_qc_$sample_name/jpeg
+    x=( \$(find ./doublet_qc_$sample_name -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./doublet_qc_$sample_name/jpeg/\$filename
+      convert -append ./doublet_qc_$sample_name/jpeg/\${filename}* ./doublet_qc_$sample_name/jpeg/\${filename}.jpg
+      rm ./doublet_qc_$sample_name/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

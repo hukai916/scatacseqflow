@@ -35,6 +35,7 @@ process ARCHR_TRAJECTORY_CLUSTERS2 {
     path "Plots/Plot-Traj-Heatmaps.pdf", emit: plot_traj_heatmap
     path "Plots/Plot-Traj-Paired-Heatmaps-w-GeneScore.pdf", emit: plot_traj_paired_heatmaps_w_genescore
     path "Plots/Plot-Traj-Paired-Heatmaps-w-GeneExpression.pdf", emit: plot_traj_paired_heatmaps_w_geneexpression
+    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
 
@@ -113,6 +114,18 @@ process ARCHR_TRAJECTORY_CLUSTERS2 {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

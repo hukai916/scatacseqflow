@@ -35,6 +35,7 @@ process ARCHR_ARCHRPROJECT_QC {
     path "Plots/TSS-vs-Frags.pdf", emit: pdf_tss_vs_frags
     path "Plots/QC-Sample-Statistics.pdf", emit: pdf_qc_sample_statistics
     path "Plots/QC-Sample-FragSizes-TSSProfile.pdf", emit: pdf_qc_sample_fragsizes_tssprofile
+    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
     path "proj_doublet_filtered.rds", emit: archr_project
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.
@@ -105,6 +106,18 @@ process ARCHR_ARCHRPROJECT_QC {
     ' > run.R
 
     Rscript run.R
+
+    # Convert to jpeg:
+    mkdir Plots/jpeg
+    x=( \$(find ./Plots -name "*.pdf") )
+    for item in "\${x[@]}"
+    do
+      filename=\$(basename -- "\$item")
+      filename="\${filename%.*}"
+      pdftoppm -jpeg -r 300 \$item ./Plots/jpeg/\$filename
+      convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
+      rm ./Plots/jpeg/\${filename}-*.jpg
+    done
 
     """
 }

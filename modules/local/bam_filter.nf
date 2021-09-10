@@ -38,7 +38,7 @@ process BAM_FILTER {
     // Ref: https://gitter.im/nextflow-io/nextflow?at=5a4f8f01ce68c3bc7480d7c5
 
     """
-    samtools view -@ $task.cpus $avail_mem $options.args -b $bamfile -o ${bam.baseName}.filtered.bam
+    samtools view -@ $task.cpus $avail_mem $options.args -b $bam -o ${bam.baseName}.filtered.bam
 
     """
 }

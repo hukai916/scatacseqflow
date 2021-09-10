@@ -31,13 +31,13 @@ process QUALIMAP {
 
     output:
     val sample_name, emit: sample_name
-    path "bamqc", emit: bamqc
+    path "bamqc_$sample_name", emit: bamqc
 
     script:
 
     """
     mem=\$(echo '$task.memory' | grep -o -E '[0-9]+')
-    qualimap bamqc $options.args --java-mem-size=\${mem}G -bam $bam -outdir bamqc
+    qualimap bamqc $options.args --java-mem-size=\${mem}G -bam $bam -outdir bamqc_${sample_name}
 
     """
 }

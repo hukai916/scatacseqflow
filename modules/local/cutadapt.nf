@@ -36,6 +36,7 @@ process CUTADAPT {
     val sample_name, emit: sample_name
     path "R1/trimmed*", emit: trimed_read1_fastq
     path "R2/trimmed*", emit: trimed_read2_fastq
+    path "log_cutadapt_*.txt", emit: log
 
     script:
     read1_name = read1_fastq.getName()
@@ -46,6 +47,7 @@ process CUTADAPT {
     cutadapt $options.args -a $read1_adapter -o R1/trimmed_$read1_name $read1_fastq
     mkdir R2
     cutadapt $options.args -a $read2_adapter -o R2/trimmed_$read2_name $read2_fastq
+    cp .command.log log_cutadapt_${sample_name}.txt
 
     """
 }

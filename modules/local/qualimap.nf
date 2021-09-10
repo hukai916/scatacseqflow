@@ -31,7 +31,7 @@ process QUALIMAP {
 
     output:
     val sample_name, emit: sample_name
-    path "bamqc_$sample_name", emit: bamqc
+    path "$sample_name", emit: bamqc
 
     script:
 

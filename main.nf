@@ -51,8 +51,10 @@ include { DOWNSTREAM } from './workflows/pipeline' addParams( summary_params: su
 workflow  SCATACSEQFLOW {
   if (params.preprocess) {
     log.info "Running preprocess ..."
-    PREPROCESS ()
+    PREPROCESS (ch_samplesheet)
+    PREPROCESS.out.view()
 
+    log.info "Running downstream analysis with ArchR ..."
     if (params.preprocess == "default") {
       // DOWNSTREAM (PREPROCESS.out.bam, PREPROCESS.out.fragments)
     } else if (params.preprocess == "10xgenomics") {

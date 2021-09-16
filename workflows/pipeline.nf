@@ -137,19 +137,6 @@ include { ARCHR_TRAJECTORY_CLUSTERS2 } from '../modules/local/archr_trajectory_c
 ////////////////////////////////////////////////////
 /* --           RUN MAIN WORKFLOW              -- */
 ////////////////////////////////////////////////////
-// parse samplesheet.csv
-if (params.input) {
-  Channel
-  .from(file(params.input, checkIfExists: true))
-  .splitCsv(header: true, sep: ",", strip: true)
-  .map {
-    row ->
-      [ row.sample_name, row.path_fastq_1, row.path_fastq_2, row.path_barcode ]
-  }
-  .unique()
-  .set { ch_samplesheet }
-}
-
 workflow PREPROCESS {
   take:
     ch_samplesheet
@@ -351,270 +338,269 @@ workflow PREPROCESS {
 
     // Collect all output results for MultiQC report:
     res_files = Channel.empty()
-    res_files = res_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
-    res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect{it[1]}.ifEmpty([]))
-    res_fiels = res_files.mix(CUTADAPT.out.log.collect{it[1]}.ifEmpty([]))
-    res_files = res_files.mix(QUALIMAP.out.bamqc.collect{it[1]}.ifEmpty([]))
+    res_files = res_files.mix(FASTQC.out.zip.collect{it}.ifEmpty([]))
+    res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect{it}.ifEmpty([]))
+    res_fiels = res_files.mix(CUTADAPT.out.log.collect{it}.ifEmpty([]))
+    res_files = res_files.mix(QUALIMAP.out.bamqc.collect{it}.ifEmpty([]))
 
   emit:
     res_files.collect()
 }
 
-if (params.input_archr) {
-  Channel
-  .from(file(params.input_archr, checkIfExists: true))
-  .splitCsv(header: true, sep: ",", strip: true)
-  .map {
-    row ->
-      [ row.sample_name, row.file_path ]
-  }
-  .unique()
-  .set { ch_samplesheet_archr }
-}
-
 workflow DOWNSTREAM {
-  ch_software_versions = Channel.empty()
-  log.info "INFO: --downstream: ArchR"
-  // Module: check if ArchR genome matches with preprocess genome, and create custome Genome if needed.
-  (bsgenome, genome_status) = get_bsgenome(params.archr_genome, params.ref_fasta_ucsc, params.ref_fasta_ensembl, params.ref_cellranger_ucsc, params.ref_cellranger_ensembl)
-  if (["ready", "ready_ucsc", "ready_ensembl"].contains(genome_status)) {
-    // "ready" means ArchR natively supported genome
-    if (genome_status == "ready_ensembl") {
-      log.info "INFO: ArchR will use natively supported ArchR genome (though ensembl genome supplied): " + bsgenome
-    } else {
-      log.info "INFO: ArchR will use natively supported ArchR genome: " + bsgenome
-    }
-    ARCHR_CREATE_ARROWFILES(ch_samplesheet_archr, bsgenome, params.archr_thread)
-    // Module: add DoubletScores
-    ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
-    ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
-    ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
-  } else if (["need_build", "need_build_ucsc", "need_build_ensembl"].contains(genome_status)) {
-      // "need_build" menas ArchR need to build gene/genomeAnnotation files first
-      if (genome_status == "need_build_ensembl") {
-        log.info "INFO: ArchR will build gene/genomeAnnotation files with (though ensembl genome supplied): " + bsgenome
+  take:
+    ch_samplesheet_archr
+
+  main:
+    ch_software_versions = Channel.empty()
+    log.info "INFO: --downstream: ArchR"
+    // Module: check if ArchR genome matches with preprocess genome, and create custome Genome if needed.
+    (bsgenome, genome_status) = get_bsgenome(params.archr_genome, params.ref_fasta_ucsc, params.ref_fasta_ensembl, params.ref_cellranger_ucsc, params.ref_cellranger_ensembl)
+    if (["ready", "ready_ucsc", "ready_ensembl"].contains(genome_status)) {
+      // "ready" means ArchR natively supported genome
+      if (genome_status == "ready_ensembl") {
+        log.info "INFO: ArchR will use natively supported ArchR genome (though ensembl genome supplied): " + bsgenome
       } else {
-        log.info "INFO: ArchR will build gene/genomeAnnotation files with: " + bsgenome
+        log.info "INFO: ArchR will use natively supported ArchR genome: " + bsgenome
       }
-      ARCHR_GET_ANNOTATION(params.archr_genome)
-      ARCHR_CREATE_ARROWFILES_ANNOTATION(ch_samplesheet_archr, ARCHR_GET_ANNOTATION.out.geneAnnotation, ARCHR_GET_ANNOTATION.out.genomeAnnotation, ARCHR_GET_ANNOTATION.out.user_rlib, params.archr_thread)
+      ARCHR_CREATE_ARROWFILES(ch_samplesheet_archr, bsgenome, params.archr_thread)
       // Module: add DoubletScores
-      ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES_ANNOTATION.out.sample_name, ARCHR_CREATE_ARROWFILES_ANNOTATION.out.arrowfile)
+      ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
       ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
       ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
-  } else {
-    exit 1, "Must provide ArchR supported genomes!"
-  }
-
-  // Module: create ArchRProject and ArchRProjectQC
-  if (["ready", "ready_ensembl", "ready_ucsc"].contains(genome_status)) {
-    ARCHR_ARCHRPROJECT(ch_arrowfile_list, bsgenome, params.archr_thread)
-    ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.archr_project, params.archr_filter_ratio)
-  } else if (["need_build", "need_build_ucsc", "need_build_ensembl"].contains(genome_status)) {
-    ARCHR_ARCHRPROJECT_ANNOTATION(ch_arrowfile_list, ARCHR_GET_ANNOTATION.out.geneAnnotation, ARCHR_GET_ANNOTATION.out.genomeAnnotation, ARCHR_GET_ANNOTATION.out.user_rlib)
-    ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project, params.archr_filter_ratio)
-  }
-
-  // Module: dimension reduction
-  ARCHR_DIMENSION_REDUCTION(ARCHR_ARCHRPROJECT_QC.out.archr_project)
-
-  // Module: batch correction with harmony
-  ARCHR_BATCH_CORRECTION(ARCHR_DIMENSION_REDUCTION.out.archr_project)
-
-  // Module: clustering with Seurat's FindClusters() function
-  ARCHR_CLUSTERING(ARCHR_BATCH_CORRECTION.out.archr_project)
-
-  // Module: single-cell embeddings
-  ARCHR_EMBEDDING(ARCHR_CLUSTERING.out.archr_project)
-
-  // Module: find marker gene
-  ARCHR_MARKER_GENE(ARCHR_EMBEDDING.out.archr_project)
-
-  // Module: integrate with matching scRNAseq data
-  if (!(params.archr_scrnaseq)) {
-    params.groupby_cluster = "Clusters"
-    log.info "NOTICE: --archr_scrnaseq: not supplied, skip integrative analysis with scRNA-seq!"
-    // ARCHR_PSEUDO_BULK(ARCHR_MARKER_GENE.out.archr_project, params.groupby_cluster)
-    ARCHR_PSEUDO_BULK_CLUSTERS(ARCHR_MARKER_GENE.out.archr_project)
-    // For each Arrorproject, you can have only one set of peak set unless you copy arrow files and create another arrowproject. That is why we implemented ARCHR_PSEUDO_BULK_CLUSTERS and ARCHR_PSEUDO_BULK_CLUSTERS2
-  } else {
-      params.groupby_cluster = "Clusters2"
-      log.info "NOTICE: --archr_scrnaseq: supplied, will perform integrative analysis with scRNA-seq!"
-      ARCHR_PSEUDO_BULK_CLUSTERS(ARCHR_MARKER_GENE.out.archr_project)
-      ARCHR_SCRNASEQ_UNCONSTRAINED(ARCHR_MARKER_GENE.out.archr_project, params.archr_scrnaseq)
-      // log.info "INFO: use the following cluster names to define --archr_scrnaseq_grouplist."
-      ARCHR_SCRNASEQ_UNCONSTRAINED.out.cell_type_scrna
-        .splitText()
-        .subscribe onNext: { String str -> println "Cluster name from scRNAseq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --archr_scrnaseq_grouplist ***\n"}
-
-      if ((!params.archr_scrnaseq_grouplist)) {
-        log.info "NOTICE: --archr_scrnaseq_grouplist: not supplied, skip constrained integration!"
-        // ARCHR_PSEUDO_BULK(ARCHR_SCRNASEQ_UNCONSTRAINED.out.archr_project, params.groupby_cluster)
-        ARCHR_PSEUDO_BULK_CLUSTERS2(ARCHR_SCRNASEQ_UNCONSTRAINED.out.archr_project)
-      } else {
-          log.info "NOTICE: --archr_scrnaseq_grouplist: supplied, will perform constrained integration!"
-          ARCHR_SCRNASEQ_CONSTRAINED(ARCHR_SCRNASEQ_UNCONSTRAINED.out.archr_project, params.archr_scrnaseq, params.archr_scrnaseq_grouplist)
-          // ARCHR_PSEUDO_BULK(ARCHR_SCRNASEQ_CONSTRAINED.out.archr_project, params.groupby_cluster)
-          ARCHR_PSEUDO_BULK_CLUSTERS2(ARCHR_SCRNASEQ_CONSTRAINED.out.archr_project)
-      }
-  }
-
-  // Module: call peaks
-  if (params.groupby_cluster == "Clusters") {
-    ARCHR_CALL_PEAKS_CLUSTERS(ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_project)
-  } else if (params.groupby_cluster == "Clusters2") {
-    ARCHR_CALL_PEAKS_CLUSTERS(ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_project)
-    ARCHR_CALL_PEAKS_CLUSTERS2(ARCHR_PSEUDO_BULK_CLUSTERS2.out.archr_project)
-  }
-
-  // Module: identify marker peaks and perform MA/Volcano plots
-  if (params.groupby_cluster == "Clusters") {
-    ARCHR_GET_MARKER_PEAKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project)
-    ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.group_names
-      .splitText()
-      .subscribe onNext: { String str -> println "Group name from scATAC-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters_1/2 and --marker_peak_clusters***\n"}
-  } else if (params.groupby_cluster == "Clusters2") {
-    ARCHR_GET_MARKER_PEAKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project)
-    ARCHR_GET_MARKER_PEAKS_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project)
-    ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.group_names
-      .splitText()
-      .subscribe onNext: { String str -> println "Group name from scATAC-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters_1/2 ***\n"}
-    ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.group_names
-      .splitText()
-      .subscribe onNext: { String str -> println "Group name from scRNA-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters2_1/2 and --marker_peak_clusters2***\n"}
-  }
-
-  // Module: plot peaks in browser tracks
-  if (params.groupby_cluster == "Clusters") {
-    if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters)) {
-      log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: not supplied, skip marker peak plotting on browser tracks!"
+    } else if (["need_build", "need_build_ucsc", "need_build_ensembl"].contains(genome_status)) {
+        // "need_build" menas ArchR need to build gene/genomeAnnotation files first
+        if (genome_status == "need_build_ensembl") {
+          log.info "INFO: ArchR will build gene/genomeAnnotation files with (though ensembl genome supplied): " + bsgenome
+        } else {
+          log.info "INFO: ArchR will build gene/genomeAnnotation files with: " + bsgenome
+        }
+        ARCHR_GET_ANNOTATION(params.archr_genome)
+        ARCHR_CREATE_ARROWFILES_ANNOTATION(ch_samplesheet_archr, ARCHR_GET_ANNOTATION.out.geneAnnotation, ARCHR_GET_ANNOTATION.out.genomeAnnotation, ARCHR_GET_ANNOTATION.out.user_rlib, params.archr_thread)
+        // Module: add DoubletScores
+        ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES_ANNOTATION.out.sample_name, ARCHR_CREATE_ARROWFILES_ANNOTATION.out.arrowfile)
+        ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
+        ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
     } else {
-      // Perform plotting
-      log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: supplied, will perform marker peak plotting on browser tracks!"
-      ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.marker_peak_geneSymbol, params.marker_peak_clusters)
+      exit 1, "Must provide ArchR supported genomes!"
     }
-  } else if (params.groupby_cluster == "Clusters2") {
-    if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters)) {
-      log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: not supplied, skip marker peak plotting on browser tracks!"
+
+    // Module: create ArchRProject and ArchRProjectQC
+    if (["ready", "ready_ensembl", "ready_ucsc"].contains(genome_status)) {
+      ARCHR_ARCHRPROJECT(ch_arrowfile_list, bsgenome, params.archr_thread)
+      ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.archr_project, params.archr_filter_ratio)
+    } else if (["need_build", "need_build_ucsc", "need_build_ensembl"].contains(genome_status)) {
+      ARCHR_ARCHRPROJECT_ANNOTATION(ch_arrowfile_list, ARCHR_GET_ANNOTATION.out.geneAnnotation, ARCHR_GET_ANNOTATION.out.genomeAnnotation, ARCHR_GET_ANNOTATION.out.user_rlib)
+      ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project, params.archr_filter_ratio)
+    }
+
+    // Module: dimension reduction
+    ARCHR_DIMENSION_REDUCTION(ARCHR_ARCHRPROJECT_QC.out.archr_project)
+
+    // Module: batch correction with harmony
+    ARCHR_BATCH_CORRECTION(ARCHR_DIMENSION_REDUCTION.out.archr_project)
+
+    // Module: clustering with Seurat's FindClusters() function
+    ARCHR_CLUSTERING(ARCHR_BATCH_CORRECTION.out.archr_project)
+
+    // Module: single-cell embeddings
+    ARCHR_EMBEDDING(ARCHR_CLUSTERING.out.archr_project)
+
+    // Module: find marker gene
+    ARCHR_MARKER_GENE(ARCHR_EMBEDDING.out.archr_project)
+
+    // Module: integrate with matching scRNAseq data
+    if (!(params.archr_scrnaseq)) {
+      params.groupby_cluster = "Clusters"
+      log.info "NOTICE: --archr_scrnaseq: not supplied, skip integrative analysis with scRNA-seq!"
+      // ARCHR_PSEUDO_BULK(ARCHR_MARKER_GENE.out.archr_project, params.groupby_cluster)
+      ARCHR_PSEUDO_BULK_CLUSTERS(ARCHR_MARKER_GENE.out.archr_project)
+      // For each Arrorproject, you can have only one set of peak set unless you copy arrow files and create another arrowproject. That is why we implemented ARCHR_PSEUDO_BULK_CLUSTERS and ARCHR_PSEUDO_BULK_CLUSTERS2
     } else {
+        params.groupby_cluster = "Clusters2"
+        log.info "NOTICE: --archr_scrnaseq: supplied, will perform integrative analysis with scRNA-seq!"
+        ARCHR_PSEUDO_BULK_CLUSTERS(ARCHR_MARKER_GENE.out.archr_project)
+        ARCHR_SCRNASEQ_UNCONSTRAINED(ARCHR_MARKER_GENE.out.archr_project, params.archr_scrnaseq)
+        // log.info "INFO: use the following cluster names to define --archr_scrnaseq_grouplist."
+        ARCHR_SCRNASEQ_UNCONSTRAINED.out.cell_type_scrna
+          .splitText()
+          .subscribe onNext: { String str -> println "Cluster name from scRNAseq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --archr_scrnaseq_grouplist ***\n"}
+
+        if ((!params.archr_scrnaseq_grouplist)) {
+          log.info "NOTICE: --archr_scrnaseq_grouplist: not supplied, skip constrained integration!"
+          // ARCHR_PSEUDO_BULK(ARCHR_SCRNASEQ_UNCONSTRAINED.out.archr_project, params.groupby_cluster)
+          ARCHR_PSEUDO_BULK_CLUSTERS2(ARCHR_SCRNASEQ_UNCONSTRAINED.out.archr_project)
+        } else {
+            log.info "NOTICE: --archr_scrnaseq_grouplist: supplied, will perform constrained integration!"
+            ARCHR_SCRNASEQ_CONSTRAINED(ARCHR_SCRNASEQ_UNCONSTRAINED.out.archr_project, params.archr_scrnaseq, params.archr_scrnaseq_grouplist)
+            // ARCHR_PSEUDO_BULK(ARCHR_SCRNASEQ_CONSTRAINED.out.archr_project, params.groupby_cluster)
+            ARCHR_PSEUDO_BULK_CLUSTERS2(ARCHR_SCRNASEQ_CONSTRAINED.out.archr_project)
+        }
+    }
+
+    // Module: call peaks
+    if (params.groupby_cluster == "Clusters") {
+      ARCHR_CALL_PEAKS_CLUSTERS(ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_project)
+    } else if (params.groupby_cluster == "Clusters2") {
+      ARCHR_CALL_PEAKS_CLUSTERS(ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_project)
+      ARCHR_CALL_PEAKS_CLUSTERS2(ARCHR_PSEUDO_BULK_CLUSTERS2.out.archr_project)
+    }
+
+    // Module: identify marker peaks and perform MA/Volcano plots
+    if (params.groupby_cluster == "Clusters") {
+      ARCHR_GET_MARKER_PEAKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project)
+      ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.group_names
+        .splitText()
+        .subscribe onNext: { String str -> println "Group name from scATAC-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters_1/2 and --marker_peak_clusters***\n"}
+    } else if (params.groupby_cluster == "Clusters2") {
+      ARCHR_GET_MARKER_PEAKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project)
+      ARCHR_GET_MARKER_PEAKS_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project)
+      ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.group_names
+        .splitText()
+        .subscribe onNext: { String str -> println "Group name from scATAC-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters_1/2 ***\n"}
+      ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.group_names
+        .splitText()
+        .subscribe onNext: { String str -> println "Group name from scRNA-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters2_1/2 and --marker_peak_clusters2***\n"}
+    }
+
+    // Module: plot peaks in browser tracks
+    if (params.groupby_cluster == "Clusters") {
+      if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters)) {
+        log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: not supplied, skip marker peak plotting on browser tracks!"
+      } else {
         // Perform plotting
         log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: supplied, will perform marker peak plotting on browser tracks!"
         ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.marker_peak_geneSymbol, params.marker_peak_clusters)
+      }
+    } else if (params.groupby_cluster == "Clusters2") {
+      if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters)) {
+        log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: not supplied, skip marker peak plotting on browser tracks!"
+      } else {
+          // Perform plotting
+          log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: supplied, will perform marker peak plotting on browser tracks!"
+          ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.marker_peak_geneSymbol, params.marker_peak_clusters)
+      }
+
+      if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters2)) {
+        log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters2: not supplied, skip marker peak plotting on browser tracks!"
+      } else {
+        // Perform plotting
+        log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters2: supplied, will perform marker peak plotting on browser tracks!"
+        ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.archr_marker_peaks, params.marker_peak_geneSymbol, params.marker_peak_clusters2)
+      }
     }
 
-    if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters2)) {
-      log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters2: not supplied, skip marker peak plotting on browser tracks!"
-    } else {
-      // Perform plotting
-      log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters2: supplied, will perform marker peak plotting on browser tracks!"
-      ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.archr_marker_peaks, params.marker_peak_geneSymbol, params.marker_peak_clusters2)
-    }
-  }
-
-  // Module: perform pairwise test
-  if (params.groupby_cluster == "Clusters") {
-    if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
-      log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip pairwise plotting!"
-    } else {
-      // Perform plotting
-      log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform pairwise plotting!"
-      ARCHR_PAIRWISE_TEST_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2)
-    }
-  } else if (params.groupby_cluster == "Clusters2") {
+    // Module: perform pairwise test
+    if (params.groupby_cluster == "Clusters") {
       if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
         log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip pairwise plotting!"
-    } else {
+      } else {
         // Perform plotting
         log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform pairwise plotting!"
         ARCHR_PAIRWISE_TEST_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2)
-    }
+      }
+    } else if (params.groupby_cluster == "Clusters2") {
+        if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
+          log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip pairwise plotting!"
+      } else {
+          // Perform plotting
+          log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform pairwise plotting!"
+          ARCHR_PAIRWISE_TEST_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2)
+      }
 
-    if (!(params.pairwise_test_clusters2_1 && params.pairwise_test_clusters2_2)) {
-      log.info "NOTICE: --pairwise_test_clusters2_1/2: not supplied, skip pairwise plotting!"
-    } else {
-      // Perform plotting
-      log.info "NOTICE: --pairwise_test_clusters2_1/2: supplied, perform pairwise plotting!"
-      ARCHR_PAIRWISE_TEST_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, params.pairwise_test_clusters2_1, params.pairwise_test_clusters2_2)
-    }
-  }
-
-  // Module: motif enrichment: note that ARCHR_MOTIF_ENRICHMENT_CLUSTERS and ARCHR_MOTIF_ENRICHMENT_CLUSTERS2 are exactly the same except for the outdir name.
-  if (params.groupby_cluster == "Clusters") {
-    if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
-      log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip motif enrichment!"
-    } else {
+      if (!(params.pairwise_test_clusters2_1 && params.pairwise_test_clusters2_2)) {
+        log.info "NOTICE: --pairwise_test_clusters2_1/2: not supplied, skip pairwise plotting!"
+      } else {
         // Perform plotting
-        log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform motif enrichment!"
-        ARCHR_MOTIF_ENRICHMENT_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2, params.custom_peaks)
+        log.info "NOTICE: --pairwise_test_clusters2_1/2: supplied, perform pairwise plotting!"
+        ARCHR_PAIRWISE_TEST_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, params.pairwise_test_clusters2_1, params.pairwise_test_clusters2_2)
+      }
     }
-  } else if (params.groupby_cluster == "Clusters2") {
+
+    // Module: motif enrichment: note that ARCHR_MOTIF_ENRICHMENT_CLUSTERS and ARCHR_MOTIF_ENRICHMENT_CLUSTERS2 are exactly the same except for the outdir name.
+    if (params.groupby_cluster == "Clusters") {
       if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
         log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip motif enrichment!"
       } else {
-        // Perform plotting
-        log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform motif enrichment!"
-        ARCHR_MOTIF_ENRICHMENT_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2, params.custom_peaks)
+          // Perform plotting
+          log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform motif enrichment!"
+          ARCHR_MOTIF_ENRICHMENT_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2, params.custom_peaks)
       }
+    } else if (params.groupby_cluster == "Clusters2") {
+        if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
+          log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip motif enrichment!"
+        } else {
+          // Perform plotting
+          log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform motif enrichment!"
+          ARCHR_MOTIF_ENRICHMENT_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2, params.custom_peaks)
+        }
 
-    if (!(params.pairwise_test_clusters2_1 && params.pairwise_test_clusters2_2)) {
-      log.info "NOTICE: --pairwise_test_clusters2_1/2: not supplied, skip motif enrichment!"
-    } else {
-        // Perform plotting
-        log.info "NOTICE: --pairwise_test_clusters2_1/2: supplied, perform motif enrichment!"
-        ARCHR_MOTIF_ENRICHMENT_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS2.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.archr_marker_peaks, params.pairwise_test_clusters2_1, params.pairwise_test_clusters2_2, params.custom_peaks)
+      if (!(params.pairwise_test_clusters2_1 && params.pairwise_test_clusters2_2)) {
+        log.info "NOTICE: --pairwise_test_clusters2_1/2: not supplied, skip motif enrichment!"
+      } else {
+          // Perform plotting
+          log.info "NOTICE: --pairwise_test_clusters2_1/2: supplied, perform motif enrichment!"
+          ARCHR_MOTIF_ENRICHMENT_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS2.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.archr_marker_peaks, params.pairwise_test_clusters2_1, params.pairwise_test_clusters2_2, params.custom_peaks)
+      }
     }
-  }
 
-  // Module: motif deviation, don't require pairwise test info
-  if (params.groupby_cluster == "Clusters") {
-    ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
-  } else if (params.groupby_cluster == "Clusters2") {
+    // Module: motif deviation, don't require pairwise test info
+    if (params.groupby_cluster == "Clusters") {
       ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
-      ARCHR_MOTIF_DEVIATIONS_CLUSTERS2(ARCHR_MOTIF_ENRICHMENT_CLUSTERS2.out.archr_project, params.custom_peaks)
-  }
-
-  // Module: footprinting
-  if (params.groupby_cluster == "Clusters") {
-    ARCHR_FOOTPRINTING_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project, ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_dir)
-  } else if (params.groupby_cluster == "Clusters2") {
-      ARCHR_FOOTPRINTING_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project, ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_dir)
-      ARCHR_FOOTPRINTING_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project, ARCHR_PSEUDO_BULK_CLUSTERS2.out.archr_dir)
-  }
-
-  // Module: integrative analysis
-  // Below are for integrative analysis: co-accessibility; peak2genelinkage; positive TF regulators.
-  // Module: co-accessibility (for both clusters and clusters2)
-  if (params.groupby_cluster == "Clusters") {
-    ARCHR_COACCESSIBILITY_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
-  } else if (params.groupby_cluster == "Clusters2") {
-      ARCHR_COACCESSIBILITY_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
-      ARCHR_COACCESSIBILITY_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
-  }
-
-  // Module: peak2genelinkage: for clusters2 only
-  if (params.groupby_cluster == "Clusters2") {
-    ARCHR_PEAK2GENELINKAGE_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
-  }
-
-  // Module: identify "positive" TF-regulators
-  if (params.groupby_cluster == "Clusters") {
-    ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
-  } else if (params.groupby_cluster == "Clusters2") {
-      ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
-      ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
-  }
-
-  // Module: trajectory analysis: for Clusters2 only
-  if (params.groupby_cluster == "Clusters2") {
-    if (params.trajectory_groups = "") {
-      log.info "Parameter --trajectory_groups not supplied, checking trajectory analysis!"
-    } else {
-        log.info "Parameter --trajectory_groups supplied, will perform trajectory analysis!"
-        ARCHR_TRAJECTORY_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project, params.trajectory_groups)
+    } else if (params.groupby_cluster == "Clusters2") {
+        ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
+        ARCHR_MOTIF_DEVIATIONS_CLUSTERS2(ARCHR_MOTIF_ENRICHMENT_CLUSTERS2.out.archr_project, params.custom_peaks)
     }
-  } else {
-    log.info "Parameter --scrnaseq not supplied, skip trajectory analysis!"
-  }
+
+    // Module: footprinting
+    if (params.groupby_cluster == "Clusters") {
+      ARCHR_FOOTPRINTING_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project, ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_dir)
+    } else if (params.groupby_cluster == "Clusters2") {
+        ARCHR_FOOTPRINTING_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project, ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_dir)
+        ARCHR_FOOTPRINTING_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project, ARCHR_PSEUDO_BULK_CLUSTERS2.out.archr_dir)
+    }
+
+    // Module: integrative analysis
+    // Below are for integrative analysis: co-accessibility; peak2genelinkage; positive TF regulators.
+    // Module: co-accessibility (for both clusters and clusters2)
+    if (params.groupby_cluster == "Clusters") {
+      ARCHR_COACCESSIBILITY_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
+    } else if (params.groupby_cluster == "Clusters2") {
+        ARCHR_COACCESSIBILITY_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
+        ARCHR_COACCESSIBILITY_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
+    }
+
+    // Module: peak2genelinkage: for clusters2 only
+    if (params.groupby_cluster == "Clusters2") {
+      ARCHR_PEAK2GENELINKAGE_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
+    }
+
+    // Module: identify "positive" TF-regulators
+    if (params.groupby_cluster == "Clusters") {
+      ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
+    } else if (params.groupby_cluster == "Clusters2") {
+        ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
+        ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
+    }
+
+    // Module: trajectory analysis: for Clusters2 only
+    if (params.groupby_cluster == "Clusters2") {
+      if (params.trajectory_groups = "") {
+        log.info "Parameter --trajectory_groups not supplied, checking trajectory analysis!"
+      } else {
+          log.info "Parameter --trajectory_groups supplied, will perform trajectory analysis!"
+          ARCHR_TRAJECTORY_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project, params.trajectory_groups)
+      }
+    } else {
+      log.info "Parameter --scrnaseq not supplied, skip trajectory analysis!"
+    }
+
+    // Collect all output results for MultiQC report:
+    res_folders = Channel.empty()
+    res_folders = res_folders.mix(ARCHR_TRAJECTORY_CLUSTERS2.out.res_dir.collect{it[1]}.ifEmpty([]))
+
+  emit:
+    res_folders.collect()
 /*
    * SUBWORKFLOW: Read in samplesheet, validate and stage input files
    */

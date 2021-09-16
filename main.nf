@@ -48,20 +48,34 @@ log.info Utils.dashedLine(params.monochrome_logs)
 include { PREPROCESS } from './workflows/pipeline' addParams( summary_params: summary_params )
 include { DOWNSTREAM } from './workflows/pipeline' addParams( summary_params: summary_params )
 
+// Parse samplesheet:
+if (params.input) {
+  Channel
+  .from(file(params.input, checkIfExists: true))
+  .splitCsv(header: true, sep: ",", strip: true)
+  .map {
+    row ->
+      [ row.sample_name, row.path_fastq_1, row.path_fastq_2, row.path_barcode ]
+  }
+  .unique()
+  .set { ch_samplesheet }
+}
+// Parse ArchR samplesheet:
+if (params.input_archr) {
+  Channel
+  .from(file(params.input_archr, checkIfExists: true))
+  .splitCsv(header: true, sep: ",", strip: true)
+  .map {
+    row ->
+      [ row.sample_name, row.file_path ]
+  }
+  .unique()
+  .set { ch_samplesheet_archr }
+}
+
 workflow  SCATACSEQFLOW {
   if (params.preprocess) {
     log.info "Running preprocess ..."
-    if (params.input) {
-      Channel
-      .from(file(params.input, checkIfExists: true))
-      .splitCsv(header: true, sep: ",", strip: true)
-      .map {
-        row ->
-          [ row.sample_name, row.path_fastq_1, row.path_fastq_2, row.path_barcode ]
-      }
-      .unique()
-      .set { ch_samplesheet }
-    }
     PREPROCESS (ch_samplesheet)
     PREPROCESS.out.view()
 
@@ -75,7 +89,10 @@ workflow  SCATACSEQFLOW {
     }
     // DOWNSTREAM ()
   } else {
-    DOWNSTREAM ()
+    DOWNSTREAM (ch_samplesheet_archr)
+    log.info "here"
+    DOWNSTREAM.out.view()
+    log.info "there"
   }
 }
 

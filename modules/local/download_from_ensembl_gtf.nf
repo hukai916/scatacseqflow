@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; get_ensembl_filename } from './functions'
 
 params.options = [:]
 options        = initOptions(params.options)
@@ -35,7 +35,7 @@ process DOWNLOAD_FROM_ENSEMBL_GTF {
     val genome_name, emit: genome_name
 
     script:
-    def dict_genome_name = [homo_sapiens: "Homo_sapiens.GRCh38", mus_musculus: "Mus_musculus.GRCm39", danio_rerio: "Danio_rerio.GRCz11"]
+    dic_genome_name = get_ensembl_filename()
 
     download_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/gtf/" + genome_name + "/" + dict_genome_name[genome_name] + "." + ensembl_release + ".gtf.gz"
 

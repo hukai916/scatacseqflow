@@ -26,9 +26,9 @@ process ARCHR_CREATE_ARROWFILES {
     // cache false
 
     input:
-    // if get_annotation == "yes", then use gene_annotation and genome_annotation to build ArchR genome.
-    // if get_annotation == "no", then, use archr_genome directly.
     tuple val(sample_name), path(fragment)
+    // val sample_name
+    // path fragment
     val archr_genome
     val archr_thread
 
@@ -39,17 +39,14 @@ process ARCHR_CREATE_ARROWFILES {
 
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
-
     """
     echo '
     library(ArchR)
-    .libPaths("user_rlib")
+    addArchRGenome("$archr_genome")
+    addArchRThreads(threads = $archr_thread)
 
     inputFiles <- "$fragment"
     names(inputFiles) <- "$sample_name"
-
-    addArchRGenome("$archr_genome")
-    addArchRThreads(threads = $archr_thread)
 
     ArrowFiles <- createArrowFiles(
       inputFiles = inputFiles,
@@ -58,9 +55,7 @@ process ARCHR_CREATE_ARROWFILES {
       QCDir = paste0("QualityControl_", "$sample_name"),
       subThreading = FALSE,
       $options.args
-    )
-
-' > run.R
+    )' > run.R
 
     Rscript run.R
 

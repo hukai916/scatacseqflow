@@ -31,7 +31,7 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
 
     output:
     path "save_archr_project/Plots/Footprints-*-Bias.pdf", emit: footprints
-    path "save_archr_project/Plots/TSS-No-Normalization.pdf", emit: tss_no_normalization
+    path "save_archr_project/Plots/TSS-*-Normalization.pdf", emit: tss_no_normalization
     path "save_archr_project/Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
@@ -70,8 +70,8 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
     plotFootprints(
       seFoot = seTSS,
       ArchRProj = proj,
-      normMethod = "None",
-      plotName = "TSS-No-Normalization",
+      normMethod = "$options.tss_norm_method",
+      plotName = paste0("TSS-", "$options.tss_norm_method", "-Normalization"),
       addDOC = FALSE,
       flank = $options.tss_flank,
       flankNorm = $options.flank_norm

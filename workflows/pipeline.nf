@@ -18,13 +18,16 @@ params.summary_params = [:]
 
 // Check mandatory parameters
 if (params.preprocess) {
-  if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+  if (params.input) {
+    ch_input = file(params.input)
+  } else {
+      exit 1, 'Input samplesheet not specified!'
+  }
 } else {
-  // will perform downstream analysis
-  // if (params.sample_name) {} else { exit 1, "Input sample_name must be specified!" }
-  // if (params.fragment) { ch_fragment = file(params.fragment) } else { exit 1, "Input fragment must be provided!" }
-  if (params.input_archr) {} else { exit 1, "--input_archr samplesheet must be specified!"}
-
+    if (params.input_archr) {
+    } else {
+        exit 1, "--input_archr samplesheet must be specified!"
+    }
 }
 
 ////////////////////////////////////////////////////
@@ -44,6 +47,8 @@ def modules = params.modules.clone()
 // def multiqc_options   = modules['multiqc']
 // multiqc_options.args += params.multiqc_title ? " --title \"$params.multiqc_title\"" : ''
 //
+include { get_bsgenome } from '../modules/local/functions'
+
 // Modules: local
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'   addParams( options: [publish_files : ['csv':'']] )
 include { GET_10XGENOMICS_FASTQ } from '../modules/local/get_10xgenomics_fastq'   addParams( options: modules['get_10xgenomics_fastq'] )
@@ -82,9 +87,12 @@ include { DOWNLOAD_FROM_ENSEMBL_GTF } from '../modules/local/download_from_ensem
 include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'             addParams( options: modules['cellranger_index'] )
 
 // For ArchR functions:
+include { ARCHR_GET_ANNOTATION } from '../modules/local/archr_get_annotation' addParams( options: modules['archr_get_annotation'] )
 include { ARCHR_CREATE_ARROWFILES } from '../modules/local/archr_create_arrowfiles' addParams( options: modules['archr_create_arrowfiles'] )
+include { ARCHR_CREATE_ARROWFILES_ANNOTATION } from '../modules/local/archr_create_arrowfiles_annotation' addParams( options: modules['archr_create_arrowfiles_annotation'] )
 include { ARCHR_ADD_DOUBLETSCORES } from '../modules/local/archr_add_doubletscores' addParams( options: modules['archr_add_doubletscores'] )
 include { ARCHR_ARCHRPROJECT } from '../modules/local/archr_archrproject' addParams( options: modules['archr_archrproject'] )
+include { ARCHR_ARCHRPROJECT_ANNOTATION } from '../modules/local/archr_archrproject_annotation' addParams( options: modules['archr_archrproject_annotation'] )
 include { ARCHR_ARCHRPROJECT_QC } from '../modules/local/archr_archrproject_qc' addParams( options: modules['archr_archrproject_qc'] )
 include { ARCHR_DIMENSION_REDUCTION } from '../modules/local/archr_dimension_reduction' addParams( options: modules['archr_dimension_reduction'] )
 include { ARCHR_BATCH_CORRECTION } from '../modules/local/archr_batch_correction' addParams( options: modules['archr_batch_correction'] )
@@ -142,25 +150,17 @@ if (params.input) {
   .set { ch_samplesheet }
 }
 
-// ch_samplesheet.view()
-// Info required for completion email and summary
-// def multiqc_report = []
-
-
 workflow PREPROCESS {
-  // Check to see if parameter modules are specified or not
+  // Log: check and see which parameter modules are specified
   if (params.preprocess == "default") {
     log.info "INFO: --preprocess: default"
-  }
-  else if (params.preprocess == "10xgenomics") {
-    log.info "INFO: --preprocess: 10xgenomics"
-  }
-  else if (params.preprocess == "biorad") {
-    log.info "INFO: --preprocess: biorad"
-    log.info "INFO: must use biorad compatible sequencing data!"
-  }
-  else {
-    log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."
+  } else if (params.preprocess == "10xgenomics") {
+      log.info "INFO: --preprocess: 10xgenomics"
+  } else if (params.preprocess == "biorad") {
+      log.info "INFO: --preprocess: biorad"
+      log.info "INFO: must use biorad compatible sequencing data!"
+  } else {
+      log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."
   }
 
   // Perform preprocess accordingly
@@ -177,16 +177,14 @@ workflow PREPROCESS {
     if (!(params.barcode_whitelist)) {
       // log.info "NOTICE(2): --barcode_whitelist: not supplied, skip barcode correction!"
       ADD_BARCODE_TO_READS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
-    }
-    else {
-      CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+    } else {
+        CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
       // module: match read1 and read2
       // MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
       // Note that the above might be problematic, since MATCH_READS would take inputs from two channels, the instance of samples may not match.
+        MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, CORRECT_BARCODE.out.read1_fastq, CORRECT_BARCODE.out.read2_fastq)
 
-      MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, CORRECT_BARCODE.out.read1_fastq, CORRECT_BARCODE.out.read2_fastq)
-
-      ADD_BARCODE_TO_READS (MATCH_READS.out.sample_name, MATCH_READS.out.barcode_fastq, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq)
+        ADD_BARCODE_TO_READS (MATCH_READS.out.sample_name, MATCH_READS.out.barcode_fastq, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq)
     }
 
     // module: trimming off adapter
@@ -202,14 +200,12 @@ workflow PREPROCESS {
 
         if (params.ref_fasta) {
           log.info "INFO: --ref_fasta provided, use it for building bwa index."
-
           // module : bwa_index
           BWA_INDEX (params.ref_fasta)
           // mapping with the built index
         } else if (params.ref_fasta_ucsc) {
           // exit 1, 'WARNING: --ref_fasta_ucsc is not supported yet, pls use --ref_fasta_ensembl!'
           log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build bwa index, and map with bwa ..."
-
           // module : download_from_ucsc
           DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
           // module : extract primary sequence
@@ -218,7 +214,6 @@ workflow PREPROCESS {
           BWA_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
         } else if (params.ref_fasta_ensembl) {
           log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
-
           // module : download_from_ucsc
           DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
           // module : bwa_index
@@ -229,11 +224,10 @@ workflow PREPROCESS {
         // module : bwa_map
         BWA_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, BWA_INDEX.out.bwa_index_folder)
       } else {
-        // use user provided bwa index for mapping
-        // module : bwa_map
+        // use user provided bwa index for mapping, module : bwa_map
         BWA_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_bwa_index)
       }
-      } else if (params.mapper == "minimap2") {
+    } else if (params.mapper == "minimap2") {
       log.info "INFO: --mapper: minimap2"
 
       if (!params.ref_minimap2_index) {
@@ -241,13 +235,11 @@ workflow PREPROCESS {
 
         if (params.ref_fasta) {
           log.info "INFO: --ref_fasta provided, use it to build minimap2 index."
-
           // module : bwa_index
           MINIMAP2_INDEX (params.ref_fasta)
           // mapping with the built index
         } else if (params.ref_fasta_ucsc) {
           log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
-
           // module : download_from_ucsc
           DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
           // module : get_primary_genome
@@ -255,32 +247,32 @@ workflow PREPROCESS {
           // module : bwa_index
           MINIMAP2_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
         } else if (params.ref_fasta_ensembl) {
-          log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+            log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
 
-          // module : download_from_ensembl
-          DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
-          // module : bwa_index
-          MINIMAP2_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
+            // module : download_from_ensembl
+            DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
+            // module : bwa_index
+            MINIMAP2_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
         } else {
-          exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
+            exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
         }
         // module : minimap2_map
         MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, MINIMAP2_INDEX.out.minimap2_index)
       } else {
-        // use user provided bwa index for mapping
-        // module : minimap2_map
-        MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_minimap2_index)
+          // use user provided bwa index for mapping
+          // module : minimap2_map
+          MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_minimap2_index)
       }
-          } else {
-              exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
-            }
+    } else {
+        exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
+    }
 
     // module: filter out poorly mapped reads
     if (params.mapper == 'bwa') {
       BAM_FILTER (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
     } else if (params.mapper == "minimap2") {
         BAM_FILTER (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
-      }
+    }
 
     // module: bamqc with qualimap for raw bam files
     QUALIMAP (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
@@ -288,74 +280,54 @@ workflow PREPROCESS {
     // module: generate fragment file with sinto
     GET_FRAGMENTS (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
 
-    // TO BE DELETED:
-    // if (params.mapper == 'bwa') {
-    //   QUALIMAP (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
-    // } else if (params.mapper == "minimap2") {
-    //     QUALIMAP (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
-    //   }
-    // module: generate fragment file with sinto
-    // if (params.mapper == 'bwa') {
-    //   GET_FRAGMENTS (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
-    //   } else if (params.mapper == "minimap2") {
-    //   GET_FRAGMENTS (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
-    //       }
-
     // module: generate fragement file with sinto
-  }
-  else if (params.preprocess == "10xgenomics") {
-    // log.info "INFO: --preprocess: 10xgenomics(2)"
-    if (params.ref_cellranger == "") {
-      log.info "Parameter --ref_cellranger not supplied, checking --ref_cellranger_ucsc/--ref_cellranger_ensembl!"
-      if (params.ref_cellranger_ucsc) {
-        log.info "Parameter --ref_cellranger_ucsc provided, will download genome, gtf, and build index with cellranger-atac."
-
-        // Module: download ucsc genome
-        DOWNLOAD_FROM_UCSC (params.ref_cellranger_ucsc)
-        // Module: download ucsc gtf
-        DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
-        // Module: fix gtf
-        FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf)
-        // Module: extract primary genome
-        GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
-        // Module: prepare cellranger index
-        CELLRANGER_INDEX (GET_PRIMARY_GENOME.out.genome_fasta, FIX_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
-        // Module: prepare fastq folder
+  } else if (params.preprocess == "10xgenomics") {
+      // log.info "INFO: --preprocess: 10xgenomics(2)"
+      if (params.ref_cellranger == "") {
+        log.info "Parameter --ref_cellranger not supplied, checking --ref_cellranger_ucsc/--ref_cellranger_ensembl!"
+        if (params.ref_cellranger_ucsc) {
+          log.info "Parameter --ref_cellranger_ucsc provided, will download genome, gtf, and build index with cellranger-atac."
+          // Module: download ucsc genome
+          DOWNLOAD_FROM_UCSC (params.ref_cellranger_ucsc)
+          // Module: download ucsc gtf
+          DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
+          // Module: fix gtf
+          FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf)
+          // Module: extract primary genome
+          GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+          // Module: prepare cellranger index
+          CELLRANGER_INDEX (GET_PRIMARY_GENOME.out.genome_fasta, FIX_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
+          // Module: prepare fastq folder
+          GET_10XGENOMICS_FASTQ (ch_samplesheet)
+          // Module: run cellranger-atac count
+          CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+        } else if (params.ref_cellranger_ensembl) {
+          // Module: download ensembl genome
+          DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, params.ensembl_release)
+          // Module: download ensembl gtf
+          DOWNLOAD_FROM_ENSEMBL_GTF (params.ref_cellranger_ensembl, params.ensembl_release)
+          // Module: prepare cellranger index
+          CELLRANGER_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
+          // Module: prepare fastq folder
+          GET_10XGENOMICS_FASTQ (ch_samplesheet)
+          // Module: run cellranger-atac count
+          CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+          } else {
+              exit 1, "--ref_cellranger_ucsc/--ref_cellranger_ensembl must be specified!"
+            }
+      } else {
+        log.info "Parameter --ref_cellranger supplied, will use it as index folder."
         GET_10XGENOMICS_FASTQ (ch_samplesheet)
-        // Module: run cellranger-atac count
-        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
+        // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
+        // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
       }
-      else if (params.ref_cellranger_ensembl) {
-        // Module: download ensembl genome
-        DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, params.ensembl_release)
-        // Module: download ensembl gtf
-        DOWNLOAD_FROM_ENSEMBL_GTF (params.ref_cellranger_ensembl, params.ensembl_release)
-        // Module: prepare cellranger index
-        CELLRANGER_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
-        // Module: prepare fastq folder
-        GET_10XGENOMICS_FASTQ (ch_samplesheet)
-        // Module: run cellranger-atac count
-        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
-      }
-      else {
-        exit 1, "--ref_cellranger_ucsc/--ref_cellranger_ensembl must be specified!"
-      }
-    }
-    else {
-      log.info "Parameter --ref_cellranger supplied, will use it as index folder."
-      GET_10XGENOMICS_FASTQ (ch_samplesheet)
-      CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
-      // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
-      // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
-    }
-  }
-  else if (params.preprocess == "biorad") {
+  } else if (params.preprocess == "biorad") {
     // log.info "INFO: --preprocess: biorad"
     // log.info "INFO: must use biorad compatible sequencing data!"
     if (params.ref_bwa_index == "") {
       exit 1, 'Parameter --ref_bwa_index: pls supply full path to bwa index folder!'
     }
-    // if (params.ref_bwa_fasta == "") {
     if (params.ref_fasta == "") {
       exit 1, 'Parameter --ref_fasta: pls supply full path to reference fasta file!'
     }
@@ -374,7 +346,6 @@ workflow PREPROCESS {
   }
 }
 
-
 if (params.input_archr) {
   Channel
   .from(file(params.input_archr, checkIfExists: true))
@@ -385,51 +356,74 @@ if (params.input_archr) {
   }
   .unique()
   .set { ch_samplesheet_archr }
-  }
+}
 
 workflow DOWNSTREAM {
-    ch_software_versions = Channel.empty()
-    log.info "INFO: --downstream: ArchR"
-    // Module: create ArrowFile
-    // ARCHR_CREATE_ARROWFILES(params.sample_name, params.fragment, params.archr_genome, params.archr_thread)
-    // ch_samplesheet_archr.view()
-    ARCHR_CREATE_ARROWFILES(ch_samplesheet_archr, params.archr_genome, params.archr_thread)
-
+  ch_software_versions = Channel.empty()
+  log.info "INFO: --downstream: ArchR"
+  // Module: check if ArchR genome matches with preprocess genome, and create custome Genome if needed.
+  (bsgenome, genome_status) = get_bsgenome(params.archr_genome, params.ref_fasta_ucsc, params.ref_fasta_ensembl, params.ref_cellranger_ucsc, params.ref_cellranger_ensembl)
+  if (["ready", "ready_ucsc", "ready_ensembl"].contains(genome_status)) {
+    // "ready" means ArchR natively supported genome
+    if (genome_status == "ready_ensembl") {
+      log.info "INFO: ArchR will use natively supported ArchR genome (though ensembl genome supplied): " + bsgenome
+    } else {
+      log.info "INFO: ArchR will use natively supported ArchR genome: " + bsgenome
+    }
+    ARCHR_CREATE_ARROWFILES(ch_samplesheet_archr, bsgenome, params.archr_thread)
     // Module: add DoubletScores
     ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
     ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
     ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
+  } else if (["need_build", "need_build_ucsc", "need_build_ensembl"].contains(genome_status)) {
+      // "need_build" menas ArchR need to build gene/genomeAnnotation files first
+      if (genome_status == "need_build_ensembl") {
+        log.info "INFO: ArchR will build gene/genomeAnnotation files with (though ensembl genome supplied): " + bsgenome
+      } else {
+        log.info "INFO: ArchR will build gene/genomeAnnotation files with: " + bsgenome
+      }
+      ARCHR_GET_ANNOTATION(params.archr_genome)
+      ARCHR_CREATE_ARROWFILES_ANNOTATION(ch_samplesheet_archr, ARCHR_GET_ANNOTATION.out.geneAnnotation, ARCHR_GET_ANNOTATION.out.genomeAnnotation, ARCHR_GET_ANNOTATION.out.user_rlib, params.archr_thread)
+      // Module: add DoubletScores
+      ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES_ANNOTATION.out.sample_name, ARCHR_CREATE_ARROWFILES_ANNOTATION.out.arrowfile)
+      ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
+      ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
+  } else {
+    exit 1, "Must provide ArchR supported genomes!"
+  }
 
-    // Module: create ArchRProject
-    // ARCHR_ARCHRPROJECT(ARCHR_ADD_DOUBLETSCORES.out.sample_name, params.archr_genome, params.archr_thread, ARCHR_ADD_DOUBLETSCORES.out.arrowfile) // Note, ARCH_ADD_DOUBLETSCORES will modify arrowfile in place, therefore, in ARCHR_ARCHRPROJECT, must use the arrowfile generated from ARCHR_ADD_DOUBLETSCORES, otherwise, ARCHR_CREATE_ARROWFILES generate arrowfile will be updated each time ARCHR_ADD_DOUBLETSCORES, so that the -resume won't work for ARCHR_ARCHRPROJECT as long as ARCHR_ADD_DOUBLETSCORES runs.
-    ARCHR_ARCHRPROJECT(ch_arrowfile_list, params.archr_genome, params.archr_thread)
-
-    // Module: ArchRProject QC
+  // Module: create ArchRProject and ArchRProjectQC
+  if (["ready", "ready_ensembl", "ready_ucsc"].contains(genome_status)) {
+    ARCHR_ARCHRPROJECT(ch_arrowfile_list, bsgenome, params.archr_thread)
     ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.archr_project, params.archr_filter_ratio)
+  } else if (["need_build", "need_build_ucsc", "need_build_ensembl"].contains(genome_status)) {
+    ARCHR_ARCHRPROJECT_ANNOTATION(ch_arrowfile_list, ARCHR_GET_ANNOTATION.out.geneAnnotation, ARCHR_GET_ANNOTATION.out.genomeAnnotation, ARCHR_GET_ANNOTATION.out.user_rlib)
+    ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project, params.archr_filter_ratio)
+  }
 
-    // Module: dimension reduction
-    ARCHR_DIMENSION_REDUCTION(ARCHR_ARCHRPROJECT_QC.out.archr_project)
+  // Module: dimension reduction
+  ARCHR_DIMENSION_REDUCTION(ARCHR_ARCHRPROJECT_QC.out.archr_project)
 
-    // Module: batch correction with harmony
-    ARCHR_BATCH_CORRECTION(ARCHR_DIMENSION_REDUCTION.out.archr_project)
+  // Module: batch correction with harmony
+  ARCHR_BATCH_CORRECTION(ARCHR_DIMENSION_REDUCTION.out.archr_project)
 
-    // Module: clustering with Seurat's FindClusters() function
-    ARCHR_CLUSTERING(ARCHR_BATCH_CORRECTION.out.archr_project)
+  // Module: clustering with Seurat's FindClusters() function
+  ARCHR_CLUSTERING(ARCHR_BATCH_CORRECTION.out.archr_project)
 
-    // Module: single-cell embeddings
-    ARCHR_EMBEDDING(ARCHR_CLUSTERING.out.archr_project)
+  // Module: single-cell embeddings
+  ARCHR_EMBEDDING(ARCHR_CLUSTERING.out.archr_project)
 
-    // Module: find marker gene
-    ARCHR_MARKER_GENE(ARCHR_EMBEDDING.out.archr_project)
+  // Module: find marker gene
+  ARCHR_MARKER_GENE(ARCHR_EMBEDDING.out.archr_project)
 
-    // Module: integrate with matching scRNAseq data
-    if (!(params.archr_scrnaseq)) {
-      params.groupby_cluster = "Clusters"
-      log.info "NOTICE: --archr_scrnaseq: not supplied, skip integrative analysis with scRNA-seq!"
-      // ARCHR_PSEUDO_BULK(ARCHR_MARKER_GENE.out.archr_project, params.groupby_cluster)
-      ARCHR_PSEUDO_BULK_CLUSTERS(ARCHR_MARKER_GENE.out.archr_project)
-      // For each Arrorproject, you can have only one set of peak set unless you copy arrow files and create another arrowproject. That is why we implemented ARCHR_PSEUDO_BULK_CLUSTERS and ARCHR_PSEUDO_BULK_CLUSTERS2
-    } else {
+  // Module: integrate with matching scRNAseq data
+  if (!(params.archr_scrnaseq)) {
+    params.groupby_cluster = "Clusters"
+    log.info "NOTICE: --archr_scrnaseq: not supplied, skip integrative analysis with scRNA-seq!"
+    // ARCHR_PSEUDO_BULK(ARCHR_MARKER_GENE.out.archr_project, params.groupby_cluster)
+    ARCHR_PSEUDO_BULK_CLUSTERS(ARCHR_MARKER_GENE.out.archr_project)
+    // For each Arrorproject, you can have only one set of peak set unless you copy arrow files and create another arrowproject. That is why we implemented ARCHR_PSEUDO_BULK_CLUSTERS and ARCHR_PSEUDO_BULK_CLUSTERS2
+  } else {
       params.groupby_cluster = "Clusters2"
       log.info "NOTICE: --archr_scrnaseq: supplied, will perform integrative analysis with scRNA-seq!"
       ARCHR_PSEUDO_BULK_CLUSTERS(ARCHR_MARKER_GENE.out.archr_project)
@@ -444,96 +438,102 @@ workflow DOWNSTREAM {
         // ARCHR_PSEUDO_BULK(ARCHR_SCRNASEQ_UNCONSTRAINED.out.archr_project, params.groupby_cluster)
         ARCHR_PSEUDO_BULK_CLUSTERS2(ARCHR_SCRNASEQ_UNCONSTRAINED.out.archr_project)
       } else {
-        log.info "NOTICE: --archr_scrnaseq_grouplist: supplied, will perform constrained integration!"
-        ARCHR_SCRNASEQ_CONSTRAINED(ARCHR_SCRNASEQ_UNCONSTRAINED.out.archr_project, params.archr_scrnaseq, params.archr_scrnaseq_grouplist)
-        // ARCHR_PSEUDO_BULK(ARCHR_SCRNASEQ_CONSTRAINED.out.archr_project, params.groupby_cluster)
-        ARCHR_PSEUDO_BULK_CLUSTERS2(ARCHR_SCRNASEQ_CONSTRAINED.out.archr_project)
+          log.info "NOTICE: --archr_scrnaseq_grouplist: supplied, will perform constrained integration!"
+          ARCHR_SCRNASEQ_CONSTRAINED(ARCHR_SCRNASEQ_UNCONSTRAINED.out.archr_project, params.archr_scrnaseq, params.archr_scrnaseq_grouplist)
+          // ARCHR_PSEUDO_BULK(ARCHR_SCRNASEQ_CONSTRAINED.out.archr_project, params.groupby_cluster)
+          ARCHR_PSEUDO_BULK_CLUSTERS2(ARCHR_SCRNASEQ_CONSTRAINED.out.archr_project)
       }
-      // ARCHR_SCRNASEQ(ARCHR_MARKER_GENE.out.archr_project, params.archr_scrnaseq)
-    }
+  }
 
-    // Module: call peaks
-    if (params.groupby_cluster == "Clusters") {
-      ARCHR_CALL_PEAKS_CLUSTERS(ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_project)
-    } else if (params.groupby_cluster == "Clusters2") {
-      ARCHR_CALL_PEAKS_CLUSTERS(ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_project)
-      ARCHR_CALL_PEAKS_CLUSTERS2(ARCHR_PSEUDO_BULK_CLUSTERS2.out.archr_project)
-    }
-    // ARCHR_CALL_PEAKS(ARCHR_PSEUDO_BULK.out.archr_project, params.groupby_cluster)
+  // Module: call peaks
+  if (params.groupby_cluster == "Clusters") {
+    ARCHR_CALL_PEAKS_CLUSTERS(ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_project)
+  } else if (params.groupby_cluster == "Clusters2") {
+    ARCHR_CALL_PEAKS_CLUSTERS(ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_project)
+    ARCHR_CALL_PEAKS_CLUSTERS2(ARCHR_PSEUDO_BULK_CLUSTERS2.out.archr_project)
+  }
 
-    // Module: identify marker peaks and perform MA/Volcano plots
-    if (params.groupby_cluster == "Clusters") {
-      ARCHR_GET_MARKER_PEAKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project)
-      ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.group_names
-        .splitText()
-        .subscribe onNext: { String str -> println "Group name from scATAC-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters_1/2 and --marker_peak_clusters***\n"}
-    } else if (params.groupby_cluster == "Clusters2") {
-      ARCHR_GET_MARKER_PEAKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project)
-      ARCHR_GET_MARKER_PEAKS_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project)
-      ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.group_names
-        .splitText()
-        .subscribe onNext: { String str -> println "Group name from scATAC-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters_1/2 ***\n"}
-      ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.group_names
-        .splitText()
-        .subscribe onNext: { String str -> println "Group name from scRNA-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters2_1/2 and --marker_peak_clusters2***\n"}
+  // Module: identify marker peaks and perform MA/Volcano plots
+  if (params.groupby_cluster == "Clusters") {
+    ARCHR_GET_MARKER_PEAKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project)
+    ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.group_names
+      .splitText()
+      .subscribe onNext: { String str -> println "Group name from scATAC-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters_1/2 and --marker_peak_clusters***\n"}
+  } else if (params.groupby_cluster == "Clusters2") {
+    ARCHR_GET_MARKER_PEAKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project)
+    ARCHR_GET_MARKER_PEAKS_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project)
+    ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.group_names
+      .splitText()
+      .subscribe onNext: { String str -> println "Group name from scATAC-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters_1/2 ***\n"}
+    ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.group_names
+      .splitText()
+      .subscribe onNext: { String str -> println "Group name from scRNA-seq: ${str}".trim() }, onComplete: { print "\n*** use above names to define --pairwise_test_clusters2_1/2 and --marker_peak_clusters2***\n"}
+  }
+
+  // Module: plot peaks in browser tracks
+  if (params.groupby_cluster == "Clusters") {
+    if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters)) {
+      log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: not supplied, skip marker peak plotting on browser tracks!"
+    } else {
+      // Perform plotting
+      log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: supplied, will perform marker peak plotting on browser tracks!"
+      ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.marker_peak_geneSymbol, params.marker_peak_clusters)
     }
-    //
-    // Module: plot peaks in browser tracks
-    if (params.groupby_cluster == "Clusters") {
-      if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters)) {
-        log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: not supplied, skip marker peak plotting on browser tracks!"
-      } else {
+  } else if (params.groupby_cluster == "Clusters2") {
+    if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters)) {
+      log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: not supplied, skip marker peak plotting on browser tracks!"
+    } else {
         // Perform plotting
         log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: supplied, will perform marker peak plotting on browser tracks!"
         ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.marker_peak_geneSymbol, params.marker_peak_clusters)
-      }
-    } else if (params.groupby_cluster == "Clusters2") {
-      if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters)) {
-        log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: not supplied, skip marker peak plotting on browser tracks!"
-      } else {
-        // Perform plotting
-        log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters: supplied, will perform marker peak plotting on browser tracks!"
-        ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.marker_peak_geneSymbol, params.marker_peak_clusters)
-      }
-
-      if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters2)) {
-        log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters2: not supplied, skip marker peak plotting on browser tracks!"
-      } else {
-        // Perform plotting
-        log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters2: supplied, will perform marker peak plotting on browser tracks!"
-        ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.archr_marker_peaks, params.marker_peak_geneSymbol, params.marker_peak_clusters2)
-      }
     }
 
-    // Module: perform pairwise test
-    if (params.groupby_cluster == "Clusters") {
+    if (!(params.marker_peak_geneSymbol && params.marker_peak_clusters2)) {
+      log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters2: not supplied, skip marker peak plotting on browser tracks!"
+    } else {
+      // Perform plotting
+      log.info "NOTICE: --marker_peak_geneSymbol and --marker_peak_clusters2: supplied, will perform marker peak plotting on browser tracks!"
+      ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.archr_marker_peaks, params.marker_peak_geneSymbol, params.marker_peak_clusters2)
+    }
+  }
+
+  // Module: perform pairwise test
+  if (params.groupby_cluster == "Clusters") {
+    if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
+      log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip pairwise plotting!"
+    } else {
+      // Perform plotting
+      log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform pairwise plotting!"
+      ARCHR_PAIRWISE_TEST_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2)
+    }
+  } else if (params.groupby_cluster == "Clusters2") {
       if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
         log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip pairwise plotting!"
-      } else {
+    } else {
         // Perform plotting
         log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform pairwise plotting!"
         ARCHR_PAIRWISE_TEST_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2)
-      }
-    } else if (params.groupby_cluster == "Clusters2") {
-      if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
-        log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip pairwise plotting!"
-      } else {
-        // Perform plotting
-        log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform pairwise plotting!"
-        ARCHR_PAIRWISE_TEST_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2)
-      }
-
-      if (!(params.pairwise_test_clusters2_1 && params.pairwise_test_clusters2_2)) {
-        log.info "NOTICE: --pairwise_test_clusters2_1/2: not supplied, skip pairwise plotting!"
-      } else {
-        // Perform plotting
-        log.info "NOTICE: --pairwise_test_clusters2_1/2: supplied, perform pairwise plotting!"
-        ARCHR_PAIRWISE_TEST_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, params.pairwise_test_clusters2_1, params.pairwise_test_clusters2_2)
-      }
     }
 
-    // Module: motif enrichment: note that ARCHR_MOTIF_ENRICHMENT_CLUSTERS and ARCHR_MOTIF_ENRICHMENT_CLUSTERS2 are exactly the same except for the outdir name.
-    if (params.groupby_cluster == "Clusters") {
+    if (!(params.pairwise_test_clusters2_1 && params.pairwise_test_clusters2_2)) {
+      log.info "NOTICE: --pairwise_test_clusters2_1/2: not supplied, skip pairwise plotting!"
+    } else {
+      // Perform plotting
+      log.info "NOTICE: --pairwise_test_clusters2_1/2: supplied, perform pairwise plotting!"
+      ARCHR_PAIRWISE_TEST_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, params.pairwise_test_clusters2_1, params.pairwise_test_clusters2_2)
+    }
+  }
+
+  // Module: motif enrichment: note that ARCHR_MOTIF_ENRICHMENT_CLUSTERS and ARCHR_MOTIF_ENRICHMENT_CLUSTERS2 are exactly the same except for the outdir name.
+  if (params.groupby_cluster == "Clusters") {
+    if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
+      log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip motif enrichment!"
+    } else {
+        // Perform plotting
+        log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform motif enrichment!"
+        ARCHR_MOTIF_ENRICHMENT_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2, params.custom_peaks)
+    }
+  } else if (params.groupby_cluster == "Clusters2") {
       if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
         log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip motif enrichment!"
       } else {
@@ -541,168 +541,115 @@ workflow DOWNSTREAM {
         log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform motif enrichment!"
         ARCHR_MOTIF_ENRICHMENT_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2, params.custom_peaks)
       }
-    } else if (params.groupby_cluster == "Clusters2") {
-      if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
-        log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip motif enrichment!"
-      } else {
-        // Perform plotting
-        log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform motif enrichment!"
-        ARCHR_MOTIF_ENRICHMENT_CLUSTERS(ARCHR_CALL_PEAKS_CLUSTERS.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.archr_marker_peaks, params.pairwise_test_clusters_1, params.pairwise_test_clusters_2, params.custom_peaks)
-      }
 
-      if (!(params.pairwise_test_clusters2_1 && params.pairwise_test_clusters2_2)) {
-        log.info "NOTICE: --pairwise_test_clusters2_1/2: not supplied, skip motif enrichment!"
-      } else {
+    if (!(params.pairwise_test_clusters2_1 && params.pairwise_test_clusters2_2)) {
+      log.info "NOTICE: --pairwise_test_clusters2_1/2: not supplied, skip motif enrichment!"
+    } else {
         // Perform plotting
         log.info "NOTICE: --pairwise_test_clusters2_1/2: supplied, perform motif enrichment!"
         ARCHR_MOTIF_ENRICHMENT_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS2.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.archr_marker_peaks, params.pairwise_test_clusters2_1, params.pairwise_test_clusters2_2, params.custom_peaks)
-      }
     }
+  }
 
-    // Module: motif deviation, don't require pairwise test info
-    if (params.groupby_cluster == "Clusters") {
-      ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
-    } else if (params.groupby_cluster == "Clusters2") {
+  // Module: motif deviation, don't require pairwise test info
+  if (params.groupby_cluster == "Clusters") {
+    ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
+  } else if (params.groupby_cluster == "Clusters2") {
       ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
       ARCHR_MOTIF_DEVIATIONS_CLUSTERS2(ARCHR_MOTIF_ENRICHMENT_CLUSTERS2.out.archr_project, params.custom_peaks)
-      }
-    // if (params.groupby_cluster == "Clusters") {
-    //   if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
-    //     log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip motif deviation!"
-    //   } else {
-    //     // Perform plotting
-    //     log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform motif deviation!"
-    //     ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
-    //   }
-    // } else if (params.groupby_cluster == "Clusters2") {
-    //   if (!(params.pairwise_test_clusters_1 && params.pairwise_test_clusters_2)) {
-    //     log.info "NOTICE: --pairwise_test_clusters_1/2: not supplied, skip motif deviation!"
-    //   } else {
-    //     // Perform plotting
-    //     log.info "NOTICE: --pairwise_test_clusters_1/2: supplied, perform motif deviation!"
-    //     ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
-    //   }
-    //
-    //   if (!(params.pairwise_test_clusters2_1 && params.pairwise_test_clusters2_2)) {
-    //     log.info "NOTICE: --pairwise_test_clusters2_1/2: not supplied, skip motif deviation!"
-    //   } else {
-    //     // Perform plotting
-    //     log.info "NOTICE: --pairwise_test_clusters2_1/2: supplied, perform motif deviation!"
-    //     ARCHR_MOTIF_DEVIATIONS_CLUSTERS2(ARCHR_MOTIF_ENRICHMENT_CLUSTERS2.out.archr_project, params.custom_peaks)
-    //   }
-    // }
+  }
 
-    // Module: footprinting
-    if (params.groupby_cluster == "Clusters") {
-      ARCHR_FOOTPRINTING_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project, ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_dir)
-    } else if (params.groupby_cluster == "Clusters2") {
+  // Module: footprinting
+  if (params.groupby_cluster == "Clusters") {
+    ARCHR_FOOTPRINTING_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project, ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_dir)
+  } else if (params.groupby_cluster == "Clusters2") {
       ARCHR_FOOTPRINTING_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project, ARCHR_PSEUDO_BULK_CLUSTERS.out.archr_dir)
       ARCHR_FOOTPRINTING_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project, ARCHR_PSEUDO_BULK_CLUSTERS2.out.archr_dir)
-      }
+  }
 
-    // Module: integrative analysis
-    // Below are for integrative analysis: co-accessibility; peak2genelinkage; positive TF regulators.
-    // Module: co-accessibility (for both clusters and clusters2)
-    if (params.groupby_cluster == "Clusters") {
-      ARCHR_COACCESSIBILITY_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
-    } else if (params.groupby_cluster == "Clusters2") {
+  // Module: integrative analysis
+  // Below are for integrative analysis: co-accessibility; peak2genelinkage; positive TF regulators.
+  // Module: co-accessibility (for both clusters and clusters2)
+  if (params.groupby_cluster == "Clusters") {
+    ARCHR_COACCESSIBILITY_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
+  } else if (params.groupby_cluster == "Clusters2") {
       ARCHR_COACCESSIBILITY_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
       ARCHR_COACCESSIBILITY_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
-      }
+  }
 
-    // Module: peak2genelinkage: for clusters2 only
-    if (params.groupby_cluster == "Clusters2") {
-      ARCHR_PEAK2GENELINKAGE_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
-    }
+  // Module: peak2genelinkage: for clusters2 only
+  if (params.groupby_cluster == "Clusters2") {
+    ARCHR_PEAK2GENELINKAGE_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
+  }
 
-    // Module: identify "positive" TF-regulators
-    if (params.groupby_cluster == "Clusters") {
-      ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
-    } else if (params.groupby_cluster == "Clusters2") {
+  // Module: identify "positive" TF-regulators
+  if (params.groupby_cluster == "Clusters") {
+    ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
+  } else if (params.groupby_cluster == "Clusters2") {
       ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.archr_project)
       ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project)
-      }
+  }
 
-    // Module: trajectory analysis: for Clusters2 only
-    if (params.groupby_cluster == "Clusters2") {
-      if (params.trajectory_groups = "") {
-        log.info "Parameter --trajectory_groups not supplied, checking trajectory analysis!"
-      } else {
+  // Module: trajectory analysis: for Clusters2 only
+  if (params.groupby_cluster == "Clusters2") {
+    if (params.trajectory_groups = "") {
+      log.info "Parameter --trajectory_groups not supplied, checking trajectory analysis!"
+    } else {
         log.info "Parameter --trajectory_groups supplied, will perform trajectory analysis!"
         ARCHR_TRAJECTORY_CLUSTERS2(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.archr_project, params.trajectory_groups)
-      }
-    } else {
-      log.info "Parameter --scrnaseq not supplied, skip trajectory analysis!"
     }
-
-    // Module: peak2genelinkage (for clusters2)
-    // if (params.groupby_cluster == "Clusters") {
-    //   log.info "INFO: scRNA-seq data not supplied, skip peak2genelinkage analysis!"
-    // } else if (params.groupby_cluster == "Clusters2") {
-    //   ARCHR_PEAK2GENELINKAGE(ARCHR_COACCESSIBILITY_CLUSTERS2.out.archr_project)
-    //   }
-
-    // Module: positive TF regulator (for both clusters and clusters2)
-
-    // Module: trajectory analysis
-
-
-    // if (params.groupby_cluster == "Clusters") {
-    //   ARCHR_TEST_MARKER_PEAKS(ARCHR_CALL_PEAKS.out.archr_project)
-    // } else if (params.groupby_cluster == "Clusters2") {
-    //   ARCHR_TEST_MARKER_PEAKS(ARCHR_CALL_PEAKS.out.archr_project)
-    //   ARCHR_TEST_MARKER_PEAKS_CLUSTER2(ARCHR_CALL_PEAKS.out.archr_project)
-    // }
-    //
+  } else {
+    log.info "Parameter --scrnaseq not supplied, skip trajectory analysis!"
+  }
 /*
-     * SUBWORKFLOW: Read in samplesheet, validate and stage input files
-     */
-    // INPUT_CHECK (
-    //     ch_input
-    // )
+   * SUBWORKFLOW: Read in samplesheet, validate and stage input files
+   */
+  // INPUT_CHECK (
+  //     ch_input
+  // )
 
-    /*
-     * MODULE: Run FastQC
-     */
-    // FASTQC (
-    //     INPUT_CHECK.out.reads
-    // )
-    // ch_software_versions = ch_software_versions.mix(FASTQC.out.version.first().ifEmpty(null))
+  /*
+   * MODULE: Run FastQC
+   */
+  // FASTQC (
+  //     INPUT_CHECK.out.reads
+  // )
+  // ch_software_versions = ch_software_versions.mix(FASTQC.out.version.first().ifEmpty(null))
 
 
-    // /*
-    //  * MODULE: Pipeline reporting
-    //  */
-    // // Get unique list of files containing version information
-    // ch_software_versions
-    //     .map { it -> if (it) [ it.baseName, it ] }
-    //     .groupTuple()
-    //     .map { it[1][0] }
-    //     .flatten()
-    //     .collect()
-    //     .set { ch_software_versions }
-    // GET_SOFTWARE_VERSIONS (
-    //     ch_software_versions
-    // )
+  // /*
+  //  * MODULE: Pipeline reporting
+  //  */
+  // // Get unique list of files containing version information
+  // ch_software_versions
+  //     .map { it -> if (it) [ it.baseName, it ] }
+  //     .groupTuple()
+  //     .map { it[1][0] }
+  //     .flatten()
+  //     .collect()
+  //     .set { ch_software_versions }
+  // GET_SOFTWARE_VERSIONS (
+  //     ch_software_versions
+  // )
 
-    /*
-     * MODULE: MultiQC
-     */
-    // workflow_summary    = Workflow.paramsSummaryMultiqc(workflow, params.summary_params)
-    // ch_workflow_summary = Channel.value(workflow_summary)
-    //
-    // ch_multiqc_files = Channel.empty()
-    // ch_multiqc_files = ch_multiqc_files.mix(Channel.from(ch_multiqc_config))
-    // ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_custom_config.collect().ifEmpty([]))
-    // ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    // ch_multiqc_files = ch_multiqc_files.mix(GET_SOFTWARE_VERSIONS.out.yaml.collect())
-    // ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+  /*
+   * MODULE: MultiQC
+   */
+  // workflow_summary    = Workflow.paramsSummaryMultiqc(workflow, params.summary_params)
+  // ch_workflow_summary = Channel.value(workflow_summary)
+  //
+  // ch_multiqc_files = Channel.empty()
+  // ch_multiqc_files = ch_multiqc_files.mix(Channel.from(ch_multiqc_config))
+  // ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_custom_config.collect().ifEmpty([]))
+  // ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+  // ch_multiqc_files = ch_multiqc_files.mix(GET_SOFTWARE_VERSIONS.out.yaml.collect())
+  // ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
-    // MULTIQC (
-    //     ch_multiqc_files.collect()
-    // )
-    // multiqc_report       = MULTIQC.out.report.toList()
-    // ch_software_versions = ch_software_versions.mix(MULTIQC.out.version.ifEmpty(null))
+  // MULTIQC (
+  //     ch_multiqc_files.collect()
+  // )
+  // multiqc_report       = MULTIQC.out.report.toList()
+  // ch_software_versions = ch_software_versions.mix(MULTIQC.out.version.ifEmpty(null))
 }
 
 ////////////////////////////////////////////////////

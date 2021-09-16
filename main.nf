@@ -28,12 +28,6 @@ if (params.help) {
 }
 
 ////////////////////////////////////////////////////
-/* --        GENOME PARAMETER VALUES           -- */
-////////////////////////////////////////////////////
-
-params.fasta = Workflow.getGenomeAttribute(params, 'fasta')
-
-////////////////////////////////////////////////////
 /* --         PRINT PARAMETER SUMMARY          -- */
 ////////////////////////////////////////////////////
 
@@ -54,8 +48,7 @@ log.info Utils.dashedLine(params.monochrome_logs)
 include { PREPROCESS } from './workflows/pipeline' addParams( summary_params: summary_params )
 include { DOWNSTREAM } from './workflows/pipeline' addParams( summary_params: summary_params )
 
-
-workflow  NFCORE_SCATACSEQFLOW {
+workflow  SCATACSEQFLOW {
   if (params.preprocess) {
     log.info "Running preprocess ..."
     PREPROCESS ()
@@ -74,7 +67,7 @@ workflow  NFCORE_SCATACSEQFLOW {
 }
 
 workflow {
-  NFCORE_SCATACSEQFLOW ()
+  SCATACSEQFLOW ()
 }
 
 ////////////////////////////////////////////////////

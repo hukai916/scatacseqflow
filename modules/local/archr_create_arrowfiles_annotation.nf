@@ -7,11 +7,11 @@ options        = initOptions(params.options)
 /*
  * Parse software version numbers
  */
-process ARCHR_CREATE_ARROWFILES {
+process ARCHR_CREATE_ARROWFILES_ANNOTATION {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'archr_create_arrowfiles', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'archr_create_arrowfiles_annotation', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -26,10 +26,10 @@ process ARCHR_CREATE_ARROWFILES {
     // cache false
 
     input:
-    // if get_annotation == "yes", then use gene_annotation and genome_annotation to build ArchR genome.
-    // if get_annotation == "no", then, use archr_genome directly.
     tuple val(sample_name), path(fragment)
-    val archr_genome
+    path gene_annotation
+    path genome_annotation
+    path user_rlib
     val archr_thread
 
     output:
@@ -48,18 +48,19 @@ process ARCHR_CREATE_ARROWFILES {
     inputFiles <- "$fragment"
     names(inputFiles) <- "$sample_name"
 
-    addArchRGenome("$archr_genome")
-    addArchRThreads(threads = $archr_thread)
+    genomeAnnotation <- readRDS("$genome_annotation")
+    geneAnnotation <- readRDS("$gene_annotation")
 
     ArrowFiles <- createArrowFiles(
       inputFiles = inputFiles,
       sampleNames = names(inputFiles),
+      geneAnnotation = geneAnnotation,
+      genomeAnnotation = genomeAnnotation,
       threads = 1,
       QCDir = paste0("QualityControl_", "$sample_name"),
       subThreading = FALSE,
       $options.args
     )
-
 ' > run.R
 
     Rscript run.R

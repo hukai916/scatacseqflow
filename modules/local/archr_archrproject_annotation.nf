@@ -7,11 +7,11 @@ options        = initOptions(params.options)
 /*
  * Parse software version numbers
  */
-process ARCHR_ARCHRPROJECT {
+process ARCHR_ARCHRPROJECT_ANNOTATION {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'archr_archrproject', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'archr_archrproject_annotation', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -27,16 +27,19 @@ process ARCHR_ARCHRPROJECT {
 
     input:
     path arrowfiles // this will prepare all required files from the list into the working dir
-    val archr_genome
-    val archr_thread
+    path gene_annotation
+    path genome_annotation
+    path user_rlib
 
     output:
+    // val sample_name, emit: sample_name
+    // // path sample_name, emit: output_dir // using this syntax, the -resume won't work
     path "ArchRProject", emit: archrproject_dir
     path "proj.rds", emit: archr_project
 
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
-    // note the double quote is intentionally used here for echo command, otherwise if single quote, the $arrow is problematic.
+    // note the double quote is intentionally used here for echo command, otherwise if singl quote, the $arrow is problematic.
     """
     echo $arrowfiles > arrowfiles.txt
     arrows=\$(cat arrowfiles.txt | sed -e 's/.arrow\s/.arrow", "/g')
@@ -44,11 +47,13 @@ process ARCHR_ARCHRPROJECT {
     echo "
     library(ArchR)
 
-    addArchRGenome(\\"$archr_genome\\")
-    addArchRThreads(threads = $archr_thread)
+    genomeAnnotation <- readRDS(\\"$genome_annotation\\")
+    geneAnnotation <- readRDS(\\"$gene_annotation\\")
 
     proj <- ArchRProject(
               ArrowFiles = c(\\"\$arrows\\"),
+              geneAnnotation = geneAnnotation,
+              genomeAnnotation = genomeAnnotation,
               outputDirectory = \\"ArchRProject\\",
               $options.args
             )

@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName } from './functions'
+include { initOptions; saveFiles; getSoftwareName; get_ensembl_filename } from './functions'
 
 params.options = [:]
 options        = initOptions(params.options)
@@ -35,9 +35,8 @@ process DOWNLOAD_FROM_ENSEMBL {
     val genome_name, emit: genome_name
 
     script:
-    def dict_genome_name = [homo_sapiens: "Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz", mus_musculus: "Mus_musculus.GRCm39.dna.primary_assembly.fa.gz", danio_rerio: "Danio_rerio.GRCz11.dna.primary_assembly.fa.gz"]
-
-    download_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/fasta/" + genome_name + "/dna/" + dict_genome_name[genome_name]
+    dict_name_name = get_ensembl_filename()
+    download_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/fasta/" + genome_name + "/dna/" + dict_genome_name[genome_name] + ".fa.gz"
 
     md5_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/fasta/" + genome_name + "/dna/CHECKSUMS"
 

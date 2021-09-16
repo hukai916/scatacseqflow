@@ -9,3 +9,35 @@ report_section_order:
         order: -1001
 
 export_plots: true
+
+# Below is for scatacseqflow config:
+ignore_images: false
+
+fn_ignore_files:
+  - "*.rds" # ignore R objects
+
+module_order:
+  - fastqc
+  - barcode_correction
+  - cutadapt
+  - qualimap
+  - archr
+
+
+
+
+# How to run fastqc twice on different files:
+# module_order:
+#   - fastqc:
+#       name: "FastQC (trimmed)"
+#       anchor: "fastqc_trimmed"
+#       info: "This section of the report shows FastQC results after adapter trimming."
+#       target: ""
+#       path_filters:
+#         - "*_1_trimmed_fastqc.zip"
+#   - cutadapt
+#   - fastqc:
+#       name: "FastQC (raw)"
+#       anchor: "fastqc_raw"
+#       path_filters:
+#         - "*_1_fastqc.zip"

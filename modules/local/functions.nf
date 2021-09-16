@@ -23,6 +23,7 @@ def initOptions(Map args) {
     options.cutoff        = args.cutoff ?: ''
     options.motifs        = args.motifs ?: ''
     options.norm_method   = args.norm_method ?: ''
+    options.tss_norm_method = args.tss_norm_method ?: ''
     options.tss_flank     = args.tss_flank ?: ''
     options.flank_norm    = args.flank_norm ?: ''
     options.gene_to_color = args.gene_to_color ?: ''
@@ -64,4 +65,44 @@ def saveFiles(Map args) {
             return "${getPathFromList(path_list)}/$args.filename"
         }
     }
+}
+
+// Function to prepare for ArchR genome name:
+def get_bsgenome(archr_genome, ref_fasta_ucsc, ref_fasta_ensembl, ref_cellranger_ucsc, ref_cellranger_ensembl) {
+  // Natively supported ArchR genomes:
+  def archr_support_genome = ["hg38", "mm9", "mm10"]
+  // Other supported ArchR bsgenomes with ArchR create annotation functions:
+  def archr_custom_bsgenome = ["hg19", "bosTau9", "ce11", "canFam3", "danRer11", "dm6", "galGal6", "rheMac10", "panTro6", "rn6", "sacCer3", "susScr11"]
+  // Map: ensembl name to uscs name
+  def ensembl2ucsc = [homo_sapiens: "hg38", mus_musculus: "mm10", bos_taurus: "bosTau9", caenorhabditis_elegans: "ce11", danio_rerio: "danRer11",  drosophila_melanogaster: "dm6", gallus_gallus: "galGal6", macaca_mulatta: "rheMac10", pan_troglodytes: "panTro6", rattus_norvegicus: "rn6", saccharomyces_cerevisiae: "sacCer3", sus_scrofa: "susScr11"
+  ]
+
+  if (archr_support_genome.contains(params.archr_genome)) {
+    return [archr_genome, "ready"]
+  }
+  if (archr_custom_bsgenome.contains(params.archr_genome)) {
+    return [archr_genome, "need_build"]
+  }
+
+  if (archr_support_genome.contains(ref_fasta_ucsc)) {
+    return [ref_fasta_ucsc, "ready_ucsc"]
+  }
+  if (archr_custom_bsgenome.contains(ref_fasta_ucsc)) {
+    return [ref_fasta_ucsc, "need_build_ucsc"]
+  }
+  if (archr_support_genome.contains(ensembl2ucsc[ref_fasta_ensembl])) {
+    return [ensembl2ucsc[ref_fasta_ensembl], "ready_ensembl"]
+  }
+  if (archr_custom_bsgenome.contains(ref_fasta_ensembl)) {
+    return [ref_fasta_ucsc, "need_build_ensembl"]
+  }
+
+  return ["NA", "NA"]
+}
+
+// Map: ensemble name to filename:
+def get_ensembl_filename() {
+      def dict_genome_name = [homo_sapiens: "Homo_sapiens.GRCh38.dna.primary_assembly", mus_musculus: "Mus_musculus.GRCm39.dna.primary_assembly", bos_taurus: "Bos_taurus.ARS-UCD1.2.dna.toplevel", caenorhabditis_elegans: "Caenorhabditis_elegans.WBcel235.dna.toplevel", danio_rerio: "Danio_rerio.GRCz11.dna.primary_assembly", drosophila_melanogaster: "Drosophila_melanogaster.BDGP6.32.dna.toplevel", gallus_gallus: "Gallus_gallus.GRCg6a.dna.toplevel", macaca_mulatta: "Macaca_mulatta.Mmul_10.dna.toplevel",  pan_troglodytes: "Pan_troglodytes.Pan_tro_3.0.dna.toplevel", rattus_norvegicus: "Rattus_norvegicus.Rnor_6.0.dna.toplevel", saccharomyces_cerevisiae: "Saccharomyces_cerevisiae.R64-1-1.dna.toplevel",  sus_scrofa: "Sus_scrofa.Sscrofa11.1.dna.toplevel"
+      ]
+      return dict_genome_name
 }

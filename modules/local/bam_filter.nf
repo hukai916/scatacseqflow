@@ -47,7 +47,8 @@ process BAM_FILTER {
     # 3. The mapq of both reads > 20.
     # 4. Non-mitochondrial reads.
 
-    chromosomes=($(samtools view -H $bam | grep '^@SQ' | perl -n -e 's{.+?SN:([^\t]+).+}{\$1}; if (\$_ ne "MT\n" && \$_ ne "chrM\n") {print}'))
+    chromosomes=(\$(samtools view -H $bam | grep '^@SQ' | perl -n -e 's{.+?SN:([^\t]+).+}{\$1}; if (\$_ ne "MT\n" && \$_ ne "chrM\n") {print}'))
+    
 
     """
 

@@ -39,13 +39,15 @@ process BAM_FILTER {
     // Ref: https://gitter.im/nextflow-io/nextflow?at=5a4f8f01ce68c3bc7480d7c5
 
     // Codes adapted from Haibo Liu.
-    if( filter_mitochondrial == 'yes' )
+    if (filter_mitochondrial == 'yes')
     """
     # Keep only the following reads:
     # 1. Paried reads mapped in the correct orientation.
     # 2. Fragment size ranges from 38 to 2000 bp.
     # 3. The mapq of both reads > 20.
     # 4. Non-mitochondrial reads.
+
+    chromosomes=($(samtools view -H $bam | grep '^@SQ' | perl -n -e 's{.+?SN:([^\t]+).+}{\$1}; if (\$_ ne "MT\n" && \$_ ne "chrM\n") {print}'))
 
     """
 

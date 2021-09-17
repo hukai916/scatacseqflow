@@ -58,4 +58,17 @@ process BAM_FILTER {
 
     """
 
+    else
+    """
+    # Keep only the following reads:
+    # 1. Paried reads mapped in the correct orientation.
+    # 2. Fragment size ranges from 38 to 2000 bp.
+    # 3. The mapq of both reads > 20.
+
+    samtools view -h -b $bam | awk 'BEGIN{FS=OFS="\t"} \
+    function abs(v) {return v < 0 ? -v : v}; \
+    /^@/ || (\$7 == "=" && (\$2 == 99 || \$2 == 147 || \$2 == 83 || \$2 ==163) && abs(\$9) <= 2000 && abs(\$9) >= 38 && \$5 >=20 ) {print}' \
+    samtools view -h -b -o ${bam.baseName}.filtered.bam
+
+    """
 }

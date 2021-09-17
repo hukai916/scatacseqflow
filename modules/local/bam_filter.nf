@@ -51,7 +51,6 @@ process BAM_FILTER {
     chromosomes=(\$(samtools view -H $bam | grep '^@SQ' | perl -n -e 's{.+?SN:([^\\t]+).+}{\$1}; if (\$_ ne "MT\\n" && \$_ ne "chrM\\n") {print}'))
 
     # Only output non-mitochondiral reads:
-    samtools view -h -b $bam ${chromosomes[@]}
 
     """
 

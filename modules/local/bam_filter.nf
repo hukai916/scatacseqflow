@@ -47,9 +47,24 @@ process BAM_FILTER {
     # 3. The mapq of both reads > 20.
     # 4. Non-mitochondrial reads.
 
-    chromosomes=(\$(samtools view -H $bam | grep '^@SQ' | perl -n -e 's{.+?SN:([^\t]+).+}{\$1}; if (\$_ ne "MT\\n" && \$_ ne "chrM\\n") {print}'))
+    # Non-mitochondrial chromosome names:
+    chromosomes=(\$(samtools view -H $bam | grep '^@SQ' | perl -n -e 's{.+?SN:([^\\t]+).+}{\$1}; if (\$_ ne "MT\\n" && \$_ ne "chrM\\n") {print}'))
 
+    # Only output non-mitochondiral reads:
+    samtools view -h -b $bam ${chromosomes[@]} | awk 'BEGIN{FS=OFS="\\t"} \
+    function abs(v) {return v < 0 ? -v : v}; \
+    /^@/ || (\$7 == "=" && (\$2 == 99 || \$2 == 147 || \$2 == 83 || \$2 == 163) && abs(\$9) <= 2000 && abs(\$9) >= 38 && \$5 >= 20 ) {print}' \
+    samtools view -h -b -o ${bam.baseName}.filtered.bam
 
     """
 
+    else
+    """
+    # Only output non-mitochondiral reads:
+    samtools view -h -b $bam | awk 'BEGIN{FS=OFS="\\t"} \
+    function abs(v) {return v < 0 ? -v : v}; \
+    /^@/ || (\$7 == "=" && (\$2 == 99 || \$2 == 147 || \$2 == 83 || \$2 == 163) && abs(\$9) <= 2000 && abs(\$9) >= 38 && \$5 >= 20 ) {print}' \
+    samtools view -h -b -o ${bam.baseName}.filtered.bam
+
+    """
 }

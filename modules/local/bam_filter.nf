@@ -28,6 +28,7 @@ process BAM_FILTER {
     input:
     val sample_name
     path bam
+    val filter_mitochondrial // if "yes", will filter mitochondrial reads too.
 
     output:
     val sample_name, emit: sample_name
@@ -37,8 +38,37 @@ process BAM_FILTER {
     def avail_mem = task.memory ? "-m ${task.memory.toBytes().intdiv(task.cpus)}" : ''
     // Ref: https://gitter.im/nextflow-io/nextflow?at=5a4f8f01ce68c3bc7480d7c5
 
+    // Codes adapted from Haibo Liu.
+    if (filter_mitochondrial == 'yes')
     """
-    samtools view -@ $task.cpus $avail_mem $options.args -b $bam -o ${bam.baseName}.filtered.bam
+    # Keep only the following reads:
+    # 1. Paried reads mapped in the correct orientation.
+    # 2. Fragment size ranges from 38 to 2000 bp.
+    # 3. The mapq of both reads > 20.
+    # 4. Non-mitochondrial reads.
+
+    # Non-mitochondrial chromosome names:
+    chromosome=(`samtools view -H $bam | grep '^@SQ' | perl -n -e 's{.+?SN:([^\t]+).+}{$\1}; if (\$_ ne "MT\n" && \$_ ne "chrM\n") {print}'`)
+
+    # Only output non-mitochondiral reads:
+    samtools view -h -b $bam ${chromosomes[@]} | awk 'BEGIN{FS=OFS="\t"} \
+    function abs(v) {return v < 0 ? -v : v}; \
+    /^@/ || (\$7 == "=" && (\$2 == 99 || \$2 == 147 || \$2 == 83 || \$2 ==163) && abs(\$9) <= 2000 && abs(\$9) >= 38 && \$5 >=20 ) {print}' \
+    samtools view -h -b -o ${bam.baseName}.filtered.bam
+
+    """
+
+    else
+    """
+    # Keep only the following reads:
+    # 1. Paried reads mapped in the correct orientation.
+    # 2. Fragment size ranges from 38 to 2000 bp.
+    # 3. The mapq of both reads > 20.
+
+    samtools view -h -b $bam | awk 'BEGIN{FS=OFS="\t"} \
+    function abs(v) {return v < 0 ? -v : v}; \
+    /^@/ || (\$7 == "=" && (\$2 == 99 || \$2 == 147 || \$2 == 83 || \$2 ==163) && abs(\$9) <= 2000 && abs(\$9) >= 38 && \$5 >=20 ) {print}' \
+    samtools view -h -b -o ${bam.baseName}.filtered.bam
 
     """
 }

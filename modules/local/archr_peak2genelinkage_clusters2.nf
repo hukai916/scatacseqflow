@@ -32,6 +32,7 @@ process ARCHR_PEAK2GENELINKAGE_CLUSTERS2 {
     path "Plots/Heatmap-Marker-Genes-with-Peak2GeneLinks.pdf", emit: heatmap_marker_genes_with_peaks2genelinks
     path "Plots/Plot-Tracks-Marker-Genes-with-Peak2GeneLinks.pdf", emit: plot_tracks_marker_genes_with_peak2genelinks
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "archr_peak2genelinkage_clusters2", emit: res_dir
 
     script:
 
@@ -86,6 +87,10 @@ process ARCHR_PEAK2GENELINKAGE_CLUSTERS2 {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # Copy to res_dir:
+    mkdir archr_peak2genelinkage_clusters2
+    cp -r Plots archr_peak2genelinkage_clusters2/
 
     """
 }

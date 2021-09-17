@@ -57,6 +57,7 @@ include { GET_BIORAD_FASTQ      } from '../modules/local/get_biorad_fastq'      
 include { CELLRANGER_ATAC_COUNT } from '../modules/local/cellranger_atac_count'   addParams( options: modules['cellranger_atac_count'] )
 include { CORRECT_BARCODE       } from '../modules/local/correct_barcode'         addParams( options: modules['correct_barcode'] )
 include { MATCH_READS           } from '../modules/local/match_reads'             addParams( options: modules['match_reads'] )
+include { MATCH_READS_TRIMMED   } from '../modules/local/match_reads_trimmed'     addParams( options: modules['match_reads_trimmed'] )
 include { FASTQC                } from '../modules/local/fastqc'                  addParams( options: modules['fastqc'] )
 
 include { BIORAD_FASTQC         } from '../modules/local/biorad_fastqc'           addParams( options: modules['biorad_fastqc'] )
@@ -181,6 +182,14 @@ workflow PREPROCESS {
       // module: trimming off adapter
       CUTADAPT (ADD_BARCODE_TO_READS.out.sample_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
 
+      // module: MATCH_READS_TRIMMED: in case user choose to trim based on quality and read pair gets unbalanced.
+      MATCH_READS_TRIMMED (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq)
+
+      // TODO: fragment generation should take input from deduplcated bam files so that fragments will be garanteed unique. Make the duplicate removal as a default cause it won't hurt. Otherwise visualizaiton is problematic.
+      // For fragement files, sinto will take care of the duplication because each line is unique? (need confirm).
+      // After mapping, if we need to split the bam files based on clusters, we need to remove duplicates, which is determined by the barcode information: PICARD or SAMTOOLS.
+      // Duplication should be determined: barcode (cell), start and end coordination, should also shift the soft-trimming starting position.
+
       // module: mapping with bwa or minimap2: mark duplicate
       // bwa or minimap2
       if (params.mapper == 'bwa') {
@@ -213,10 +222,10 @@ workflow PREPROCESS {
             exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
           }
           // module : bwa_map
-          BWA_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, BWA_INDEX.out.bwa_index_folder)
+          BWA_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, BWA_INDEX.out.bwa_index_folder)
         } else {
           // use user provided bwa index for mapping, module : bwa_map
-          BWA_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_bwa_index)
+          BWA_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, params.ref_bwa_index)
         }
       } else if (params.mapper == "minimap2") {
         log.info "INFO: --mapper: minimap2"
@@ -248,11 +257,11 @@ workflow PREPROCESS {
               exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
           }
           // module : minimap2_map
-          MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, MINIMAP2_INDEX.out.minimap2_index)
+          MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, MINIMAP2_INDEX.out.minimap2_index)
         } else {
             // use user provided bwa index for mapping
             // module : minimap2_map
-            MINIMAP2_MAP (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq, params.ref_minimap2_index)
+            MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, params.ref_minimap2_index)
         }
       } else {
           exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
@@ -260,12 +269,15 @@ workflow PREPROCESS {
 
       // module: filter out poorly mapped reads
       if (params.mapper == 'bwa') {
-        BAM_FILTER (BWA_MAP.out.sample_name, BWA_MAP.out.bam)
+        BAM_FILTER (BWA_MAP.out.sample_name, BWA_MAP.out.bam, params.filter_mitochondrial)
       } else if (params.mapper == "minimap2") {
-          BAM_FILTER (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam)
+          BAM_FILTER (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam, params.filter_mitochondrial)
       }
 
+      // Here: dedulicate bam;
+
       // module: bamqc with qualimap for raw bam files
+      // TODO: Run Qualimap on the final filtered deduplicated bam file.
       QUALIMAP (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
 
       // module: generate fragment file with sinto
@@ -338,10 +350,10 @@ workflow PREPROCESS {
 
     // Collect all output results for MultiQC report:
     res_files = Channel.empty()
-    res_files = res_files.mix(FASTQC.out.zip.collect{it}.ifEmpty([]))
-    res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect{it}.ifEmpty([]))
-    res_fiels = res_files.mix(CUTADAPT.out.log.collect{it}.ifEmpty([]))
-    res_files = res_files.mix(QUALIMAP.out.bamqc.collect{it}.ifEmpty([]))
+    res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
+    res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
+    res_fiels = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))
+    res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
 
   emit:
     res_files.collect()
@@ -584,6 +596,7 @@ workflow DOWNSTREAM {
     }
 
     // Module: trajectory analysis: for Clusters2 only
+    // TODO: Module: trajectory analysis: for Clusters using Gene Score Matrix
     if (params.groupby_cluster == "Clusters2") {
       if (params.trajectory_groups = "") {
         log.info "Parameter --trajectory_groups not supplied, checking trajectory analysis!"
@@ -597,7 +610,8 @@ workflow DOWNSTREAM {
 
     // Collect all output results for MultiQC report:
     res_folders = Channel.empty()
-    res_folders = res_folders.mix(ARCHR_TRAJECTORY_CLUSTERS2.out.res_dir.collect{it[1]}.ifEmpty([]))
+    res_folders = res_folders.mix(ARCHR_PEAK2GENELINKAGE_CLUSTERS2.out.res_dir.collect().ifEmpty([]))
+    res_folders = res_folders.mix(ARCHR_TRAJECTORY_CLUSTERS2.out.res_dir.collect().ifEmpty([]))
 
   emit:
     res_folders.collect()

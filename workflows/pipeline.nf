@@ -269,9 +269,9 @@ workflow PREPROCESS {
 
       // module: filter out poorly mapped reads
       if (params.mapper == 'bwa') {
-        BAM_FILTER (BWA_MAP.out.sample_name, BWA_MAP.out.bam, params.filter_mitochondrial)
+        BAM_FILTER (BWA_MAP.out.sample_name, BWA_MAP.out.bam, params.filter)
       } else if (params.mapper == "minimap2") {
-          BAM_FILTER (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam, params.filter_mitochondrial)
+          BAM_FILTER (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam, params.filter)
       }
 
       // Here: dedulicate bam;

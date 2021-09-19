@@ -53,7 +53,6 @@ process CELLRANGER_INDEX {
     echo '}' >> index.config
 
     # Make ref:
-    mkdir genome_index
     cellranger-atac mkref --config=index.config
 
     """

@@ -39,7 +39,7 @@ process BAM_FILTER {
     // Ref: https://gitter.im/nextflow-io/nextflow?at=5a4f8f01ce68c3bc7480d7c5
 
     // Codes adapted from Haibo Liu.
-    if (filter_mitochondrial == 'yes')
+    if (filter == 'both') // filter out both mitochondiral and "unproper reads"
     """
     # Keep only the following reads:
     # 1. Paried reads mapped in the correct orientation.
@@ -59,7 +59,7 @@ process BAM_FILTER {
 
     """
 
-    else
+    else if (filter == 'unproper') // filter out only "unproper reads"
     """
     # Keep only the following reads:
     # 1. Paried reads mapped in the correct orientation.
@@ -73,4 +73,14 @@ process BAM_FILTER {
     samtools view -h -b -o ${bam.baseName}.filtered.bam
 
     """
+
+    else // don't apply any filtering
+    """
+    # Don't apply any default filtering:
+
+    samtools index $bam
+    samtools view -h -b -@ $task.cpus $options.args $bam -o ${bam.baseName}.filtered.bam
+
+    """
+
 }

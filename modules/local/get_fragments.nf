@@ -40,7 +40,7 @@ process GET_FRAGMENTS {
     samtools index $options.args $bam
 
     # then, generate the fragments file
-    sinto fragments $options.args --nproc $task.cpus --bam $bam -f fragments.bed
+    sinto fragments $options.args --nproc $task.cpus --bam $bam -f fragments.bed --barcode_regex "[^:]*"
     # sort and bzip the fragment file
     sort -k 1,1 -k2,2n fragments.bed > fragments.sort.bed
     bgzip fragments.sort.bed

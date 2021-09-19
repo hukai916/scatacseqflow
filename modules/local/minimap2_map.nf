@@ -40,5 +40,6 @@ process MINIMAP2_MAP {
     """
     minimap2 $options.args -a $minimap2_index_file $read1_fastq $read2_fastq | samtools sort -@ $task.cpus -O bam -o ${sample_name}.sorted.bam
     # note that -ax sr pops error for test dataset.
+    # minimap2 is not good for short reads alignments.
     """
 }

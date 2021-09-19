@@ -35,7 +35,7 @@ process BAM_FILTER {
     path "*.filtered.bam", emit: bam
 
     script:
-    def avail_mem = task.memory ? "-m ${task.memory.toBytes().intdiv(task.cpus)}" : ''
+    // def avail_mem = task.memory ? "-m ${task.memory.toBytes().intdiv(task.cpus)}" : ''
     // Ref: https://gitter.im/nextflow-io/nextflow?at=5a4f8f01ce68c3bc7480d7c5
 
     // Codes adapted from Haibo Liu.
@@ -52,7 +52,7 @@ process BAM_FILTER {
 
     # Only output non-mitochondiral reads:
     samtools index $bam
-    samtools view -h $bam \${chromosomes[@]} | awk 'BEGIN{FS=OFS="\\t"} \
+    samtools view -h -@ $task.cpus $options.args $bam \${chromosomes[@]} | awk 'BEGIN{FS=OFS="\\t"} \
     function abs(v) {return v < 0 ? -v : v}; \
     /^@/ || (\$7 == "=" && (\$2 == 99 || \$2 == 147 || \$2 == 83 || \$2 == 163) && abs(\$9) <= 2000 && abs(\$9) >= 38 && \$5 >= 20 ) {print}' | \
     samtools view -h -b -o ${bam.baseName}.filtered.bam
@@ -67,7 +67,7 @@ process BAM_FILTER {
     # 3. The mapq of both reads > 20.
 
     samtools index $bam
-    samtools view -h $bam | awk 'BEGIN{FS=OFS="\\t"} \
+    samtools view -h -@ $task.cpus $options.args $bam | awk 'BEGIN{FS=OFS="\\t"} \
     function abs(v) {return v < 0 ? -v : v}; \
     /^@/ || (\$7 == "=" && (\$2 == 99 || \$2 == 147 || \$2 == 83 || \$2 == 163) && abs(\$9) <= 2000 && abs(\$9) >= 38 && \$5 >= 20 ) {print}'| \
     samtools view -h -b -o ${bam.baseName}.filtered.bam

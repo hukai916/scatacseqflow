@@ -79,6 +79,7 @@ include { MINIMAP2_INDEX   } from '../modules/local/minimap2_index'    addParams
 include { MINIMAP2_MAP     } from '../modules/local/minimap2_map'    addParams( options: modules['minimap2_map'] )
 
 include { BAM_FILTER       } from '../modules/local/bam_filter'    addParams( options: modules['bam_filter'] )
+include { REMOVE_DUPLICATE } from '../modules/local/remove_duplicate'    addParams( options: modules['remove_duplicate'] )
 include { QUALIMAP         } from '../modules/local/qualimap'    addParams( options: modules['qualimap'] )
 include { GET_FRAGMENTS    } from '../modules/local/get_fragments'    addParams( options: modules['get_fragments'] )
 
@@ -274,14 +275,15 @@ workflow PREPROCESS {
           BAM_FILTER (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam, params.filter)
       }
 
-      // Here: dedulicate bam;
+      // module: remove duplicates based on cell barcode, start, end
+      REMOVE_DUPLICATE(BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
 
       // module: bamqc with qualimap for raw bam files
       // TODO: Run Qualimap on the final filtered deduplicated bam file.
-      QUALIMAP (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
+      QUALIMAP (REMOVE_DUPLICATE.out.sample_name, REMOVE_DUPLICATE.out.bam)
 
       // module: generate fragment file with sinto
-      GET_FRAGMENTS (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
+      GET_FRAGMENTS (REMOVE_DUPLICATE.out.sample_name, REMOVE_DUPLICATE.out.bam)
 
       // module: generate fragement file with sinto
     } else if (params.preprocess == "10xgenomics") {

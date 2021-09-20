@@ -7,11 +7,11 @@ options        = initOptions(params.options)
 /*
  * Parse software version numbers
  */
-process GET_FRAGMENTS {
+process REMOVE_DUPLICATE {
     label 'process_low'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'fragments', publish_id:'') }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'remove_duplicate', publish_id:'') }
 
     // conda (params.enable_conda ? "conda-forge::python=3.8.3" : null)
     // if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -21,7 +21,7 @@ process GET_FRAGMENTS {
     // }
 
     // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/sinto_xenial:0.2"
+    container "hukai916/pysam_xenial:0.1"
 
     // cache false
 
@@ -31,19 +31,15 @@ process GET_FRAGMENTS {
 
     output:
     val sample_name, emit: sample_name
-    path "fragments.sort.bed.gz", emit: fragments
+    path "rm_dup_*.bam", emit: bam
 
     script:
 
     """
-    # first index the bam file
-    samtools index $options.args $bam
+    # Remove PCR duplicates based on cell barcode, start, end:
 
-    # then, generate the fragments file
-    sinto fragments $options.args --nproc $task.cpus --bam $bam -f fragments.bed --barcode_regex "[^:]*"
-    # sort and bzip the fragment file
-    sort -k 1,1 -k2,2n fragments.bed > fragments.sort.bed
-    bgzip fragments.sort.bed
+    rm_dup.py $bam $options.args
 
     """
+
 }

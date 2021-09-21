@@ -45,5 +45,8 @@ for read in input_file:
         unique_reads[read_id] += 1
 print("Done!")
 
-print("Result from rm_dup: total unique reads:\t\t" + str(len(unique_reads)))
-print("Result from rm_dup: total duplicate reads:\t" + str(sum(unique_reads.values()) - len(unique_reads)))
+summary = "Summary (rm_dup.py): total unique reads: " + str(len(unique_reads)) + ", total duplicate reads: " + str(sum(unique_reads.values()) - len(unique_reads)) + "."
+print(summary)
+
+with open("summary_" + basename + ".txt", "w") as f:
+    f.write(summary)

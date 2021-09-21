@@ -28,7 +28,7 @@ process BAM_FILTER {
     input:
     val sample_name
     path bam
-    val filter_mitochondrial // if "yes", will filter mitochondrial reads too.
+    val filter // if "yes", will filter mitochondrial reads too.
 
     output:
     val sample_name, emit: sample_name
@@ -57,6 +57,12 @@ process BAM_FILTER {
     /^@/ || (\$7 == "=" && (\$2 == 99 || \$2 == 147 || \$2 == 83 || \$2 == 163) && abs(\$9) <= 2000 && abs(\$9) >= 38 && \$5 >= 20 ) {print}' | \
     samtools view -h -b -o ${bam.baseName}.filtered.bam
 
+    num_kept=\$(samtools view -c ${bam.baseName}.filtered.bam)
+    num_all=\$(samtools view -c $bam)
+    num_filtered=\$((num_all - num_kept))
+
+    echo "Summary (bam_filter): total valid: \$num_kept; total filtered: \${num_filtered}." > summary_${bam.baseName}.txt
+
     """
 
     else if (filter == 'unproper') // filter out only "unproper reads"
@@ -72,6 +78,12 @@ process BAM_FILTER {
     /^@/ || (\$7 == "=" && (\$2 == 99 || \$2 == 147 || \$2 == 83 || \$2 == 163) && abs(\$9) <= 2000 && abs(\$9) >= 38 && \$5 >= 20 ) {print}'| \
     samtools view -h -b -o ${bam.baseName}.filtered.bam
 
+    num_kept=\$(samtools view -c ${bam.baseName}.filtered.bam)
+    num_all=\$(samtools view -c $bam)
+    num_filtered=\$((num_all - num_kept))
+
+    echo "Summary (bam_filter): total valid: \$num_kept; total filtered: \${num_filtered}." > summary_${bam.baseName}.txt
+
     """
 
     else // don't apply any filtering
@@ -81,6 +93,12 @@ process BAM_FILTER {
     samtools index $bam
     samtools view -h -b -@ $task.cpus $options.args $bam -o ${bam.baseName}.filtered.bam
 
+    num_kept=\$(samtools view -c ${bam.baseName}.filtered.bam)
+    num_all=\$(samtools view -c $bam)
+    num_filtered=\$((num_all - num_kept))
+
+    echo "Summary (bam_filter): total valid: \$num_kept; total filtered: \${num_filtered}." > summary_${bam.baseName}.txt
+    
     """
 
 }

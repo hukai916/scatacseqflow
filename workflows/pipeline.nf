@@ -90,6 +90,7 @@ include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'           
 
 // For ArchR functions:
 include { ARCHR_GET_ANNOTATION } from '../modules/local/archr_get_annotation' addParams( options: modules['archr_get_annotation'] )
+include { ARCHR_GET_ANNOTATION_CUSTOM } from '../modules/local/archr_get_annotation_custom' addParams( options: modules['archr_get_annotation_custom'] )
 include { ARCHR_CREATE_ARROWFILES } from '../modules/local/archr_create_arrowfiles' addParams( options: modules['archr_create_arrowfiles'] )
 include { ARCHR_CREATE_ARROWFILES_ANNOTATION } from '../modules/local/archr_create_arrowfiles_annotation' addParams( options: modules['archr_create_arrowfiles_annotation'] )
 include { ARCHR_ADD_DOUBLETSCORES } from '../modules/local/archr_add_doubletscores' addParams( options: modules['archr_add_doubletscores'] )
@@ -127,7 +128,7 @@ include { ARCHR_PEAK2GENELINKAGE_CLUSTERS2 } from '../modules/local/archr_peak2g
 include { ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS } from '../modules/local/archr_get_positive_tf_regulator_clusters' addParams( options: modules['archr_get_positive_tf_regulator_clusters'] )
 include { ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2 } from '../modules/local/archr_get_positive_tf_regulator_clusters2' addParams( options: modules['archr_get_positive_tf_regulator_clusters2'] )
 include { ARCHR_TRAJECTORY_CLUSTERS2 } from '../modules/local/archr_trajectory_clusters2' addParams( options: modules['archr_trajectory_clusters2'] )
-
+include { ARCHR_GET_CLUSTERING_TSV } from '../modules/local/archr_get_clustering_tsv' addParams( options: modules['archr_get_clustering_tsv'] )
 
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
@@ -283,9 +284,11 @@ workflow PREPROCESS {
       QUALIMAP (REMOVE_DUPLICATE.out.sample_name, REMOVE_DUPLICATE.out.bam)
 
       // module: generate fragment file with sinto
-      GET_FRAGMENTS (REMOVE_DUPLICATE.out.sample_name, REMOVE_DUPLICATE.out.bam)
+      // use raw bam file since ArchR may take advantage of the duplication info.
+      GET_FRAGMENTS (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
 
-      // module: generate fragement file with sinto
+      // TODO: module: move barcode from read name to tag
+
     } else if (params.preprocess == "10xgenomics") {
         // log.info "INFO: --preprocess: 10xgenomics(2)"
         if (params.ref_cellranger == "") {
@@ -360,6 +363,8 @@ workflow PREPROCESS {
 
   emit:
     res_files.collect()
+    REMOVE_DUPLICATE.out.bam
+
 }
 
 workflow DOWNSTREAM {
@@ -370,11 +375,23 @@ workflow DOWNSTREAM {
     ch_software_versions = Channel.empty()
     log.info "INFO: --downstream: ArchR"
     // Module: check if ArchR genome matches with preprocess genome, and create custome Genome if needed.
-    (bsgenome, genome_status) = get_bsgenome(params.archr_genome, params.ref_fasta_ucsc, params.ref_fasta_ensembl, params.ref_cellranger_ucsc, params.ref_cellranger_ensembl)
-    if (["ready", "ready_ucsc", "ready_ensembl"].contains(genome_status)) {
+    (bsgenome, genome_status) = get_bsgenome(params.archr_genome, params.archr_custom_genome, params.archr_txdb, params.archr_org, params.archr_bsgenome, params.ref_fasta_ucsc, params.ref_fasta_ensembl, params.ref_cellranger_ucsc, params.ref_cellranger_ensembl)
+
+    // Module: createArrowFile and addDoubletScores
+    if (["custom"].contains(genome_status)) {
+      log.info "INFO: ArchR will build gene/genomeAnnotation files with custom TxDb, Org, and BSgenome files supplied by user."
+
+      ARCHR_GET_ANNOTATION_CUSTOM(params.archr_txdb, params.archr_org, params.archr_bsgenome)
+      ARCHR_CREATE_ARROWFILES_ANNOTATION(ch_samplesheet_archr, ARCHR_GET_ANNOTATION_CUSTOM.out.geneAnnotation, ARCHR_GET_ANNOTATION_CUSTOM.out.genomeAnnotation, ARCHR_GET_ANNOTATION_CUSTOM.out.user_rlib, params.archr_thread)
+      // Module: add DoubletScores
+      ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES_ANNOTATION.out.sample_name, ARCHR_CREATE_ARROWFILES_ANNOTATION.out.arrowfile)
+      ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
+      ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
+    } else if (["ready", "ready_ucsc", "ready_ensembl"].contains(genome_status)) {
       // "ready" means ArchR natively supported genome
       if (genome_status == "ready_ensembl") {
-        log.info "INFO: ArchR will use natively supported ArchR genome (though ensembl genome supplied): " + bsgenome
+        // log.info "INFO: ArchR will use natively supported ArchR genome (though ensembl genome supplied): " + bsgenome
+        exit 1, "INFO: ensembl genome supplied, need to build ArchR genome first, pls supply corresponding TxDb, Org, and BSgenome objects via --txdb, --org, and --bsgenome parameters."
       } else {
         log.info "INFO: ArchR will use natively supported ArchR genome: " + bsgenome
       }
@@ -384,9 +401,10 @@ workflow DOWNSTREAM {
       ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
       ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
     } else if (["need_build", "need_build_ucsc", "need_build_ensembl"].contains(genome_status)) {
-        // "need_build" menas ArchR need to build gene/genomeAnnotation files first
+        // "need_build" means ArchR needs to build gene/genomeAnnotation files first
         if (genome_status == "need_build_ensembl") {
-          log.info "INFO: ArchR will build gene/genomeAnnotation files with (though ensembl genome supplied): " + bsgenome
+          // log.info "INFO: ArchR will build gene/genomeAnnotation files with (though ensembl genome supplied): " + bsgenome
+          exit 1, "INFO: ensembl genome supplied, need to build ArchR genome first, pls supply corresponding TxDb, Org, and BSgenome objects via --txdb, --org, and --bsgenome parameters."
         } else {
           log.info "INFO: ArchR will build gene/genomeAnnotation files with: " + bsgenome
         }
@@ -397,14 +415,17 @@ workflow DOWNSTREAM {
         ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
         ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
     } else {
-      exit 1, "Must provide ArchR supported genomes!"
+        exit 1, "Must supply ArchR genomes!"
     }
 
     // Module: create ArchRProject and ArchRProjectQC
-    if (["ready", "ready_ensembl", "ready_ucsc"].contains(genome_status)) {
+    if (["custom"].contains(genome_status)) {
+      ARCHR_ARCHRPROJECT_ANNOTATION(ch_arrowfile_list, ARCHR_GET_ANNOTATION_CUSTOM.out.geneAnnotation, ARCHR_GET_ANNOTATION_CUSTOM.out.genomeAnnotation, ARCHR_GET_ANNOTATION_CUSTOM.out.user_rlib)
+      ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project, params.archr_filter_ratio)
+    } else if (["ready", "ready_ucsc"].contains(genome_status)) {
       ARCHR_ARCHRPROJECT(ch_arrowfile_list, bsgenome, params.archr_thread)
       ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.archr_project, params.archr_filter_ratio)
-    } else if (["need_build", "need_build_ucsc", "need_build_ensembl"].contains(genome_status)) {
+    } else if (["need_build", "need_build_ucsc"].contains(genome_status)) {
       ARCHR_ARCHRPROJECT_ANNOTATION(ch_arrowfile_list, ARCHR_GET_ANNOTATION.out.geneAnnotation, ARCHR_GET_ANNOTATION.out.genomeAnnotation, ARCHR_GET_ANNOTATION.out.user_rlib)
       ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project, params.archr_filter_ratio)
     }
@@ -611,6 +632,20 @@ workflow DOWNSTREAM {
       log.info "Parameter --scrnaseq not supplied, skip trajectory analysis!"
     }
 
+    // Module: prepare clustering tsv file for spliting using sinto fragment
+    if (params.groupby_cluster == "Clusters") {
+      ARCHR_GET_CLUSTERING_TSV(ARCHR_CLUSTERING.out.archr_project, ch_samplesheet_archr, "Clusters")
+    } else if (params.groupby_cluster == "Clusters2") {
+      ARCHR_GET_CLUSTERING_TSV(ARCHR_PSEUDO_BULK_CLUSTERS2.out.archr_project, ch_samplesheet_archr, "Clusters2")
+    }
+
+    // Module: split fragment bed files:
+    // ch_tsv = ARCHR_GET_CLUSTERING_TSV.out.tsv // each instance may output more than 1 clustering tsv file.
+    // SPLIT_BED(ARCHR_GET_CLUSTERING_TSV.out.tsv, ARCHR_GET_CLUSTERING_TSV.out.fragment)
+
+    // Module: split bam files if available:
+    // SPLIT_BAM()
+
     // Collect all output results for MultiQC report:
     res_folders = Channel.empty()
     res_folders = res_folders.mix(ARCHR_PEAK2GENELINKAGE_CLUSTERS2.out.res_dir.collect().ifEmpty([]))
@@ -618,6 +653,9 @@ workflow DOWNSTREAM {
 
   emit:
     res_folders.collect()
+    ARCHR_GET_CLUSTERING_TSV.out.res // Here if using collect(), only the first element will be used for split_bed module, reason unclear.
+    ARCHR_GET_CLUSTERING_TSV.out.tsv
+    // [ARCHR_GET_CLUSTERING_TSV.out.sample_name, ARCHR_GET_CLUSTERING_TSV.out.tsv]
 /*
    * SUBWORKFLOW: Read in samplesheet, validate and stage input files
    */

@@ -20,6 +20,8 @@ module_order:
   - fastqc
   - barcode_correction
   - cutadapt
+  - bam_filter
+  - remove_duplicate
   - qualimap
   - archr
 

@@ -36,6 +36,8 @@ log.info NfcoreSchema.paramsSummaryLog(workflow, params, json_schema)
 log.info Workflow.citation(workflow)
 log.info Utils.dashedLine(params.monochrome_logs)
 
+def modules = params.modules.clone()
+
 ////////////////////////////////////////////////////
 /* --         VALIDATE PARAMETERS              -- */
 ////////////////////////////////////////////////////
@@ -47,6 +49,9 @@ log.info Utils.dashedLine(params.monochrome_logs)
 ////////////////////////////////////////////////////
 include { PREPROCESS } from './workflows/pipeline' addParams( summary_params: summary_params )
 include { DOWNSTREAM } from './workflows/pipeline' addParams( summary_params: summary_params )
+include { SPLIT_BED  } from './modules/local/split_bed' addParams( options: modules['split_bed'] )
+include { SPLIT_BAM  } from './modules/local/split_bam' addParams( options: modules['split_bam'] )
+
 
 // Parse samplesheet:
 if (params.input) {
@@ -81,18 +86,31 @@ workflow  SCATACSEQFLOW {
 
     log.info "Running downstream analysis with ArchR ..."
     if (params.preprocess == "default") {
-      // DOWNSTREAM (PREPROCESS.out.bam, PREPROCESS.out.fragments)
+      // DOWNSTREAM (PREPROCESS.out[1], PREPROCESS.out[2])
+      // SPLIT_BED(DOWNSTREAM.out[1])
+      // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), "[^:]*")
+      // SPLIT_BAM(PREPROCESS.out[bam_filter].collect(), DOWNSTREAM.out[1].collect(), "[^:]*")
     } else if (params.preprocess == "10xgenomics") {
-
+      // DOWNSTREAM (PREPROCESS.out[1], PREPROCESS.out[2])
+      // SPLIT_BED(DOWNSTREAM.out[1])
+      // SPLIT_BAM(PREPROCESS.out[bam_filter].collect(), DOWNSTREAM.out[1].collect(), "NA")
     } else if (params.preprocess == "biorad") {
 
     }
     // DOWNSTREAM ()
   } else {
     DOWNSTREAM (ch_samplesheet_archr)
-    log.info "here"
-    DOWNSTREAM.out.view()
-    log.info "there"
+    // DOWNSTREAM.out[2].collect().view()
+    // DOWNSTREAM.out[2].collect().flatten().filter( ~/^.*\.tsv$/ ).view()
+    SPLIT_BED(DOWNSTREAM.out[1])
+    ch_test = Channel.fromPath( '/Users/kaihu/Projects/workflow/test_data/10x_genomics_5k/remove_duplicate/*.bam' )
+    if (!(params.barcode_regex == "")) {
+      SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), "NA")
+    } else {
+      SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), params.barcode_regex, params.barcode_regex)
+    }
+
+    // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), ch_test.collect(), "NA")
   }
 }
 

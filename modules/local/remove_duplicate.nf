@@ -31,13 +31,16 @@ process REMOVE_DUPLICATE {
 
     output:
     val sample_name, emit: sample_name
-    path "rm_dup_*.bam", emit: bam
+    path "rm_dup_*.sorted.bam", emit: bam
 
     script:
 
     """
-    # Remove PCR duplicates based on cell barcode, start, end:
+    # remove PCR duplicates based on cell barcode, start, end:
     remove_duplicate.py --inbam $bam --outbam rm_dup_${sample_name}.bam $options.args
+
+    # sort output bam:
+    samtools sort rm_dup_${sample_name}.bam -o rm_dup_${sample_name}.sorted.bam
 
     """
 

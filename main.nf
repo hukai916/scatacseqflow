@@ -82,7 +82,7 @@ workflow  SCATACSEQFLOW {
   if (params.preprocess) {
     log.info "Running preprocess ..."
     PREPROCESS (ch_samplesheet)
-    PREPROCESS.out.view()
+    // PREPROCESS.out.view()
 
     log.info "Running downstream analysis with ArchR ..."
     if (params.preprocess == "default") {

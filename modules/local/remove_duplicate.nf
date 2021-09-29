@@ -37,8 +37,7 @@ process REMOVE_DUPLICATE {
 
     """
     # Remove PCR duplicates based on cell barcode, start, end:
-
-    rm_dup.py $bam $options.args
+    remove_duplicate.py --inbam $bam --outbam rm_dup_${sample_name}.bam $options.args
 
     """
 

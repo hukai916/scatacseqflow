@@ -43,7 +43,7 @@ process CORRECT_BARCODE_PHENIQS {
 
     """
     # step1, interleave read and index files
-    pheniqs mux -i $read1_fastq -i $barcode_fastq -i $read2_fastq --output ${sample_name}.cram
+    pheniqs mux -R log_interleave.txt -i $read1_fastq -i $barcode_fastq -i $read2_fastq --output ${sample_name}.cram
 
     # step2, prepare a json config file for pheniqs
     ## determine the index read length from index fastq file:
@@ -51,7 +51,7 @@ process CORRECT_BARCODE_PHENIQS {
     make_json.py $barcode_whitelist ${sample_name}.cram 3 0::,2:: 1::\$barcode_length ${sample_name}.json
 
     # step4, run pheniqs
-    pheniqs mux --threads $task.cpus --decoding-threads $task.cpus --htslib-threads $task.cpus --config debarcode.json --output ${sample_name}.bam
+    pheniqs mux -R log_decode.txt --threads $task.cpus --decoding-threads $task.cpus --htslib-threads $task.cpus --config debarcode.json --output ${sample_name}.bam
 
     # step5, extract fastq from pheniqs output bam
     bam2fastq.py ${sample_name}.bam barcode_corrected_${sample_name}

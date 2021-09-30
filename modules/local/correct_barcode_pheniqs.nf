@@ -50,7 +50,7 @@ process CORRECT_BARCODE_PHENIQS {
     get_barcode_pool.py $barcode_whitelist $barcode_fastq valid_barcode_pool.txt
 
     # step3, make a json config file
-    barcode_length=$(awk 'FNR==1 {print length($(NF-1))}' valid_barcode_pool.txt)
+    barcode_length=\$(awk 'FNR==1 {print length(\$(NF-1))}' valid_barcode_pool.txt)
     make_json.py valid_barcode_pool.txt ${sample_name}.cram 3 0::,2:: 1::\$barcode_length ${sample_name}.json
 
     # step4, run pheniqs

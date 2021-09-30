@@ -56,6 +56,7 @@ include { GET_BIORAD_FASTQ      } from '../modules/local/get_biorad_fastq'      
 
 include { CELLRANGER_ATAC_COUNT } from '../modules/local/cellranger_atac_count'   addParams( options: modules['cellranger_atac_count'] )
 include { CORRECT_BARCODE       } from '../modules/local/correct_barcode'         addParams( options: modules['correct_barcode'] )
+include { CORRECT_BARCODE_PHENIQS } from '../modules/local/correct_barcode_pheniqs' addParams( options: modules['correct_barcode_pheniqs'] )
 include { MATCH_READS           } from '../modules/local/match_reads'             addParams( options: modules['match_reads'] )
 include { MATCH_READS_TRIMMED   } from '../modules/local/match_reads_trimmed'     addParams( options: modules['match_reads_trimmed'] )
 include { FASTQC                } from '../modules/local/fastqc'                  addParams( options: modules['fastqc'] )
@@ -172,17 +173,29 @@ workflow PREPROCESS {
         // log.info "NOTICE(2): --barcode_whitelist: not supplied, skip barcode correction!"
         ADD_BARCODE_TO_READS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
       } else {
+        // Allow users to choose from barcode_correction.R or Pheniqs:
+        if (params.barcode_correction == "naive") {
           CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
-        // module: match read1 and read2
         // MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
         // Note that the above might be problematic, since MATCH_READS would take inputs from two channels, the instance of samples may not match.
           MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, CORRECT_BARCODE.out.read1_fastq, CORRECT_BARCODE.out.read2_fastq)
 
           ADD_BARCODE_TO_READS (MATCH_READS.out.sample_name, MATCH_READS.out.barcode_fastq, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq)
-      }
+        } else {
+          // use pheniqs:
+          CORRECT_BARCODE_PHENIQS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+
+          MATCH_READS (CORRECT_BARCODE_PHENIQS.out.sample_name, CORRECT_BARCODE_PHENIQS.out.corrected_barcode, CORRECT_BARCODE_PHENIQS.out.read1_fastq, CORRECT_BARCODE_PHENIQS.out.read2_fastq)
+        }
+
+}
 
       // module: trimming off adapter
-      CUTADAPT (ADD_BARCODE_TO_READS.out.sample_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
+      if ((params.barcode_whitelist) && (params.barcode_correction == "pheniqs")) {
+        CUTADAPT (MATCH_READS.out.sample_name, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
+      } else {
+        CUTADAPT (ADD_BARCODE_TO_READS.out.sample_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
+      }
 
       // module: MATCH_READS_TRIMMED: in case user choose to trim based on quality and read pair gets unbalanced.
       MATCH_READS_TRIMMED (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq)
@@ -288,6 +301,7 @@ workflow PREPROCESS {
       GET_FRAGMENTS (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
 
       // TODO: module: move barcode from read name to tag
+      // This module is included into the remove_duplicate module
 
     } else if (params.preprocess == "10xgenomics") {
         // log.info "INFO: --preprocess: 10xgenomics(2)"

@@ -47,7 +47,7 @@ process CORRECT_BARCODE_PHENIQS {
 
     # step2, prepare a json config file for pheniqs
     ## determine the index read length from index fastq file:
-    barcode_length=$(pheniqs mux -i $barcode_fastq | head -n 1000 | cut -f 10 | awk '{print length(\$0)}' | uniq -c | sort -r | head -n 1 | cut -f 3 -d " ")
+    barcode_length=\$(pheniqs mux -i $barcode_fastq | head -n 1000 | cut -f 10 | awk '{print length(\$0)}' | uniq -c | sort -r | head -n 1 | cut -f 3 -d " ")
     make_json.py $barcode_whitelist ${sample_name}.cram 3 0::,2:: 1::\$barcode_length ${sample_name}.json
 
     # step4, run pheniqs

@@ -54,9 +54,9 @@ include { SPLIT_BAM  } from './modules/local/split_bam' addParams( options: modu
 
 
 // Parse samplesheet:
-if (params.input) {
+if (params.input_preprocess) {
   Channel
-  .from(file(params.input, checkIfExists: true))
+  .from(file(params.input_preprocess, checkIfExists: true))
   .splitCsv(header: true, sep: ",", strip: true)
   .map {
     row ->

@@ -377,7 +377,7 @@ workflow PREPROCESS {
 
   emit:
     res_files.collect()
-    REMOVE_DUPLICATE.out.bam
+    // REMOVE_DUPLICATE.out.bam
 
 }
 

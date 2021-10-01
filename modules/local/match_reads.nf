@@ -43,8 +43,8 @@ process MATCH_READS {
     """
     seqkit pair $options.args -1 $corrected_barcode_fastq -2 $read1_fastq -O R1
     rm R1/$corrected_barcode_fastq
-    seqkit pair $options.args -1 R1/*.fastq.gz -2 $read2_fastq -O R2
+    # seqkit pair $options.args -1 R1/*.fastq.gz -2 $read2_fastq -O R2
     # note that though the orders of R1 and R2 matches, the barcode may not.
-    
+
     """
 }

@@ -37,10 +37,11 @@ if whitelist.endswith(".gz"):
 else:
     f = open(whitelist)
 for line in f:
-    barcode = line.strip()
+    barcode = line.split()[0]
+    concentration = line.split()[1]
     config['sample']['codec']['@' + barcode] = {}
     config['sample']['codec']['@' + barcode]['barcode'] = [barcode]
-    config['sample']['codec']['@' + barcode]['concentration'] = 1
+    config['sample']['codec']['@' + barcode]['concentration'] = float(concentration)
 f.close()
 
 with open(outfile, 'w') as outfile:

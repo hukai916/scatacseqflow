@@ -52,7 +52,6 @@ include { DOWNSTREAM } from './workflows/pipeline' addParams( summary_params: su
 include { SPLIT_BED  } from './modules/local/split_bed' addParams( options: modules['split_bed'] )
 include { SPLIT_BAM  } from './modules/local/split_bam' addParams( options: modules['split_bam'] )
 
-
 // Parse samplesheet:
 if (params.input_preprocess) {
   Channel
@@ -97,20 +96,17 @@ workflow  SCATACSEQFLOW {
     } else if (params.preprocess == "biorad") {
 
     }
-    // DOWNSTREAM ()
   } else {
     DOWNSTREAM (ch_samplesheet_archr)
     // DOWNSTREAM.out[2].collect().view()
     // DOWNSTREAM.out[2].collect().flatten().filter( ~/^.*\.tsv$/ ).view()
     SPLIT_BED(DOWNSTREAM.out[1])
     ch_test = Channel.fromPath( '/Users/kaihu/Projects/workflow/test_data/10x_genomics_5k/remove_duplicate/*.bam' )
-    if (!(params.barcode_regex == "")) {
+    if (!(params.barcode_regex)) {
       SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), "NA")
     } else {
       SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), params.barcode_regex, params.barcode_regex)
     }
-
-    // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), ch_test.collect(), "NA")
   }
 }
 

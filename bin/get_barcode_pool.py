@@ -50,7 +50,7 @@ else:
     out_file = open(outfile_name, "wt")
 
 for barcode in whitelist_dict:
-    if not whitelist_dict[barcode] > read_count_cutoff:
+    if whitelist_dict[barcode] > read_count_cutoff:
         out_file.write("\t".join([barcode, str(whitelist_dict[barcode] / total_valid_barcode)]) + "\n")
 out_file.close()
 

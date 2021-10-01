@@ -18,8 +18,8 @@ params.summary_params = [:]
 
 // Check mandatory parameters
 if (params.preprocess) {
-  if (params.input) {
-    ch_input = file(params.input)
+  if (params.input_preprocess) {
+    ch_input = file(params.input_preprocess)
   } else {
       exit 1, 'Input samplesheet not specified!'
   }
@@ -299,13 +299,8 @@ workflow PREPROCESS {
       // module: generate fragment file with sinto
       // use raw bam file since ArchR may take advantage of the duplication info.
       GET_FRAGMENTS (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
-
-      // TODO: module: move barcode from read name to tag
-      // This module is included into the remove_duplicate module
-
     } else if (params.preprocess == "10xgenomics") {
-        // log.info "INFO: --preprocess: 10xgenomics(2)"
-        if (params.ref_cellranger == "") {
+        if (!params.ref_cellranger) {
           log.info "Parameter --ref_cellranger not supplied, checking --ref_cellranger_ucsc/--ref_cellranger_ensembl!"
           if (params.ref_cellranger_ucsc) {
             log.info "Parameter --ref_cellranger_ucsc provided, will download genome, gtf, and build index with cellranger-atac."
@@ -347,13 +342,13 @@ workflow PREPROCESS {
     } else if (params.preprocess == "biorad") {
       // log.info "INFO: --preprocess: biorad"
       // log.info "INFO: must use biorad compatible sequencing data!"
-      if (params.ref_bwa_index == "") {
+      if (!params.ref_bwa_index) {
         exit 1, 'Parameter --ref_bwa_index: pls supply full path to bwa index folder!'
       }
-      if (params.ref_fasta == "") {
+      if (!params.ref_fasta) {
         exit 1, 'Parameter --ref_fasta: pls supply full path to reference fasta file!'
       }
-      if (params.biorad_genome == "") {
+      if (!params.biorad_genome) {
         exit 1, 'Parameter --biorad_genome: pls choose from "hg19", "hg38","mm10", or "hg19-mm10"!'
       }
 
@@ -636,7 +631,7 @@ workflow DOWNSTREAM {
     // Module: trajectory analysis: for Clusters2 only
     // TODO: Module: trajectory analysis: for Clusters using Gene Score Matrix
     if (params.groupby_cluster == "Clusters2") {
-      if (params.trajectory_groups = "") {
+      if (!params.trajectory_groups) {
         log.info "Parameter --trajectory_groups not supplied, checking trajectory analysis!"
       } else {
           log.info "Parameter --trajectory_groups supplied, will perform trajectory analysis!"

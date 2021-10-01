@@ -35,8 +35,8 @@ process MATCH_READS {
     val sample_name, emit: sample_name
     // path "R2/barcode_corrected*fastq.gz", emit: barcode_fastq
     path corrected_barcode_fastq, emit: barcode_fastq
-    path "R1/*.fastq.gz" + read1_fastq, emit: read1_fastq
-    path "R2/*.fastq.gz" + read2_fastq, emit: read2_fastq
+    path "R1/*.fastq.gz", emit: read1_fastq
+    path "R2/*.fastq.gz", emit: read2_fastq
 
     script:
 

@@ -35,8 +35,8 @@ process MATCH_READS {
     val sample_name, emit: sample_name
     // path "R2/barcode_corrected*fastq.gz", emit: barcode_fastq
     path corrected_barcode_fastq, emit: barcode_fastq
-    path "R1/*.fastq.gz", emit: read1_fastq
-    path "R2/*.fastq.gz", emit: read2_fastq
+    path "R1/*.fastq.gz" + read1_fastq, emit: read1_fastq
+    path "R2/*.fastq.gz" + read2_fastq, emit: read2_fastq
 
     script:
 
@@ -44,6 +44,7 @@ process MATCH_READS {
     seqkit pair $options.args -1 $corrected_barcode_fastq -2 $read1_fastq -O R1
     rm R1/$corrected_barcode_fastq
     seqkit pair $options.args -1 R1/*.fastq.gz -2 $read2_fastq -O R2
+    mv R2/$read1_fastq R1/
     # note that though the orders of R1 and R2 matches, the barcode may not.
 
     """

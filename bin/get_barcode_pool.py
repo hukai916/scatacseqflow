@@ -4,18 +4,19 @@
 Given full whitelist and index fastq, determine the valid barcode pool and its frequency.
 
 Usage:
-python get_barcode_pool.py whitelist.txt.gz index.fastq.gz outfile.txt
+python get_barcode_pool.py whitelist.txt.gz index.fastq.gz read_count_cutoff outfile.txt
 
+read_count_cutoff is an integer indicating the minimum number of reads to include certain barcode into the valid barcode pool.
 """
 
 import sys
 import gzip
 import pysam
-import numpy as np
 
 whitelist_file = sys.argv[1]
 index_fastq    = sys.argv[2]
-outfile_name   = sys.argv[3]
+read_count_cutoff   = int(sys.argv[3])
+outfile_name   = sys.argv[4]
 
 # read in whitelist and make a dict:
 whitelist_dict = {}
@@ -39,8 +40,8 @@ with pysam.FastxFile(index_fastq) as f:
         else:
             not_in_whitelist += 1
 
-total_valid_barcode = sum(whitelist_dict.values())
-total_unique_valid_barcode = np.count_nonzero(list(whitelist_dict.values()))
+total_valid_barcode = sum([x for x in list(whitelist_dict.values()) if x > read_count_cutoff])
+total_unique_valid_barcode = sum([1 for x in list(whitelist_dict.values()) if x > read_count_cutoff])
 
 # store output:
 if outfile_name.endswith(".gz"):
@@ -49,7 +50,7 @@ else:
     out_file = open(outfile_name, "wt")
 
 for barcode in whitelist_dict:
-    if not whitelist_dict[barcode] == 0:
+    if not whitelist_dict[barcode] > read_count_cutoff:
         out_file.write("\t".join([barcode, str(whitelist_dict[barcode] / total_valid_barcode)]) + "\n")
 out_file.close()
 

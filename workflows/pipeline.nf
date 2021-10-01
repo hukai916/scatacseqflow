@@ -17,7 +17,7 @@ params.summary_params = [:]
 // for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
-if (params.preprocess) {
+if (params.input_preprocess) {
   if (params.input_preprocess) {
     ch_input = file(params.input_preprocess)
   } else {

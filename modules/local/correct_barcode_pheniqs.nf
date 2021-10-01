@@ -47,7 +47,7 @@ process CORRECT_BARCODE_PHENIQS {
     pheniqs mux -R log_interleave.txt -i $read1_fastq -i $barcode_fastq -i $read2_fastq --output ${sample_name}.cram
 
     # step2, retrieve valid barcode pool and concentration
-    get_barcode_pool.py $barcode_whitelist $barcode_fastq valid_barcode_pool.txt
+    get_barcode_pool.py $barcode_whitelist $barcode_fastq $options.read_count_cutoff valid_barcode_pool.txt
 
     # step3, make a json config file
     barcode_length=\$(awk 'FNR==1 {print length(\$(NF-1))}' valid_barcode_pool.txt)

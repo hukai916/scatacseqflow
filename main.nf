@@ -76,7 +76,7 @@ if (params.input_archr) {
   .unique()
   .set { ch_samplesheet_archr }
 
-  log.info "ch_samplesheet_archr: " + ch_samplesheet_archr.view()
+  // log.info "ch_samplesheet_archr: " + ch_samplesheet_archr.view()
 }
 
 workflow  SCATACSEQFLOW {
@@ -93,7 +93,7 @@ workflow  SCATACSEQFLOW {
       // PREPROCESS.out[1].view() remove_duplicated bam files for splitting
       // PREPROCESS.out[2].view() fragement file for ArchR
       log.info "TEST preprocess output"
-      PREPROCESS.out[2].view()
+      PREPROCESS.out[3].view()
       log.info "TEST HERE"
 
       // DOWNSTREAM (PREPROCESS.out[2])

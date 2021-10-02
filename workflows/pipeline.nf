@@ -386,6 +386,7 @@ workflow PREPROCESS {
     res_files
     REMOVE_DUPLICATE.out.bam.collect()
     GET_FRAGMENTS.out.fragments.collect()
+    GET_FRAGMENTS.out.ch_fragment.collect()
 
     // REMOVE_DUPLICATE.out.bam
 

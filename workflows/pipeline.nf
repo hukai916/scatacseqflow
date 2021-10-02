@@ -606,12 +606,12 @@ workflow DOWNSTREAM {
     }
 
     // Module: motif deviation, don't require pairwise test info
-    if (params.groupby_cluster == "Clusters") {
-      ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
-    } else if (params.groupby_cluster == "Clusters2") {
-        ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
-        ARCHR_MOTIF_DEVIATIONS_CLUSTERS2(ARCHR_MOTIF_ENRICHMENT_CLUSTERS2.out.archr_project, params.custom_peaks)
-    }
+    // if (params.groupby_cluster == "Clusters") {
+    //   ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
+    // } else if (params.groupby_cluster == "Clusters2") {
+    //     ARCHR_MOTIF_DEVIATIONS_CLUSTERS(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.archr_project, params.custom_peaks)
+    //     ARCHR_MOTIF_DEVIATIONS_CLUSTERS2(ARCHR_MOTIF_ENRICHMENT_CLUSTERS2.out.archr_project, params.custom_peaks)
+    // }
 
     // Module: footprinting
     if (params.groupby_cluster == "Clusters") {

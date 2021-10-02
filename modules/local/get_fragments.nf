@@ -32,6 +32,7 @@ process GET_FRAGMENTS {
     output:
     val sample_name, emit: sample_name
     path "fragments.sort.bed.gz", emit: fragments
+    tuple val(x), path("fragments.sort.bed.gz"), emit: ch_fragment
 
     script:
 

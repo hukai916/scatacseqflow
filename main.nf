@@ -85,6 +85,9 @@ workflow  SCATACSEQFLOW {
 
     log.info "Running downstream analysis with ArchR ..."
     if (params.preprocess == "default") {
+      PREPROCESS.out.view()
+      log.info "TEST HERE"
+
       // DOWNSTREAM (PREPROCESS.out[1], PREPROCESS.out[2])
       // SPLIT_BED(DOWNSTREAM.out[1])
       // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), "[^:]*")

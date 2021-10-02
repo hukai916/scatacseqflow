@@ -366,6 +366,12 @@ workflow PREPROCESS {
 
     // Collect all output results for MultiQC report:
     res_files = Channel.empty()
+    if (params.preprocess == "default") {
+      res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
+      res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
+      res_files = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))
+      res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
+    }
     // If using 10xgenomics as preprocessing option, the following might not be available since they are not called.
     // res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
     // res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
@@ -374,6 +380,8 @@ workflow PREPROCESS {
 
   emit:
     res_files.collect()
+    REMOVE_DUPLICATE.out.bam.collect()
+
     // REMOVE_DUPLICATE.out.bam
 
 }

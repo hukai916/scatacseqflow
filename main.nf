@@ -85,13 +85,16 @@ workflow  SCATACSEQFLOW {
 
     log.info "Running downstream analysis with ArchR ..."
     if (params.preprocess == "default") {
-      // PREPROCESS.out[1].view()
-      // PREPROCESS.out[0].view()
+      // if PREPROCESS emits multiple output, must use .out[index].view()
+      // if PREPROCESS emits only one output, use .out.view() is fine.
+      // PREPROCESS.out[0].view() result files for multiQC
+      // PREPROCESS.out[1].view() remove_duplicated bam files for splitting
+      // PREPROCESS.out[2].view() fragement file for ArchR
       PREPROCESS.out.view()
       log.info "TEST HERE"
 
-      // DOWNSTREAM (PREPROCESS.out[1], PREPROCESS.out[2])
-      // SPLIT_BED(DOWNSTREAM.out[1])
+      DOWNSTREAM (PREPROCESS.out[2])
+      // SPLIT_BED(DOWNSTREAM.out[2])
       // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), "[^:]*")
       // SPLIT_BAM(PREPROCESS.out[bam_filter].collect(), DOWNSTREAM.out[1].collect(), "[^:]*")
     } else if (params.preprocess == "10xgenomics") {

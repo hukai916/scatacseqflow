@@ -384,7 +384,8 @@ workflow PREPROCESS {
 
   emit:
     res_files
-    // REMOVE_DUPLICATE.out.bam.collect()
+    REMOVE_DUPLICATE.out.bam.collect()
+    GET_FRAGMENTS.out.fragments.collect()
 
     // REMOVE_DUPLICATE.out.bam
 

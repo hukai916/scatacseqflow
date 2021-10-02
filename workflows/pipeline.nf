@@ -368,9 +368,9 @@ workflow PREPROCESS {
     res_files = Channel.empty()
     if (params.preprocess == "default") {
       res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
-      if (params.correct_barcode == "pheniqs") {
+      if (params.barcode_correction == "pheniqs") {
         res_files = res_files.mix(CORRECT_BARCODE_PHENIQS.out.corrected_barcode_summary.collect().ifEmpty([]))
-      } else if (params.correct_barcode == "naive") {
+      } else if (params.barcode_correction == "naive") {
         res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
       }
       res_files = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))

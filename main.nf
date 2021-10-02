@@ -93,7 +93,7 @@ workflow  SCATACSEQFLOW {
       PREPROCESS.out[2].view()
       log.info "TEST HERE"
 
-      DOWNSTREAM (PREPROCESS.out[2])
+      // DOWNSTREAM (PREPROCESS.out[2])
       // SPLIT_BED(DOWNSTREAM.out[2])
       // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), "[^:]*")
       // SPLIT_BAM(PREPROCESS.out[bam_filter].collect(), DOWNSTREAM.out[1].collect(), "[^:]*")

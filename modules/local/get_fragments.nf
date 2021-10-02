@@ -32,8 +32,7 @@ process GET_FRAGMENTS {
     output:
     val sample_name, emit: sample_name
     path "fragments.sort.bed.gz", emit: fragments
-    tuple val(x), path("fragments.sort.bed.gz"), emit: ch_fragment
-    path "test.txt", emit: test
+    tuple val(sample_name), path("fragments.sort.bed.gz"), emit: ch_fragment
 
     script:
 
@@ -46,8 +45,6 @@ process GET_FRAGMENTS {
     # sort and bzip the fragment file
     sort -k 1,1 -k2,2n fragments.bed > fragments.sort.bed
     bgzip fragments.sort.bed
-
-    touch test.txt
 
     """
 }

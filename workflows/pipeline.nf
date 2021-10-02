@@ -368,7 +368,11 @@ workflow PREPROCESS {
     res_files = Channel.empty()
     if (params.preprocess == "default") {
       res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
-      res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
+      if (params.correct_barcode == "pheniqs") {
+        res_files = res_files.mix(CORRECT_BARCODE_PHENIQS.out.corrected_barcode_summary.collect().ifEmpty([]))
+      } else if (params.correct_barcode == "naive") {
+        res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
+      }
       res_files = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))
       res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
     }
@@ -379,7 +383,7 @@ workflow PREPROCESS {
     // res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
 
   emit:
-    res_files.collect()
+    res_files
     REMOVE_DUPLICATE.out.bam.collect()
 
     // REMOVE_DUPLICATE.out.bam

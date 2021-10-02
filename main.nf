@@ -93,7 +93,7 @@ workflow  SCATACSEQFLOW {
       // PREPROCESS.out[1].view() remove_duplicated bam files for splitting
       // PREPROCESS.out[2].view() fragement file for ArchR
       log.info "TEST preprocess output"
-      PREPROCESS.out[3].view()
+      PREPROCESS.out[2].view()
       log.info "TEST HERE"
 
       // DOWNSTREAM (PREPROCESS.out[2])

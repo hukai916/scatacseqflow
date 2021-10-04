@@ -386,11 +386,8 @@ workflow PREPROCESS {
     res_files // out[0]: res folders for MultiQC report
     GET_FRAGMENTS.out.fragments // out[1]: for split bed
     GET_FRAGMENTS.out.ch_fragment // out[2]: fragment ch for ArchR
-
     REMOVE_DUPLICATE.out.sample_name // out[3]: for split bam
     REMOVE_DUPLICATE.out.bam // out[4]: fro split bam
-    // REMOVE_DUPLICATE.out.bam
-
 }
 
 workflow DOWNSTREAM {
@@ -603,8 +600,6 @@ workflow DOWNSTREAM {
           // Perform plotting
           log.info "NOTICE: --pairwise_test_clusters2_1/2: supplied, perform motif enrichment!"
           ARCHR_MOTIF_ENRICHMENT_CLUSTERS2(ARCHR_CALL_PEAKS_CLUSTERS2.out.archr_project, ARCHR_PAIRWISE_TEST_CLUSTERS2.out.archr_marker_test, ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.archr_marker_peaks, params.pairwise_test_clusters2_1, params.pairwise_test_clusters2_2, params.custom_peaks)
-
-
       }
     }
 

@@ -30,8 +30,8 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
     path archr_dir
 
     output:
-    path "save_archr_project/Plots/Footprints-*-Bias.pdf", emit: footprints
-    path "save_archr_project/Plots/TSS-*-Normalization.pdf", emit: tss_no_normalization
+    // path "save_archr_project/Plots/Footprints-*-Bias.pdf", emit: footprints
+    // path "save_archr_project/Plots/TSS-*-Normalization.pdf", emit: tss_no_normalization
     path "save_archr_project/Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:
@@ -53,7 +53,7 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
       )
     plotName <- paste0("Footprints", "-", "$options.norm_method", "-Bias")
     out <- tryCatch(
-      {
+      expr = {
         plotFootprints(
           seFoot = seFoot,
           ArchRProj = proj,
@@ -61,6 +61,9 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
           plotName = plotName,
           $options.args
         )
+      },
+      error = function(e) {
+        return("Footprint plotting failed.")
       }
     )
 
@@ -71,16 +74,20 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
       groupBy = "Clusters",
       flank = $options.tss_flank
       )
-    out <- tryCatch({
-      plotFootprints(
-        seFoot = seTSS,
-        ArchRProj = proj,
-        normMethod = "$options.tss_norm_method",
-        plotName = paste0("TSS-", "$options.tss_norm_method", "-Normalization"),
-        addDOC = FALSE,
-        flank = $options.tss_flank,
-        flankNorm = $options.flank_norm
-        )
+    out <- tryCatch(
+      expr = {
+        plotFootprints(
+          seFoot = seTSS,
+          ArchRProj = proj,
+          normMethod = "$options.tss_norm_method",
+          plotName = paste0("TSS-", "$options.tss_norm_method", "-Normalization"),
+          addDOC = FALSE,
+          flank = $options.tss_flank,
+          flankNorm = $options.flank_norm
+          )
+      },
+      error = function(e) {
+        return("Footprint plotting failed.")
       }
     )
 

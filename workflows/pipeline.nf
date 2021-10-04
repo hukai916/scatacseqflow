@@ -370,6 +370,9 @@ workflow PREPROCESS {
       if (FASTQC.out) {
         res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
       }
+      if (CELLRANGER_ATAC_COUNT.out) {
+        res_files.mix(CELLRANGER_ATAC_COUNT.out.fastq_folder.collect().ifEmpty([]))
+      }
 
       if (params.barcode_correction == "pheniqs") {
         res_files = res_files.mix(CORRECT_BARCODE_PHENIQS.out.corrected_barcode_summary.collect().ifEmpty([]))

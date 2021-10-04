@@ -51,6 +51,7 @@ include { PREPROCESS } from './workflows/pipeline' addParams( summary_params: su
 include { DOWNSTREAM } from './workflows/pipeline' addParams( summary_params: summary_params )
 include { SPLIT_BED  } from './modules/local/split_bed' addParams( options: modules['split_bed'] )
 include { SPLIT_BAM  } from './modules/local/split_bam' addParams( options: modules['split_bam'] )
+include { MULTIQC } from './modules/local/multiqc' addParams( options: modules['multiqc'] )
 
 // Parse samplesheet:
 if (params.input_preprocess) {
@@ -96,6 +97,8 @@ workflow  SCATACSEQFLOW {
       SPLIT_BED(DOWNSTREAM.out[1]) // take a tuple (sample_name, fragment_path, tsv_path) as input
       SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS.out[4].collect(), "[^:]*") // input: sample_name, all_bams, all_fragments, barcode_regex
       log.info "HERE: downstream_res: " + DOWNSTREAM.out[0].view()
+      // Add MultiQC module here:
+      MULTIQC(PREPROCESS.out[0].mix(DOWNSTREAM.out[0].ifEmpty([])))
 
     } else if (params.preprocess == "10xgenomics") {
       // DOWNSTREAM (PREPROCESS.out[1], PREPROCESS.out[2])
@@ -119,6 +122,8 @@ workflow  SCATACSEQFLOW {
 
       // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), params.barcode_regex, params.barcode_regex)
     }
+    // Add MultiQC module here:
+
   }
 }
 

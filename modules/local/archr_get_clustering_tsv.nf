@@ -32,7 +32,7 @@ process ARCHR_GET_CLUSTERING_TSV {
 
     output:
     tuple val(sample_name), path(fragment), path("*.tsv"), emit: res
-    // path "*.tsv", emit: tsv
+    path "*.tsv", emit: tsv
 
     script:
 

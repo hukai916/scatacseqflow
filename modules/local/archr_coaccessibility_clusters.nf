@@ -31,7 +31,8 @@ process ARCHR_COACCESSIBILITY_CLUSTERS {
     output:
     path "archr_coaccessibility_project.rds", emit: archr_project
     path "Plots/Plot-Tracks-Marker-Genes-with-CoAccessibility.pdf", emit: plot_tracks_marker_genes_with_coaccessibility
-    path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    // path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "archr_coaccessibility_clusters", emit: report
 
     script:
 
@@ -83,6 +84,9 @@ process ARCHR_COACCESSIBILITY_CLUSTERS {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mv ./Plots/jpeg archr_coaccessibility_clusters
 
     """
 }

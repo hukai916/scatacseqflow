@@ -89,16 +89,12 @@ workflow  SCATACSEQFLOW {
     if (params.preprocess == "default") {
       // if PREPROCESS emits multiple output, must use .out[index].view()
       // if PREPROCESS emits only one output, use .out.view() is fine.
-      // PREPROCESS.out[0].view() result files for multiQC
-      // PREPROCESS.out[1].view() remove_duplicated bam files for splitting
-      // PREPROCESS.out[2].view() fragement file for ArchR
-      log.info "TEST preprocess output"
-      PREPROCESS.out[3].view()
-      log.info "TEST HERE"
 
-      DOWNSTREAM (PREPROCESS.out[3])
-      SPLIT_BED(DOWNSTREAM.out[1])
-      // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), "[^:]*")
+      log.info "TEST preprocess output"
+
+      DOWNSTREAM (PREPROCESS.out[2])
+      SPLIT_BED(DOWNSTREAM.out[1]) // take a tuple (sample_name, fragment_path, tsv_path) as input
+      SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[1].collect(), PREPROCESS.out[4].collect(), "[^:]*") // input: sample_name, all_bams, all_fragments, barcode_regex
     } else if (params.preprocess == "10xgenomics") {
       // DOWNSTREAM (PREPROCESS.out[1], PREPROCESS.out[2])
       // SPLIT_BED(DOWNSTREAM.out[1])

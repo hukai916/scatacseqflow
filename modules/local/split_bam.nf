@@ -25,7 +25,8 @@ process SPLIT_BAM {
     // cache false
 
     input:
-    tuple val(sample_name), path(fragment)
+    // tuple val(sample_name), path(fragment)
+    val sample_name
     path tsv // if using path "*.tsv", then in the working dir, the tsv files will be named with numbers, reason unclear.
     path bam
     val barcode_regex
@@ -47,9 +48,6 @@ process SPLIT_BAM {
       mkdir split_\$f
       cd split_\$f
       samtools index ../\$bam
-      if ($barcode_regex == "NA")
-      VAR1="Linuxize"
-      VAR2="Linuxize"
 
       if [ "$barcode_regex" == "NA" ]; then
         sinto filterbarcodes -b ../\$bam -c ../\${tsv[\$i]} -p $task.cpus

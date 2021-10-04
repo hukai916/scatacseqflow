@@ -366,11 +366,16 @@ workflow PREPROCESS {
 
     // Collect all output results for MultiQC report:
     res_files = Channel.empty()
+
     try {
       res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
+    } catch(Exception ex) {
+        continue
     }
     try {
       res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
+    } catch(Exception ex) {
+        continue
     }
 
     // if (params.preprocess == "default") {

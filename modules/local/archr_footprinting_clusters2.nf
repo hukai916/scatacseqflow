@@ -52,13 +52,17 @@ process ARCHR_FOOTPRINTING_CLUSTERS2 {
       groupBy = "Clusters2"
       )
     plotName <- paste0("Footprints", "-", "$options.norm_method", "-Bias")
-    plotFootprints(
-      seFoot = seFoot,
-      ArchRProj = proj,
-      normMethod = "$options.norm_method",
-      plotName = plotName,
-      $options.args
-      )
+    out <- tryCatch(
+      {
+        plotFootprints(
+          seFoot = seFoot,
+          ArchRProj = proj,
+          normMethod = "$options.norm_method",
+          plotName = plotName,
+          $options.args
+          )
+      }
+    )
 
     # Footprinting of TSS (custom) Features
     seTSS <- getFootprints(
@@ -67,15 +71,20 @@ process ARCHR_FOOTPRINTING_CLUSTERS2 {
       groupBy = "Clusters2",
       flank = $options.tss_flank
       )
-    plotFootprints(
-      seFoot = seTSS,
-      ArchRProj = proj,
-      normMethod = "$options.tss_norm_method",
-      plotName = paste0("TSS-", "$options.tss_norm_method", "-Normalization"),
-      addDOC = FALSE,
-      flank = $options.tss_flank,
-      flankNorm = $options.flank_norm
-      )
+    out <- tryCatch(
+      {
+        plotFootprints(
+          seFoot = seTSS,
+          ArchRProj = proj,
+          normMethod = "$options.tss_norm_method",
+          plotName = paste0("TSS-", "$options.tss_norm_method", "-Normalization"),
+          addDOC = FALSE,
+          flank = $options.tss_flank,
+          flankNorm = $options.flank_norm
+          )
+      }
+
+    )
 
     ' > run.R
 

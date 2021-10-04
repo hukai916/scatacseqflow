@@ -366,28 +366,28 @@ workflow PREPROCESS {
 
     // Collect all output results for MultiQC report:
     res_files = Channel.empty()
-    if (params.preprocess == "default") {
-      if (FASTQC.out) {
-        res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
-      }
-      if (CELLRANGER_ATAC_COUNT.out) {
-        res_files.mix(CELLRANGER_ATAC_COUNT.out.fastq_folder.collect().ifEmpty([]))
-      }
-
-      if (params.barcode_correction == "pheniqs") {
-        res_files = res_files.mix(CORRECT_BARCODE_PHENIQS.out.corrected_barcode_summary.collect().ifEmpty([]))
-        // res_files = res_files.mix(CELLRANGER_ATAC_COUNT.out.fastq_folder.collect().ifEmpty([]))
-      } else if (params.barcode_correction == "naive") {
-        res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
-      }
-      res_files = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))
-      res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
+    try {
+      res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
     }
-    // If using 10xgenomics as preprocessing option, the following might not be available since they are not called.
-    // res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
-    // res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
-    // res_fiels = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))
-    // res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
+    try {
+      res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
+    }
+
+    // if (params.preprocess == "default") {
+    //     res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
+    //   if (params.barcode_correction == "pheniqs") {
+    //     res_files = res_files.mix(CORRECT_BARCODE_PHENIQS.out.corrected_barcode_summary.collect().ifEmpty([]))
+    //   } else if (params.barcode_correction == "naive") {
+    //     res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
+    //   }
+    //   res_files = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))
+    //   res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
+    // } else if (params.preprocess == "10xgenomics") {
+    //   res_files = res_files.mix(CELLRANGER_ATAC_COUNT.out.cellranger_atac_count.collect().ifEmpty([]))
+    //   if (!params.ref_cellranger) {
+    //     res_files.mix(CELLRANGER_INDEX.out.bwa_index_folder.collect().ifEmpty([]))
+    //   }
+    // }
 
   emit:
     res_files // out[0]: res folders for MultiQC report
@@ -680,13 +680,14 @@ workflow DOWNSTREAM {
     // SPLIT_BAM()
 
     // Collect all output results for MultiQC report:
-    res_folders = Channel.empty()
+    res_files = Channel.empty()
+
     // Note some module may not run and therefore may not have out and therefore erro
     // res_folders = res_folders.mix(ARCHR_PEAK2GENELINKAGE_CLUSTERS2.out.res_dir.collect().ifEmpty([]))
     // res_folders = res_folders.mix(ARCHR_TRAJECTORY_CLUSTERS2.out.res_dir.collect().ifEmpty([]))
 
   emit:
-    res_folders.collect()
+    res_files.collect()
     ARCHR_GET_CLUSTERING_TSV.out.res // Here if using collect(), only the first element will be used for split_bed module. For split bed
     ARCHR_GET_CLUSTERING_TSV.out.tsv // for split bam
     // [ARCHR_GET_CLUSTERING_TSV.out.sample_name, ARCHR_GET_CLUSTERING_TSV.out.tsv]

@@ -36,8 +36,8 @@ process ARCHR_MOTIF_DEVIATIONS_CLUSTERS2 {
     path "Plots/Plot-Groups-Deviations-w-Imputation-UMAP-Embedding.pdf", emit: plot_groups_deviations_w_imputation_umap_embedding
     path "Plots/Plot-Groups-Deviations-w-Imputation-UMAP-Embedding-w-Gene-Scores.pdf", emit: plot_groups_deviations_w_imputation_umap_embedding_w_gene_scores
     path "Plots/Plot-Groups-Deviations-w-Imputation-UMAP-Embedding-w-Gene-Expression.pdf", emit: plot_groups_deviations_w_imputation_umap_embedding_w_gene_expression
-    path "Plots/Variable-Custom-Deviation-Scores.pdf", emit: variable_custom_deviation_scores
-    path "Plots/Plot-Groups-Deviations-w-Imputation-UMAP-Embedding-w-z-scores.pdf", emit: plot_groups_deviations_w_imputation_umap_embedding_w_z_scores
+    // path "Plots/Variable-Custom-Deviation-Scores.pdf", emit: variable_custom_deviation_scores
+    // path "Plots/Plot-Groups-Deviations-w-Imputation-UMAP-Embedding-w-z-scores.pdf", emit: plot_groups_deviations_w_imputation_umap_embedding_w_z_scores
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
 
     script:

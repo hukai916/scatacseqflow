@@ -366,14 +366,36 @@ workflow PREPROCESS {
 
     // Collect all output results for MultiQC report:
     res_files = Channel.empty()
-
+    // Use try-catch since if certain module is not run, module.out becomes undefined.
+    // FASTQC module:
     try {
       res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
-    } catch(Exception ex) {
-    }
+    } catch (Exception ex) {}
+    // CORRECT_BARCODE module:
     try {
       res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
-    } catch(Exception ex) {
+    } catch (Exception ex) {}
+    // CORRECT_BARCODE_PHENIQS module:
+    try {
+      res_files = res_files.mix(CORRECT_BARCODE_PHENIQS.out.corrected_barcode_summary.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // CUTADAPT module:
+    try {
+      res_files = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // QUALIMAP module:
+    try {
+      res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // CELLRANGER_INDEX module:
+    try {
+      res_files.mix(CELLRANGER_INDEX.out.bwa_index_folder.collect().ifEmpty([]))
+    } catch (Exception ex) {
+    }
+    // CELLRANGER_ATAC_COUNT module:
+    try {
+      res_files = res_files.mix(CELLRANGER_ATAC_COUNT.out.cellranger_atac_count.collect().ifEmpty([]))
+    } catch (Exception ex) {
     }
 
     // if (params.preprocess == "default") {

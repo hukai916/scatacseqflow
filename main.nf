@@ -83,7 +83,7 @@ workflow  SCATACSEQFLOW {
   if (params.preprocess) {
     log.info "Running preprocess ..."
     PREPROCESS (ch_samplesheet)
-    log.info "HERE: res_folders " + params.preprocess.out[0]
+    log.info "HERE: res_folders " + PREPROCESS.out[0]
     // PREPROCESS.out.view() // if put view() here, error?
 
     log.info "Running downstream analysis with ArchR ..."

@@ -94,7 +94,7 @@ workflow  SCATACSEQFLOW {
 
       DOWNSTREAM (PREPROCESS.out[2])
       SPLIT_BED(DOWNSTREAM.out[1]) // take a tuple (sample_name, fragment_path, tsv_path) as input
-      SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[1].collect(), PREPROCESS.out[4].collect(), "[^:]*") // input: sample_name, all_bams, all_fragments, barcode_regex
+      SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS.out[4].collect(), "[^:]*") // input: sample_name, all_bams, all_fragments, barcode_regex
     } else if (params.preprocess == "10xgenomics") {
       // DOWNSTREAM (PREPROCESS.out[1], PREPROCESS.out[2])
       // SPLIT_BED(DOWNSTREAM.out[1])
@@ -107,11 +107,15 @@ workflow  SCATACSEQFLOW {
     // DOWNSTREAM.out[2].collect().view()
     // DOWNSTREAM.out[2].collect().flatten().filter( ~/^.*\.tsv$/ ).view()
     SPLIT_BED(DOWNSTREAM.out[1])
-    ch_test = Channel.fromPath( '/Users/kaihu/Projects/workflow/test_data/10x_genomics_5k/remove_duplicate/*.bam' )
+    // ch_test = Channel.fromPath( '/Users/kaihu/Projects/workflow/test_data/10x_genomics_5k/remove_duplicate/*.bam' )
     if (!(params.barcode_regex)) {
-      SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), "NA")
+      SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS.out[4].collect(), "NA")
+
+      // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), "NA")
     } else {
-      SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), params.barcode_regex, params.barcode_regex)
+      SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS.out[4].collect(), params.barcode_regex)
+
+      // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), params.barcode_regex, params.barcode_regex)
     }
   }
 }

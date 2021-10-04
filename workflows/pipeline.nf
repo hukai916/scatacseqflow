@@ -685,8 +685,8 @@ workflow DOWNSTREAM {
 
   emit:
     res_folders.collect()
-    ARCHR_GET_CLUSTERING_TSV.out.res // Here if using collect(), only the first element will be used for split_bed module.
-    // ARCHR_GET_CLUSTERING_TSV.out.tsv
+    ARCHR_GET_CLUSTERING_TSV.out.res // Here if using collect(), only the first element will be used for split_bed module. For split bed
+    ARCHR_GET_CLUSTERING_TSV.out.tsv // for split bam
     // [ARCHR_GET_CLUSTERING_TSV.out.sample_name, ARCHR_GET_CLUSTERING_TSV.out.tsv]
 /*
    * SUBWORKFLOW: Read in samplesheet, validate and stage input files

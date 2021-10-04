@@ -707,6 +707,16 @@ workflow DOWNSTREAM {
     // Collect all output results for MultiQC report:
     res_files = Channel.empty()
 
+    // ARCHR_CREATE_ARROWFILES module:
+    try {
+      res_files = res_files.mix(ARCHR_CREATE_ARROWFILES.out.quality_control.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_ADD_DOUBLETSCORES
+    try {
+      res_files = res_files.mix(ARCHR_ADD_DOUBLETSCORES.out.qc.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+
+
     // Note some module may not run and therefore may not have out and therefore erro
     // res_folders = res_folders.mix(ARCHR_PEAK2GENELINKAGE_CLUSTERS2.out.res_dir.collect().ifEmpty([]))
     // res_folders = res_folders.mix(ARCHR_TRAJECTORY_CLUSTERS2.out.res_dir.collect().ifEmpty([]))

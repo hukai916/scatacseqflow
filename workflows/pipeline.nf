@@ -383,10 +383,10 @@ workflow PREPROCESS {
     // res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
 
   emit:
-    res_files
-    REMOVE_DUPLICATE.out.bam.collect()
-    GET_FRAGMENTS.out.fragments.collect()
-    GET_FRAGMENTS.out.ch_fragment
+    res_files // res folders for MultiQC report
+    REMOVE_DUPLICATE.out.bam.collect() // for split bam 
+    GET_FRAGMENTS.out.fragments // for split bed
+    GET_FRAGMENTS.out.ch_fragment // fragment ch for ArchR
 
     // REMOVE_DUPLICATE.out.bam
 

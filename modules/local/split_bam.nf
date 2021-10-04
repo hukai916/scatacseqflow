@@ -51,7 +51,7 @@ process SPLIT_BAM {
       VAR1="Linuxize"
       VAR2="Linuxize"
 
-      if [ "$barcode_regex" = "NA" ]; then
+      if [ "$barcode_regex" == "NA" ]; then
         sinto filterbarcodes -b ../\$bam -c ../\${tsv[\$i]} -p $task.cpus
       else
         sinto filterbarcodes --barcode_regex "$barcode_regex" -b ../\$bam -c ../\${tsv[\$i]} -p $task.cpus

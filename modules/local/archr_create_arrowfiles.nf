@@ -36,7 +36,7 @@ process ARCHR_CREATE_ARROWFILES {
     val sample_name, emit: sample_name
     path "QualityControl_*", emit: quality_control
     path "*.arrow", emit: arrowfile
-    path "archr_create_arrowfiles", emit: report
+    path "report_*/archr_create_arrowfiles", emit: report
 
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
@@ -78,7 +78,8 @@ process ARCHR_CREATE_ARROWFILES {
     done
 
     # For reporting:
-    cp -r QualityControl_$sample_name/jpeg archr_create_arrowfiles
+    mkdir -p report_$sample_name/archr_create_arrowfiles
+    cp -r QualityControl_$sample_name/jpeg report_$sample_name/archr_create_arrowfiles
 
     """
 }

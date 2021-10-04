@@ -112,7 +112,8 @@ process ARCHR_MOTIF_ENRICHMENT_CLUSTERS {
     # Custom enrichment if supplied
     customPeaks <- c($custom_peaks)
     # if (!("$custom_peaks" == '') { # wont work if contain quotes
-    if (customPeaks[1] != "") {
+    # if (customPeaks[1] != "") { # if custome_peaks == '', NULL will be passed
+    if (!(is.null(customPeaks[1]))) {
       customPeaks <- customPeaks
       proj2 <- addPeakAnnotations(ArchRProj = proj2, regions = customPeaks, name = "Custom")
       enrichRegions <- peakAnnoEnrichment(

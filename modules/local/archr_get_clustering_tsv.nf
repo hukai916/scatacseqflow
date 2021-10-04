@@ -31,11 +31,8 @@ process ARCHR_GET_CLUSTERING_TSV {
     val cluster
 
     output:
-    // path "*.tsv", emit: tsv
-    // path fragment, emit: fragment
-    // val sample_name, emit: sample_name
     tuple val(sample_name), path(fragment), path("*.tsv"), emit: res
-    path "*.tsv", emit: tsv
+    // path "*.tsv", emit: tsv
 
     script:
 

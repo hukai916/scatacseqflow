@@ -384,7 +384,7 @@ workflow PREPROCESS {
 
   emit:
     res_files // res folders for MultiQC report
-    REMOVE_DUPLICATE.out.bam.collect() // for split bam 
+    REMOVE_DUPLICATE.out.bam.collect() // for split bam
     GET_FRAGMENTS.out.fragments // for split bed
     GET_FRAGMENTS.out.ch_fragment // fragment ch for ArchR
 
@@ -684,8 +684,8 @@ workflow DOWNSTREAM {
 
   emit:
     res_folders.collect()
-    ARCHR_GET_CLUSTERING_TSV.out.res // Here if using collect(), only the first element will be used for split_bed module, reason unclear.
-    ARCHR_GET_CLUSTERING_TSV.out.tsv
+    ARCHR_GET_CLUSTERING_TSV.out.res // Here if using collect(), only the first element will be used for split_bed module.
+    // ARCHR_GET_CLUSTERING_TSV.out.tsv
     // [ARCHR_GET_CLUSTERING_TSV.out.sample_name, ARCHR_GET_CLUSTERING_TSV.out.tsv]
 /*
    * SUBWORKFLOW: Read in samplesheet, validate and stage input files

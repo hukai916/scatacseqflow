@@ -715,7 +715,82 @@ workflow DOWNSTREAM {
     try {
       res_files = res_files.mix(ARCHR_ADD_DOUBLETSCORES.out.report.collect().ifEmpty([]))
     } catch (Exception ex) {}
-
+    // ARCHR_ARCHRPROJECT_QC:
+    try {
+      res_files = res_files.mix(ARCHR_ARCHRPROJECT_QC.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_CLUSTERING:
+    try {
+      res_files = res_files.mix(ARCHR_CLUSTERING.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_EMBEDDING:
+    try {
+      res_files = res_files.mix(ARCHR_EMBEDDING.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_MARKER_GENE:
+    try {
+      res_files = res_files.mix(ARCHR_MARKER_GENE.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_SCRNASEQ_UNCONSTRAINED:
+    try {
+      res_files = res_files.mix(ARCHR_SCRNASEQ_UNCONSTRAINED.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_SCRNASEQ_CONSTRAINED:
+    try {
+      res_files = res_files.mix(ARCHR_SCRNASEQ_CONSTRAINED.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_GET_MARKER_PEAKS_CLUSTERS:
+    try {
+      res_files = res_files.mix(ARCHR_GET_MARKER_PEAKS_CLUSTERS.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_GET_MARKER_PEAKS_CLUSTERS2:
+    try {
+      res_files = res_files.mix(ARCHR_GET_MARKER_PEAKS_CLUSTERS2.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS:
+    try {
+      res_files = res_files.mix(ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS2:
+    try {
+      res_files = res_files.mix(ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS2.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_PAIRWISE_TEST_CLUSTERS:
+    try {
+      res_files = res_files.mix(ARCHR_PAIRWISE_TEST_CLUSTERS.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_PAIRWISE_TEST_CLUSTERS2:
+    try {
+      res_files = res_files.mix(ARCHR_PAIRWISE_TEST_CLUSTERS2.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_MOTIF_DEVIATIONS_CLUSTERS:
+    try {
+      res_files = res_files.mix(ARCHR_MOTIF_DEVIATIONS_CLUSTERS.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_MOTIF_DEVIATIONS_CLUSTERS2:
+    try {
+      res_files = res_files.mix(ARCHR_MOTIF_DEVIATIONS_CLUSTERS2.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_COACCESSIBILITY_CLUSTERS:
+    try {
+      res_files = res_files.mix(ARCHR_COACCESSIBILITY_CLUSTERS.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_COACCESSIBILITY_CLUSTERS2:
+    try {
+      res_files = res_files.mix(ARCHR_COACCESSIBILITY_CLUSTERS2.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_TRAJECTORY_CLUSTERS2:
+    try {
+      res_files = res_files.mix(ARCHR_TRAJECTORY_CLUSTERS2.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS:
+    try {
+      res_files = res_files.mix(ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2:
+    try {
+      res_files = res_files.mix(ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
 
     // Note some module may not run and therefore may not have out and therefore erro
     // res_folders = res_folders.mix(ARCHR_PEAK2GENELINKAGE_CLUSTERS2.out.res_dir.collect().ifEmpty([]))

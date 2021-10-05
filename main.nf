@@ -98,7 +98,8 @@ workflow  SCATACSEQFLOW {
       SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS.out[4].collect(), "[^:]*") // input: sample_name, all_bams, all_fragments, barcode_regex
       log.info "HERE: downstream_res: " + DOWNSTREAM.out[0].view()
       // Add MultiQC module here:
-      MULTIQC(PREPROCESS.out[0].mix(DOWNSTREAM.out[0].ifEmpty([])).collect())
+      log.info "HERE multiqc: " + PREPROCESS.out[0].mix(DOWNSTREAM.out[0].ifEmpty([])).collect()
+      // MULTIQC(PREPROCESS.out[0].mix(DOWNSTREAM.out[0].ifEmpty([])).collect())
 
     } else if (params.preprocess == "10xgenomics") {
       // DOWNSTREAM (PREPROCESS.out[1], PREPROCESS.out[2])

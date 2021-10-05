@@ -36,7 +36,7 @@ process ARCHR_ADD_DOUBLETSCORES {
     val sample_name, emit: sample_name
     path "doublet_qc_*", emit: qc
     path "*_doublet.arrow", emit: arrowfile
-    path "report_*/archr_add_doubletscores", emit: report
+    path "report_*", emit: report
 
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.

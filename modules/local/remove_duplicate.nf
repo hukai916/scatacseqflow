@@ -32,6 +32,7 @@ process REMOVE_DUPLICATE {
     output:
     val sample_name, emit: sample_name
     path "rm_dup_*.sorted.bam", emit: bam
+    path "summary_rm_dup_*.txt", emit: summary
 
     script:
 

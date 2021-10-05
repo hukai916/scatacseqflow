@@ -384,7 +384,7 @@ workflow PREPROCESS {
     } catch (Exception ex) {}
     // REMOVE_DUPLICATE module:
     try {
-      res_files = res_files.mix(REMOVE_DUPLICATE.out.summary.collect().ifEmpty([]))
+      res_files = res_files.mix(REMOVE_DUPLICATE.out.remove_duplicate_summary.collect().ifEmpty([]))
     } catch (Exception ex) {}
     // CUTADAPT module:
     try {

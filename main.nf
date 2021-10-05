@@ -51,7 +51,8 @@ include { PREPROCESS } from './workflows/pipeline' addParams( summary_params: su
 include { DOWNSTREAM } from './workflows/pipeline' addParams( summary_params: summary_params )
 include { SPLIT_BED  } from './modules/local/split_bed' addParams( options: modules['split_bed'] )
 include { SPLIT_BAM  } from './modules/local/split_bam' addParams( options: modules['split_bam'] )
-include { MULTIQC } from './modules/local/multiqc' addParams( options: modules['multiqc'] )
+include { MULTIQC    } from './modules/local/multiqc' addParams( options: modules['multiqc'] )
+include { ch_multiqc_config } from './workflows/pipeline'
 
 // Parse samplesheet:
 if (params.input_preprocess) {

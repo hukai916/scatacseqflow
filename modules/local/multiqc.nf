@@ -34,7 +34,7 @@ process MULTIQC {
     script:
 
     """
-    multiqc .
+    multiqc . --config *.yaml
 
     """
 }

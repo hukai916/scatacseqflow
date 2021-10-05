@@ -52,6 +52,7 @@ include { DOWNSTREAM } from './workflows/pipeline' addParams( summary_params: su
 include { SPLIT_BED  } from './modules/local/split_bed' addParams( options: modules['split_bed'] )
 include { SPLIT_BAM  } from './modules/local/split_bam' addParams( options: modules['split_bam'] )
 include { MULTIQC    } from './modules/local/multiqc' addParams( options: modules['multiqc'] )
+ch_multiqc_config        = file("$projectDir/assets/multiqc_config.yaml", checkIfExists: true)
 
 // Parse samplesheet:
 if (params.input_preprocess) {
@@ -98,7 +99,7 @@ workflow  SCATACSEQFLOW {
       SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS.out[4].collect(), "[^:]*") // input: sample_name, all_bams, all_fragments, barcode_regex
       log.info "HERE: downstream_res: " + DOWNSTREAM.out[0].view()
       // Add MultiQC module here:
-      MULTIQC(PREPROCESS.out[0].mix(DOWNSTREAM.out[0].ifEmpty([])).collect())
+      MULTIQC(PREPROCESS.out[0].mix(DOWNSTREAM.out[0].ifEmpty([])).mix(Channel.from(ch_multiqc_config)).collect())
 
     } else if (params.preprocess == "10xgenomics") {
       // DOWNSTREAM (PREPROCESS.out[1], PREPROCESS.out[2])

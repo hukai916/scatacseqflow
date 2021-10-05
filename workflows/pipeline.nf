@@ -366,7 +366,7 @@ workflow PREPROCESS {
 
     // Collect all output results for MultiQC report:
     res_files = Channel.empty()
-    res_files = res_files.mix(Channel.from(ch_multiqc_config))
+    // res_files = res_files.mix(Channel.from(ch_multiqc_config))
     // res_files = res_files.mix(Channel.from(ch_multiqc_custom_config).collect().ifEmpty([]))
 
     // Use try-catch since if certain module is not run, module.out becomes undefined.
@@ -709,7 +709,7 @@ workflow DOWNSTREAM {
 
     // Collect all output results for MultiQC report:
     res_files = Channel.empty()
-    res_files = res_files.mix(Channel.from(ch_multiqc_config))
+    // res_files = res_files.mix(Channel.from(ch_multiqc_config))
     // res_files = res_files.mix(Channel.from(ch_multiqc_custom_config).collect().ifEmpty([]))
 
     // ARCHR_CREATE_ARROWFILES module:

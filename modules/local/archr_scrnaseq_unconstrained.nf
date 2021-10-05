@@ -35,6 +35,7 @@ process ARCHR_SCRNASEQ_UNCONSTRAINED {
     path "Plots/Plot-UMAP-Remap-Clusters.pdf", emit: pdf_umap_remap_clusters
     path "cell_type_scRNA.txt", emit: cell_type_scrna
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "report_jpeg/archr_scrnaseq_unconstrained", emit: report
 
     script:
 
@@ -102,6 +103,10 @@ process ARCHR_SCRNASEQ_UNCONSTRAINED {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_scrnaseq_unconstrained
+    cp -r Plots/jpeg report_jpeg/archr_scrnaseq_unconstrained
 
     """
 }

@@ -35,6 +35,7 @@ process ARCHR_CLUSTERING {
     path "Plots/Cluster-heatmap.pdf", emit: pdf_cluster_heatmap
     path "Plots/Cluster-scran-heatmap.pdf", emit: pdf_cluster_scran_heatmap
     path "Plots/jpeg", emit: jpeg
+    path "report_jpeg/archr_clustering", emit: report
 
     script:
 
@@ -110,6 +111,10 @@ process ARCHR_CLUSTERING {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_clustering
+    cp -r Plots/jpeg report_jpeg/archr_clustering
 
     """
 }

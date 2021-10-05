@@ -37,6 +37,7 @@ process ARCHR_EMBEDDING {
     path "Plots/Plot-UMAP2Harmony-Sample-Clusters.pdf", emit: pdf_umap2harmony_sample_clusters
     path "Plots/Plot-TSNE2Harmony-Sample-Clusters.pdf", emit: pdf_tsne2harmony_sample_clusters
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "report_jpeg/archr_embedding", emit: report
 
     script:
 
@@ -122,6 +123,10 @@ process ARCHR_EMBEDDING {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+      mkdir -p report_jpeg/archr_embedding
+      cp -r Plots/jpeg report_jpeg/archr_embedding
 
     """
 }

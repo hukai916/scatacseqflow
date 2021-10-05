@@ -35,6 +35,7 @@ process ARCHR_SCRNASEQ_CONSTRAINED {
     path "Plots/Plot-UMAP-Marker-Genes-RNA-W-Imputation.pdf", emit: pdf_umap_marker_genes_rna_w_imputation
     path "Plots/Plot-UMAP-Remap-Clusters.pdf", emit: pdf_umap_remap_clusters
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "report_jpeg/archr_scrnaseq_constrained", emit: report
 
     script:
 
@@ -162,6 +163,10 @@ process ARCHR_SCRNASEQ_CONSTRAINED {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_scrnaseq_constrained
+    cp -r Plots/jpeg report_jpeg/archr_scrnaseq_constrained
 
     """
 }

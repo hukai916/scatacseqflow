@@ -31,6 +31,7 @@ process ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS {
     output:
     path "Plots/Plot-Tracks-With-Features.pdf", emit: plot_tracks_with_features
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "report_jpeg/archr_get_positive_tf_regulator_clusters", emit: report
 
     script:
 
@@ -88,6 +89,10 @@ process ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_get_positive_tf_regulator_clusters
+    cp -r Plots/jpeg report_jpeg/archr_get_positive_tf_regulator_clusters
 
     """
 }

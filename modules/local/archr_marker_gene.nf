@@ -35,6 +35,7 @@ process ARCHR_MARKER_GENE {
     path "Plots/Plot-UMAP-Marker-Genes-W-Imputation.pdf", emit: pdf_umap_markder_genes_w_imputation
     path "Plots/Plot-Tracks-Marker-Genes.pdf", emit: pdf_tracks_marker_genes
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "report_jpeg/archr_marker_gene", emit: report
 
     script:
 
@@ -105,6 +106,10 @@ process ARCHR_MARKER_GENE {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_marker_gene
+    cp -r Plots/jpeg report_jpeg/archr_marker_gene
 
     """
 }

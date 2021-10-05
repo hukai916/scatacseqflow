@@ -33,6 +33,7 @@ process ARCHR_PEAK2GENELINKAGE_CLUSTERS2 {
     path "Plots/Plot-Tracks-Marker-Genes-with-Peak2GeneLinks.pdf", emit: plot_tracks_marker_genes_with_peak2genelinks
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
     path "archr_peak2genelinkage_clusters2", emit: res_dir
+    path "report_jpeg/archr_peak2genelinkage_clusters2", emit: report
 
     script:
 
@@ -91,6 +92,10 @@ process ARCHR_PEAK2GENELINKAGE_CLUSTERS2 {
     # Copy to res_dir:
     mkdir archr_peak2genelinkage_clusters2
     cp -r Plots archr_peak2genelinkage_clusters2/
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_peak2genelinkage_clusters2
+    cp -r archr_peak2genelinkage_clusters2 report_jpeg/archr_peak2genelinkage_clusters2
 
     """
 }

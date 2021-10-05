@@ -37,6 +37,7 @@ process ARCHR_TRAJECTORY_CLUSTERS2 {
     path "Plots/Plot-Traj-Paired-Heatmaps-w-GeneExpression.pdf", emit: plot_traj_paired_heatmaps_w_geneexpression
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
     path "archr_trajectory_clusters2", emit: res_dir
+    path "report_jpeg/archr_trajectory_clusters2", emit: report
 
     script:
 
@@ -128,9 +129,9 @@ process ARCHR_TRAJECTORY_CLUSTERS2 {
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
 
-    # Copy results to res_dir:
-    mkdir archr_trajectory_clusters2
-    cp -r Plots archr_trajectory_clusters2/
+    # For reporting:
+    mkdir -p report_jpeg/archr_trajectory_clusters2
+    cp -r Plots/jpeg report_jpeg/archr_trajectory_clusters2
 
     """
 }

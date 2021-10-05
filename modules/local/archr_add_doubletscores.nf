@@ -36,6 +36,8 @@ process ARCHR_ADD_DOUBLETSCORES {
     val sample_name, emit: sample_name
     path "doublet_qc_*", emit: qc
     path "*_doublet.arrow", emit: arrowfile
+    path "report_*/archr_add_doubletscores", emit: report
+
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.
     // This is because the quality_control folder content gets updated after each run, and it will be used as input for itself, so each time, it rerun, the timestamp of this folder is newer.
@@ -69,6 +71,10 @@ process ARCHR_ADD_DOUBLETSCORES {
       convert -append ./doublet_qc_$sample_name/jpeg/\${filename}* ./doublet_qc_$sample_name/jpeg/\${filename}.jpg
       rm ./doublet_qc_$sample_name/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_$sample_name/archr_add_doubletscores
+    cp -r doublet_qc_$sample_name/jpeg report_$sample_name/archr_add_doubletscores
 
     """
 }

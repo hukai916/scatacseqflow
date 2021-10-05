@@ -40,6 +40,8 @@ process ARCHR_ARCHRPROJECT_QC {
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.
     // This is because the quality_control folder content gets updated after each run, and it will be used as input for itself, so each time, it rerun, the timestamp of this folder is newer.
+    path "report_jpeg/archr_archrproject_qc", emit: report
+
 
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
@@ -118,6 +120,10 @@ process ARCHR_ARCHRPROJECT_QC {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_archrproject_qc
+    cp -r Plots/jpeg report_jpeg/archr_archrproject_qc
 
     """
 }

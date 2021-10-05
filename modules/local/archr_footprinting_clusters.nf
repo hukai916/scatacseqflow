@@ -33,6 +33,7 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
     // path "save_archr_project/Plots/Footprints-*-Bias.pdf", emit: footprints
     // path "save_archr_project/Plots/TSS-*-Normalization.pdf", emit: tss_no_normalization
     path "save_archr_project/Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "report_jpeg/archr_footprinting_clusters", emit: report
 
     script:
 
@@ -108,6 +109,10 @@ process ARCHR_FOOTPRINTING_CLUSTERS {
       convert -append ./save_archr_project/Plots/jpeg/\${filename}* ./save_archr_project/Plots/jpeg/\${filename}.jpg
       rm ./save_archr_project/Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_footprinting_clusters
+    cp -r save_archr_project/Plots/jpeg report_jpeg/archr_footprinting_clusters
 
     """
 }

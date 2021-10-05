@@ -33,6 +33,7 @@ process ARCHR_GET_MARKER_PEAKS_CLUSTERS2 {
     path "Plots/Peak-Marker-Heatmap.pdf", emit: archr_peak_marker_heatmap
     path "group_names.txt", emit: group_names
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "report_jpeg/archr_get_marker_peaks_clusters2", emit: report
 
     script:
 
@@ -87,6 +88,10 @@ process ARCHR_GET_MARKER_PEAKS_CLUSTERS2 {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_get_marker_peaks_clusters2
+    cp -r Plots/jpeg report_jpeg/archr_get_marker_peaks_clusters2
 
     """
 }

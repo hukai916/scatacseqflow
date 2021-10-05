@@ -34,6 +34,7 @@ process ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS {
     output:
     path "Plots/Plot-Tracks-With-Features.pdf", emit: archr_tracks_with_features
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "report_jpeg/archr_marker_peaks_in_tracks_clusters", emit: report
 
     script:
 
@@ -68,6 +69,10 @@ process ARCHR_MARKER_PEAKS_IN_TRACKS_CLUSTERS {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_marker_peaks_in_tracks_clusters
+    cp -r Plots/jpeg report_jpeg/archr_marker_peaks_in_tracks_clusters
 
     """
 }

@@ -38,6 +38,7 @@ process ARCHR_MOTIF_ENRICHMENT_CLUSTERS {
     path "Plots/*-vs-*-Markers-Motifs-Enriched.pdf", emit: markers_motifs_enriched
     path "Plots/Motifs-Enriched-Marker-Heatmap.pdf", emit: motifs_enriched_marker_heatmap
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
+    path "report_jpeg/archr_motif_enrichment_clusters", emit: report
 
     script:
 
@@ -143,6 +144,10 @@ process ARCHR_MOTIF_ENRICHMENT_CLUSTERS {
       convert -append ./Plots/jpeg/\${filename}* ./Plots/jpeg/\${filename}.jpg
       rm ./Plots/jpeg/\${filename}-*.jpg
     done
+
+    # For reporting:
+    mkdir -p report_jpeg/archr_motif_enrichment_clusters
+    cp -r Plots/jpeg report_jpeg/archr_motif_enrichment_clusters
 
     """
 }

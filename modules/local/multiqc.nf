@@ -30,7 +30,7 @@ process MULTIQC {
 
     output:
     path "*.html", emit: html
-    path "*", emit: data
+    path res_files, emit: res_files
 
     script:
 

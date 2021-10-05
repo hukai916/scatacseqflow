@@ -709,11 +709,11 @@ workflow DOWNSTREAM {
 
     // ARCHR_CREATE_ARROWFILES module:
     try {
-      res_files = res_files.mix(ARCHR_CREATE_ARROWFILES.out.quality_control.collect().ifEmpty([]))
+      res_files = res_files.mix(ARCHR_CREATE_ARROWFILES.out.report.collect().ifEmpty([]))
     } catch (Exception ex) {}
     // ARCHR_ADD_DOUBLETSCORES
     try {
-      res_files = res_files.mix(ARCHR_ADD_DOUBLETSCORES.out.qc.collect().ifEmpty([]))
+      res_files = res_files.mix(ARCHR_ADD_DOUBLETSCORES.out.report.collect().ifEmpty([]))
     } catch (Exception ex) {}
 
 

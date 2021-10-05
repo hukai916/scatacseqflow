@@ -124,7 +124,7 @@ workflow  SCATACSEQFLOW {
       // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), params.barcode_regex, params.barcode_regex)
     }
     // Add MultiQC module here:
-    MULTIQC(DOWNSTREAM.out[0].ifEmpty([]))
+    MULTIQC(DOWNSTREAM.out[0].ifEmpty([]).mix(Channel.from(ch_multiqc_config)).collect())
 
   }
 }

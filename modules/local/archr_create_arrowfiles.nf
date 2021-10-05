@@ -78,8 +78,8 @@ process ARCHR_CREATE_ARROWFILES {
     done
 
     # For reporting:
-    mkdir -p report_$sample_name/archr_create_arrowfiles
-    cp -r QualityControl_$sample_name/jpeg report_$sample_name/archr_create_arrowfiles
+    mkdir -p report_archr_create_arrowfiles_$sample_name/archr_create_arrowfiles
+    cp -r QualityControl_$sample_name/jpeg report_archr_create_arrowfiles_$sample_name/archr_create_arrowfiles
 
     """
 }

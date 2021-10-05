@@ -73,8 +73,8 @@ process ARCHR_ADD_DOUBLETSCORES {
     done
 
     # For reporting:
-    mkdir -p report_$sample_name/archr_add_doubletscores
-    cp -r doublet_qc_$sample_name/jpeg report_$sample_name/archr_add_doubletscores
+    mkdir -p report_archr_add_doubletscores_$sample_name/archr_add_doubletscores
+    cp -r doublet_qc_$sample_name/jpeg report_archr_add_doubletscores_$sample_name/archr_add_doubletscores
 
     """
 }

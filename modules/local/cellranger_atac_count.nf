@@ -34,9 +34,8 @@ process CELLRANGER_ATAC_COUNT {
     path "cellranger_atac_count_*", emit: cellranger_atac_count
 
     script:
-    def avail_mem = task.memory ? "${task.memory.toBytes().intdiv(10737418240).intdiv(task.cpus)}" : ''
-    log.info "task mem: " + task.memory
-    
+    def avail_mem = task.memory ? "${task.memory.toBytes().intdiv(1073741824).intdiv(task.cpus) * 0.9 }" : ''
+
     """
     cellranger-atac count $options.args \
     --id cellranger_atac_count_$fastq_folder \

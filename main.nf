@@ -104,7 +104,9 @@ workflow  SCATACSEQFLOW {
       // SPLIT_BED(DOWNSTREAM.out[1])
       // SPLIT_BAM(PREPROCESS.out[bam_filter].collect(), DOWNSTREAM.out[1].collect(), "NA")
     } else if (params.preprocess == "biorad") {
-
+      exit 1, "biorad to be added"
+    } else {
+      exit 1, "must supply valid preproess option"
     }
   } else {
     DOWNSTREAM (ch_samplesheet_archr)

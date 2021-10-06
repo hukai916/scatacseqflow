@@ -424,10 +424,10 @@ workflow PREPROCESS {
 
   emit:
     res_files // out[0]: res folders for MultiQC report
-    GET_FRAGMENTS.out.fragments // out[1]: for split bed
-    GET_FRAGMENTS.out.ch_fragment // out[2]: fragment ch for ArchR
-    REMOVE_DUPLICATE.out.sample_name // out[3]: for split bam
-    REMOVE_DUPLICATE.out.bam // out[4]: for split bam
+    // GET_FRAGMENTS.out.fragments // out[1]: for split bed
+    // GET_FRAGMENTS.out.ch_fragment // out[2]: fragment ch for ArchR
+    // REMOVE_DUPLICATE.out.sample_name // out[3]: for split bam
+    // REMOVE_DUPLICATE.out.bam // out[4]: for split bam
 }
 
 workflow DOWNSTREAM {

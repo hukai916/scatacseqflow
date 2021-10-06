@@ -48,6 +48,8 @@ def modules = params.modules.clone()
 /* --            RUN WORKFLOW(S)               -- */
 ////////////////////////////////////////////////////
 include { PREPROCESS } from './workflows/pipeline' addParams( summary_params: summary_params )
+include { PREPROCESS_DEFAULT } from './workflows/pipeline' addParams( summary_params: summary_params )
+include { PREPROCESS_10XGENOMICS } from './workflows/pipeline' addParams( summary_params: summary_params )
 include { DOWNSTREAM } from './workflows/pipeline' addParams( summary_params: summary_params )
 include { SPLIT_BED  } from './modules/local/split_bed' addParams( options: modules['split_bed'] )
 include { SPLIT_BAM  } from './modules/local/split_bam' addParams( options: modules['split_bam'] )
@@ -85,9 +87,7 @@ workflow  SCATACSEQFLOW {
   if (params.preprocess) {
     log.info "Running preprocess ..."
     PREPROCESS (ch_samplesheet)
-    log.info "HERE: res_folders " + PREPROCESS.out[0].view()
 
-    log.info "Running downstream analysis with ArchR ..."
     if (params.preprocess == "default") {
       // if PREPROCESS emits multiple output, must use .out[index].view()
       // if PREPROCESS emits only one output, use .out.view() is fine.

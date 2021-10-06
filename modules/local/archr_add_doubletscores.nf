@@ -37,7 +37,7 @@ process ARCHR_ADD_DOUBLETSCORES {
     path "doublet_qc_*", emit: qc
     path "*_doublet.arrow", emit: arrowfile
     path "report_*", emit: report
-    path "summary_add_doubletscores.txt", emit: summary
+    path "summary_add_doubletscores_*.txt", emit: summary
 
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.
@@ -76,7 +76,7 @@ process ARCHR_ADD_DOUBLETSCORES {
     # For reporting:
     mkdir -p report_archr_add_doubletscores_$sample_name/archr_add_doubletscores
     cp -r doublet_qc_$sample_name/jpeg report_archr_add_doubletscores_$sample_name/archr_add_doubletscores
-    cp .command.log summary_add_doubletscores.txt
+    cp .command.log summary_add_doubletscores_${sample_name}.txt
 
     """
 }

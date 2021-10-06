@@ -99,6 +99,7 @@ include { ARCHR_CREATE_ARROWFILES_ANNOTATION } from '../modules/local/archr_crea
 include { ARCHR_ADD_DOUBLETSCORES } from '../modules/local/archr_add_doubletscores' addParams( options: modules['archr_add_doubletscores'] )
 include { ARCHR_ARCHRPROJECT } from '../modules/local/archr_archrproject' addParams( options: modules['archr_archrproject'] )
 include { ARCHR_ARCHRPROJECT_ANNOTATION } from '../modules/local/archr_archrproject_annotation' addParams( options: modules['archr_archrproject_annotation'] )
+include { ARCHR_FILTER_DOUBLETS } from '../modules/local/archr_filter_doublets' addParams( options: modules['archr_filter_doublets'] )
 include { ARCHR_ARCHRPROJECT_QC } from '../modules/local/archr_archrproject_qc' addParams( options: modules['archr_archrproject_qc'] )
 include { ARCHR_DIMENSION_REDUCTION } from '../modules/local/archr_dimension_reduction' addParams( options: modules['archr_dimension_reduction'] )
 include { ARCHR_BATCH_CORRECTION } from '../modules/local/archr_batch_correction' addParams( options: modules['archr_batch_correction'] )
@@ -483,7 +484,7 @@ workflow DOWNSTREAM {
     // Module: create ArchRProject and ArchRProjectQC
     if (["custom"].contains(genome_status)) {
       ARCHR_ARCHRPROJECT_ANNOTATION(ch_arrowfile_list, ARCHR_GET_ANNOTATION_CUSTOM.out.geneAnnotation, ARCHR_GET_ANNOTATION_CUSTOM.out.genomeAnnotation, ARCHR_GET_ANNOTATION_CUSTOM.out.user_rlib)
-      ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project, params.archr_filter_ratio)
+      ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project)
     } else if (["ready", "ready_ucsc"].contains(genome_status)) {
       ARCHR_ARCHRPROJECT(ch_arrowfile_list, bsgenome, params.archr_thread)
       ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.archr_project, params.archr_filter_ratio)
@@ -492,8 +493,16 @@ workflow DOWNSTREAM {
       ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project, params.archr_filter_ratio)
     }
 
-    // Module: dimension reduction
-    ARCHR_DIMENSION_REDUCTION(ARCHR_ARCHRPROJECT_QC.out.archr_project)
+    // Module: filterDoublets depending on user option.
+    if (!params.archr_filter_doublets_ratio) {
+      // Module: dimension reduction
+      ARCHR_DIMENSION_REDUCTION(ARCHR_ARCHRPROJECT_QC.out.archr_project)
+    } else {
+      // Module: filtering doublets
+      ARCHR_FILTER_DOUBLETS(ARCHR_ARCHRPROJECT_QC.out.archr_project, params.archr_filter_doublets_ratio)
+      // Module: dimension reduction
+      ARCHR_DIMENSION_REDUCTION(ARCHR_FILTER_DOUBLETS.out.archr_project)
+    }
 
     // Module: batch correction with harmony
     ARCHR_BATCH_CORRECTION(ARCHR_DIMENSION_REDUCTION.out.archr_project)
@@ -723,10 +732,15 @@ workflow DOWNSTREAM {
     // ARCHR_ADD_DOUBLETSCORES
     try {
       res_files = res_files.mix(ARCHR_ADD_DOUBLETSCORES.out.report.collect().ifEmpty([]))
+      res_files = res_files.mix(ARCHR_ADD_DOUBLETSCORES.out.summary.collect().ifEmpty([]))
     } catch (Exception ex) {}
     // ARCHR_ARCHRPROJECT_QC:
     try {
       res_files = res_files.mix(ARCHR_ARCHRPROJECT_QC.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_FILTER_DOUBLETS:
+    try {
+      res_files = res_files.mix(ARCHR_FILTER_DOUBLETS.out.summary.collect().ifEmpty([]))
     } catch (Exception ex) {}
     // ARCHR_CLUSTERING:
     try {

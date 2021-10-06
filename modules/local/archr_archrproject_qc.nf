@@ -27,7 +27,7 @@ process ARCHR_ARCHRPROJECT_QC {
 
     input:
     path archr_project
-    val archr_filter_ratio
+    // val archr_filter_ratio
     // val archr_genome
     // val archr_thread
 
@@ -36,12 +36,13 @@ process ARCHR_ARCHRPROJECT_QC {
     path "Plots/QC-Sample-Statistics.pdf", emit: pdf_qc_sample_statistics
     path "Plots/QC-Sample-FragSizes-TSSProfile.pdf", emit: pdf_qc_sample_fragsizes_tssprofile
     path "Plots/jpeg", emit: jpeg // to also publish the jpeg folder
-    path "proj_doublet_filtered.rds", emit: archr_project
+    // path "proj_doublet_filtered.rds", emit: archr_project
+    path archr_project, emit: archr_project
     // path quality_control, emit: quality_control // if using this syntax, the -resume won't work
     // path "QualityControl", emit: quality_control // using this, the -resume won't work either.
     // This is because the quality_control folder content gets updated after each run, and it will be used as input for itself, so each time, it rerun, the timestamp of this folder is newer.
     path "report_jpeg/archr_archrproject_qc", emit: report
-
+    // path "summary_archrproject_qc.txt", emit: summary
 
     script:
     // for unknown reason, #!/usr/bin/R + direct R codes won't work
@@ -101,10 +102,6 @@ process ARCHR_ARCHRPROJECT_QC {
     p6 <- plotTSSEnrichment(ArchRProj = proj)
     plotPDF(p5,p6, name = "QC-Sample-FragSizes-TSSProfile.pdf", ArchRProj = NULL, addDOC = FALSE, width = 5, height = 5)
 
-    # Filtering Doublets:
-    proj2 <- filterDoublets(proj, filterRatio = $archr_filter_ratio)
-    saveRDS(proj2, file = "proj_doublet_filtered.rds")
-
     ' > run.R
 
     Rscript run.R
@@ -124,6 +121,7 @@ process ARCHR_ARCHRPROJECT_QC {
     # For reporting:
     mkdir -p report_jpeg/archr_archrproject_qc
     cp -r Plots/jpeg report_jpeg/archr_archrproject_qc
+    # cp .command.log summary_archrproject_qc.txt
 
     """
 }

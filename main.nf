@@ -86,22 +86,20 @@ if (params.input_archr) {
 workflow  SCATACSEQFLOW {
   if (params.preprocess) {
     log.info "Running preprocess ..."
-    PREPROCESS (ch_samplesheet)
+    // PREPROCESS (ch_samplesheet)
 
     if (params.preprocess == "default") {
       // if PREPROCESS emits multiple output, must use .out[index].view()
       // if PREPROCESS emits only one output, use .out.view() is fine.
-
-      log.info "TEST preprocess output"
-
-      DOWNSTREAM (PREPROCESS.out[2])
+      PREPROCESS_DEFAULT(ch_samplesheet)
+      DOWNSTREAM (PREPROCESS_DEFAULT.out[2])
       SPLIT_BED(DOWNSTREAM.out[1]) // take a tuple (sample_name, fragment_path, tsv_path) as input
-      SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS.out[4].collect(), "[^:]*") // input: sample_name, all_bams, all_fragments, barcode_regex
+      SPLIT_BAM(PREPROCESS_DEFAULT.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS_DEFAULT.out[4].collect(), "[^:]*") // input: sample_name, all_bams, all_fragments, barcode_regex
       log.info "HERE: downstream_res: " + DOWNSTREAM.out[0].view()
       // Add MultiQC module here:
-      MULTIQC(PREPROCESS.out[0].mix(DOWNSTREAM.out[0].ifEmpty([])).mix(Channel.from(ch_multiqc_config)).collect())
-
+      MULTIQC(PREPROCESS_DEFAULT.out[0].mix(DOWNSTREAM.out[0].ifEmpty([])).mix(Channel.from(ch_multiqc_config)).collect())
     } else if (params.preprocess == "10xgenomics") {
+      PREPROCESS_10XGENOMICS(ch_samplesheet)
       // DOWNSTREAM (PREPROCESS.out[1], PREPROCESS.out[2])
       // SPLIT_BED(DOWNSTREAM.out[1])
       // SPLIT_BAM(PREPROCESS.out[bam_filter].collect(), DOWNSTREAM.out[1].collect(), "NA")
@@ -115,11 +113,11 @@ workflow  SCATACSEQFLOW {
     SPLIT_BED(DOWNSTREAM.out[1])
     // ch_test = Channel.fromPath( '/Users/kaihu/Projects/workflow/test_data/10x_genomics_5k/remove_duplicate/*.bam' )
     if (!(params.barcode_regex)) {
-      SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS.out[4].collect(), "NA")
+      SPLIT_BAM(PREPROCESS_DEFAULT.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS_DEFAULT.out[4].collect(), "NA")
 
       // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), "NA")
     } else {
-      SPLIT_BAM(PREPROCESS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS.out[4].collect(), params.barcode_regex)
+      SPLIT_BAM(PREPROCESS_DEFAULT.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS_DEFAULT.out[4].collect(), params.barcode_regex)
 
       // SPLIT_BAM(ch_samplesheet_archr, DOWNSTREAM.out[2].collect(), PREPROCESS.out[1].collect(), params.barcode_regex, params.barcode_regex)
     }

@@ -35,7 +35,8 @@ process CELLRANGER_ATAC_COUNT {
 
     script:
     def avail_mem = task.memory ? "${task.memory.toBytes().intdiv(10737418240).intdiv(task.cpus)}" : ''
-
+    log.info "task mem: " + task.memory
+    
     """
     cellranger-atac count $options.args \
     --id cellranger_atac_count_$fastq_folder \

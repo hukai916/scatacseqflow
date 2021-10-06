@@ -34,12 +34,15 @@ process CELLRANGER_ATAC_COUNT {
     path "cellranger_atac_count_*", emit: cellranger_atac_count
 
     script:
+    def avail_mem = task.memory ? "${task.memory.intdiv(task.cpus)}" : ''
 
     """
     cellranger-atac count $options.args \
     --id cellranger_atac_count_$fastq_folder \
     --fastqs $fastq_folder \
     --reference $reference \
+    --localcores $task.cpus \
+    --localmem $avail_mem
 
     """
 }

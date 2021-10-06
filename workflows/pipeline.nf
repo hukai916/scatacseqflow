@@ -144,6 +144,242 @@ include { ARCHR_GET_CLUSTERING_TSV } from '../modules/local/archr_get_clustering
 ////////////////////////////////////////////////////
 /* --           RUN MAIN WORKFLOW              -- */
 ////////////////////////////////////////////////////
+workflow PREPROCESS_DEFAULT {
+  take:
+    ch_samplesheet
+
+  main:
+    // log.info "INFO(2): --preprocess: default"
+    GET_10XGENOMICS_FASTQ (ch_samplesheet)
+    // module: fastQC
+    FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+
+    // module: barcode correction (optional) and add barcode: correct barcode fastq given whitelist and barcode fastq file
+    if (!(params.barcode_whitelist)) {
+      log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
+      ADD_BARCODE_TO_READS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+    } else {
+      // Allow users to choose from barcode_correction.R or Pheniqs:
+      if (params.barcode_correction == "naive") {
+        CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+      // MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+      // Note that the above might be problematic, since MATCH_READS would take inputs from two channels, the instance of samples may not match.
+        MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, CORRECT_BARCODE.out.read1_fastq, CORRECT_BARCODE.out.read2_fastq)
+
+        ADD_BARCODE_TO_READS (MATCH_READS.out.sample_name, MATCH_READS.out.barcode_fastq, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq)
+      } else {
+        // use pheniqs:
+        CORRECT_BARCODE_PHENIQS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+
+        MATCH_READS (CORRECT_BARCODE_PHENIQS.out.sample_name, CORRECT_BARCODE_PHENIQS.out.corrected_barcode, CORRECT_BARCODE_PHENIQS.out.read1_fastq, CORRECT_BARCODE_PHENIQS.out.read2_fastq)
+      }
+    }
+
+    // module: trimming off adapter
+    if ((params.barcode_whitelist) && (params.barcode_correction == "pheniqs")) {
+      CUTADAPT (MATCH_READS.out.sample_name, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
+    } else {
+      CUTADAPT (ADD_BARCODE_TO_READS.out.sample_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
+    }
+
+    // module: MATCH_READS_TRIMMED: in case user choose to trim based on quality and read pair gets unbalanced.
+    MATCH_READS_TRIMMED (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq)
+
+    // module: mapping with bwa or minimap2: mark duplicate
+    // bwa or minimap2
+    if (params.mapper == 'bwa') {
+      log.info "INFO: --mapper: bwa"
+
+      if (!params.ref_bwa_index) {
+        log.info "INFO: --ref_bwa_index not provided, checking --ref_fasta and --ref_fasta_ucsc/--ref_fasta_ensembl ..."
+
+        if (params.ref_fasta) {
+          log.info "INFO: --ref_fasta provided, use it for building bwa index."
+          // module : bwa_index
+          BWA_INDEX (params.ref_fasta)
+          // mapping with the built index
+        } else if (params.ref_fasta_ucsc) {
+          // exit 1, 'WARNING: --ref_fasta_ucsc is not supported yet, pls use --ref_fasta_ensembl!'
+          log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build bwa index, and map with bwa ..."
+          // module : download_from_ucsc
+          DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
+          // module : extract primary sequence
+          GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+          // module : bwa_index
+          BWA_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
+        } else if (params.ref_fasta_ensembl) {
+          log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+          // module : download_from_ucsc
+          DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
+          // module : bwa_index
+          BWA_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
+        } else {
+          exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
+        }
+        // module : bwa_map
+        BWA_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, BWA_INDEX.out.bwa_index_folder)
+      } else {
+        // use user provided bwa index for mapping, module : bwa_map
+        BWA_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, params.ref_bwa_index)
+      }
+    } else if (params.mapper == "minimap2") {
+      log.info "INFO: --mapper: minimap2"
+
+      if (!params.ref_minimap2_index) {
+        log.info "INFO: --ref_minimap2_index not provided, check --ref_fasta and --ref_fasta_uscs/--ref_fasta_ensembl ..."
+
+        if (params.ref_fasta) {
+          log.info "INFO: --ref_fasta provided, use it to build minimap2 index."
+          // module : bwa_index
+          MINIMAP2_INDEX (params.ref_fasta)
+          // mapping with the built index
+        } else if (params.ref_fasta_ucsc) {
+          log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+          // module : download_from_ucsc
+          DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
+          // module : get_primary_genome
+          GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+          // module : bwa_index
+          MINIMAP2_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
+        } else if (params.ref_fasta_ensembl) {
+            log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+
+            // module : download_from_ensembl
+            DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
+            // module : bwa_index
+            MINIMAP2_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
+        } else {
+            exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
+        }
+        // module : minimap2_map
+        MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, MINIMAP2_INDEX.out.minimap2_index)
+      } else {
+          // use user provided bwa index for mapping
+          // module : minimap2_map
+          MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, params.ref_minimap2_index)
+      }
+    } else {
+        exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
+    }
+
+    // module: filter out poorly mapped reads
+    if (params.mapper == 'bwa') {
+      BAM_FILTER (BWA_MAP.out.sample_name, BWA_MAP.out.bam, params.filter)
+    } else if (params.mapper == "minimap2") {
+        BAM_FILTER (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam, params.filter)
+    }
+
+    // module: remove duplicates based on cell barcode, start, end
+    REMOVE_DUPLICATE(BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
+
+    // module: bamqc with qualimap for raw bam files
+    // TODO: Run Qualimap on the final filtered deduplicated bam file.
+    QUALIMAP (REMOVE_DUPLICATE.out.sample_name, REMOVE_DUPLICATE.out.bam)
+
+    // module: generate fragment file with sinto
+    // use raw bam file since ArchR may take advantage of the duplication info.
+    GET_FRAGMENTS (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
+
+    // Collect all output results for MultiQC report:
+    res_files = Channel.empty()
+    // res_files = res_files.mix(Channel.from(ch_multiqc_config))
+    // res_files = res_files.mix(Channel.from(ch_multiqc_custom_config).collect().ifEmpty([]))
+
+    // Use try-catch since if certain module is not run, module.out becomes undefined.
+    // FASTQC module:
+    try {
+      res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // CORRECT_BARCODE module:
+    try {
+      res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // CORRECT_BARCODE_PHENIQS module:
+    try {
+      res_files = res_files.mix(CORRECT_BARCODE_PHENIQS.out.corrected_barcode_summary.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // REMOVE_DUPLICATE module:
+    try {
+      res_files = res_files.mix(REMOVE_DUPLICATE.out.remove_duplicate_summary.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // CUTADAPT module:
+    try {
+      res_files = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // QUALIMAP module:
+    try {
+      res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // CELLRANGER_INDEX module:
+    try {
+      res_files.mix(CELLRANGER_INDEX.out.bwa_index_folder.collect().ifEmpty([]))
+    } catch (Exception ex) {
+    }
+    // CELLRANGER_ATAC_COUNT module:
+    try {
+      res_files = res_files.mix(CELLRANGER_ATAC_COUNT.out.cellranger_atac_count.collect().ifEmpty([]))
+    } catch (Exception ex) {
+    }
+
+  emit:
+    res_files // out[0]: res folders for MultiQC report
+    GET_FRAGMENTS.out.fragments // out[1]: for split bed
+    GET_FRAGMENTS.out.ch_fragment // out[2]: fragment ch for ArchR
+    REMOVE_DUPLICATE.out.sample_name // out[3]: for split bam
+    REMOVE_DUPLICATE.out.bam // out[4]: for split bam
+}
+
+workflow PREPROCESS_10XGENOMICS {
+  take:
+    ch_samplesheet
+
+  main:
+    if (!params.ref_cellranger) {
+      log.info "Parameter --ref_cellranger not supplied, checking --ref_cellranger_ucsc/--ref_cellranger_ensembl!"
+      if (params.ref_cellranger_ucsc) {
+        log.info "Parameter --ref_cellranger_ucsc provided, will download genome, gtf, and build index with cellranger-atac."
+        // Module: download ucsc genome
+        DOWNLOAD_FROM_UCSC (params.ref_cellranger_ucsc)
+        // Module: download ucsc gtf
+        DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
+        // Module: fix gtf
+        FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf)
+        // Module: extract primary genome
+        GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+        // Module: prepare cellranger index
+        CELLRANGER_INDEX (GET_PRIMARY_GENOME.out.genome_fasta, FIX_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
+        // Module: prepare fastq folder
+        GET_10XGENOMICS_FASTQ (ch_samplesheet)
+        // Module: run cellranger-atac count
+        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+      } else if (params.ref_cellranger_ensembl) {
+        // Module: download ensembl genome
+        DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, params.ensembl_release)
+        // Module: download ensembl gtf
+        DOWNLOAD_FROM_ENSEMBL_GTF (params.ref_cellranger_ensembl, params.ensembl_release)
+        // Module: prepare cellranger index
+        CELLRANGER_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
+        // Module: prepare fastq folder
+        GET_10XGENOMICS_FASTQ (ch_samplesheet)
+        // Module: run cellranger-atac count
+        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+        } else {
+            exit 1, "--ref_cellranger_ucsc/--ref_cellranger_ensembl must be specified!"
+          }
+    } else {
+      log.info "Parameter --ref_cellranger supplied, will use it as index folder."
+      GET_10XGENOMICS_FASTQ (ch_samplesheet)
+      CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
+      // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
+      // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
+    }
+
+    res_files = Channel.empty()
+
+  emit:
+    res_files
+}
+
 workflow PREPROCESS {
   take:
     ch_samplesheet
@@ -190,8 +426,7 @@ workflow PREPROCESS {
 
           MATCH_READS (CORRECT_BARCODE_PHENIQS.out.sample_name, CORRECT_BARCODE_PHENIQS.out.corrected_barcode, CORRECT_BARCODE_PHENIQS.out.read1_fastq, CORRECT_BARCODE_PHENIQS.out.read2_fastq)
         }
-
-}
+      }
 
       // module: trimming off adapter
       if ((params.barcode_whitelist) && (params.barcode_correction == "pheniqs")) {

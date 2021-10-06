@@ -34,7 +34,7 @@ process CELLRANGER_ATAC_COUNT {
     path "cellranger_atac_count_*", emit: cellranger_atac_count
 
     script:
-    def avail_mem = task.memory ? "${(int) task.memory.toBytes().intdiv(1073741824).intdiv(task.cpus) * 0.9 }" : ''
+    def avail_mem = task.memory ? "${ (task.memory.toBytes().intdiv(1073741824).intdiv(task.cpus) * 0.9).toInteger() }" : ''
 
     """
     cellranger-atac count $options.args \

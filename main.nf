@@ -111,6 +111,7 @@ workflow  SCATACSEQFLOW {
   } else {
     DOWNSTREAM (ch_samplesheet_archr)
     SPLIT_BED (DOWNSTREAM.out[1])
+    MULTIQC (DOWNSTREAM.out[0].ifEmpty([]).mix(Channel.from(ch_multiqc_config)).collect())
     // // ch_test = Channel.fromPath( '/Users/kaihu/Projects/workflow/test_data/10x_genomics_5k/remove_duplicate/*.bam' )
     // if (!(params.barcode_regex)) {
     //   SPLIT_BAM(PREPROCESS_DEFAULT.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS_DEFAULT.out[4].collect(), "NA")
@@ -119,10 +120,6 @@ workflow  SCATACSEQFLOW {
     // } else {
     //   SPLIT_BAM(PREPROCESS_DEFAULT.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS_DEFAULT.out[4].collect(), params.barcode_regex)
     }
-    // Add MultiQC module here:
-    MULTIQC (DOWNSTREAM.out[0].ifEmpty([]).mix(Channel.from(ch_multiqc_config)).collect())
-
-  }
 }
 
 workflow {

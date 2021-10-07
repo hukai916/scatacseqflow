@@ -26,12 +26,17 @@ process CELLRANGER_ATAC_COUNT {
     // cache false
 
     input:
+    val sample_name
     path fastq_folder
     path reference
     // val jobmode
 
     output:
+    val sample_name, emit: sample_name
+    path "cellranger_atac_count_*/outs/fragments.tsv.gz", emit: fragments
+    tuple val(sample_name), path("cellranger_atac_count_*/outs/fragments.tsv.gz"), emit: ch_fragment
     path "cellranger_atac_count_*", emit: cellranger_atac_count
+    path "cellranger_atac_count_*/outs/*.bam", emit: bam
 
     script:
     def avail_mem = task.memory ? "${ (task.memory.toBytes().intdiv(1073741824).intdiv(task.cpus) * 0.9).toInteger() }" : ''

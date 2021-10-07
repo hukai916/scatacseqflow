@@ -351,7 +351,7 @@ workflow PREPROCESS_10XGENOMICS {
         // Module: prepare fastq folder
         GET_10XGENOMICS_FASTQ (ch_samplesheet)
         // Module: run cellranger-atac count
-        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
       } else if (params.ref_cellranger_ensembl) {
         // Module: download ensembl genome
         DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, params.ensembl_release)
@@ -362,14 +362,14 @@ workflow PREPROCESS_10XGENOMICS {
         // Module: prepare fastq folder
         GET_10XGENOMICS_FASTQ (ch_samplesheet)
         // Module: run cellranger-atac count
-        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
         } else {
             exit 1, "--ref_cellranger_ucsc/--ref_cellranger_ensembl must be specified!"
           }
     } else {
       log.info "Parameter --ref_cellranger supplied, will use it as index folder."
       GET_10XGENOMICS_FASTQ (ch_samplesheet)
-      CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
+      CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
       // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
       // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
     }
@@ -377,7 +377,11 @@ workflow PREPROCESS_10XGENOMICS {
     res_files = Channel.empty()
 
   emit:
-    res_files
+    res_files // out[0]: res folders for MultiQC report
+    CELLRANGER_ATAC_COUNT.out.fragments // out[1]: for split bed
+    CELLRANGER_ATAC_COUNT.out.ch_fragment // out[2]: fragment ch for ArchR
+    CELLRANGER_ATAC_COUNT.out.sample_name // out[3]: for split bam
+    CELLRANGER_ATAC_COUNT.out.bam // out[4]: for split bam
 }
 
 workflow PREPROCESS {
@@ -555,7 +559,7 @@ workflow PREPROCESS {
             // Module: prepare fastq folder
             GET_10XGENOMICS_FASTQ (ch_samplesheet)
             // Module: run cellranger-atac count
-            CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+            CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
           } else if (params.ref_cellranger_ensembl) {
             // Module: download ensembl genome
             DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, params.ensembl_release)
@@ -566,14 +570,14 @@ workflow PREPROCESS {
             // Module: prepare fastq folder
             GET_10XGENOMICS_FASTQ (ch_samplesheet)
             // Module: run cellranger-atac count
-            CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+            CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
             } else {
                 exit 1, "--ref_cellranger_ucsc/--ref_cellranger_ensembl must be specified!"
               }
         } else {
           log.info "Parameter --ref_cellranger supplied, will use it as index folder."
           GET_10XGENOMICS_FASTQ (ch_samplesheet)
-          CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
+          CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
           // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
           // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
         }
@@ -1020,6 +1024,14 @@ workflow DOWNSTREAM {
     // ARCHR_PAIRWISE_TEST_CLUSTERS2:
     try {
       res_files = res_files.mix(ARCHR_PAIRWISE_TEST_CLUSTERS2.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_MOTIF_ENRICHMENT_CLUSTERS:
+    try {
+      res_files = res_files.mix(ARCHR_MOTIF_ENRICHMENT_CLUSTERS.out.report.collect().ifEmpty([]))
+    } catch (Exception ex) {}
+    // ARCHR_MOTIF_ENRICHMENT_CLUSTERS2:
+    try {
+      res_files = res_files.mix(ARCHR_MOTIF_ENRICHMENT_CLUSTERS2.out.report.collect().ifEmpty([]))
     } catch (Exception ex) {}
     // ARCHR_MOTIF_DEVIATIONS_CLUSTERS:
     try {

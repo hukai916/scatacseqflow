@@ -8,7 +8,7 @@ options        = initOptions(params.options)
  * Parse software version numbers
  */
 process CELLRANGER_ATAC_COUNT {
-    label 'process_medium'
+    label 'process_high'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'cellranger_count', publish_id:'') }

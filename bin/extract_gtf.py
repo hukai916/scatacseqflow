@@ -17,7 +17,7 @@ import gzip
 genome = sys.argv[1]
 gtf    = sys.argv[2]
 
-if genome.endsWith(".gz"):
+if genome.endswith(".gz"):
     fasta = SeqIO.parse(gzip.open(genome, mode = 'rt'),'fasta')
 else:
     fasta = SeqIO.parse(open(genome),'fasta')

@@ -21,12 +21,13 @@ process FIX_UCSC_GTF {
     // }
 
     // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/miniconda3_xenial:0.1"
+    container "hukai916/miniconda3_bio:0.1:0.1"
 
     // cache false
 
     input:
     path gtf
+    path genome
 
     output:
     path "fixed.*.gz", emit: gtf
@@ -35,7 +36,12 @@ process FIX_UCSC_GTF {
 
     """
     gunzip -c $gtf > annotation.gtf
-    sort_gtf.py annotation.gtf > fixed.annotation.gtf
+    # sort the gtf in case some records are not in order
+    sort_gtf.py annotation.gtf > sorted.annotation.gtf
+
+    # make sure gtf config is a subset of genome.fa config, required for cellranger_index step
+    extract_gtf.py $genome sorted.annotation.gtf > fixed.annotation.gtf
+
     gzip fixed.annotation.gtf
 
     """

@@ -343,7 +343,7 @@ workflow PREPROCESS_10XGENOMICS {
         // Module: download ucsc gtf
         DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
         // Module: fix gtf
-        FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf)
+        FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf, GET_PRIMARY_GENOME.out.genome_fasta)
         // Module: extract primary genome
         GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
         // Module: prepare cellranger index
@@ -551,7 +551,7 @@ workflow PREPROCESS {
             // Module: download ucsc gtf
             DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
             // Module: fix gtf
-            FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf)
+            FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf, GET_PRIMARY_GENOME.out.genome_fasta)
             // Module: extract primary genome
             GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
             // Module: prepare cellranger index

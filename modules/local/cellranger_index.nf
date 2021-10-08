@@ -52,6 +52,9 @@ process CELLRANGER_INDEX {
 
     echo '}' >> index.config
 
+    # In case GTF contains config names that are not in the genome.fa:
+    
+
     # Make ref:
     cellranger-atac mkref --config=index.config
 

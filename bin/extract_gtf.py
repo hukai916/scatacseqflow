@@ -12,11 +12,15 @@ python extract_gtf.py genome.fa xxx.gtf
 import sys
 import re
 from Bio import SeqIO
+import gzip
 
 genome = sys.argv[1]
 gtf    = sys.argv[2]
 
-fasta   = SeqIO.parse(open(genome),'fasta')
+if genome.endsWith(".gz"):
+    fasta = SeqIO.parse(gzip.open(genome, mode = 'rt'),'fasta')
+else:
+    fasta = SeqIO.parse(open(genome),'fasta')
 contig  = [record.id for record in fasta]
 
 # check if chrM or chrMT:

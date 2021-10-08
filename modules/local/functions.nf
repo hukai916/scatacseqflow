@@ -95,11 +95,17 @@ def get_bsgenome(archr_genome, archr_custom_genome, archr_txdb, archr_org, archr
     if (archr_support_genome.contains(ref_fasta_ucsc)) {
       return [ref_fasta_ucsc, "ready_ucsc"]
     }
+    if (archr_support_genome.contains(ref_cellranger_ucsc)) {
+      return [ref_fasta_ucsc, "ready_ucsc"]
+    }
     if (archr_custom_bsgenome.contains(ref_fasta_ucsc)) {
       return [ref_fasta_ucsc, "need_build_ucsc"]
     }
     if (archr_support_genome.contains(ensembl2ucsc[ref_fasta_ensembl])) {
       return [ensembl2ucsc[ref_fasta_ensembl], "ready_ensembl"]
+    }
+    if (archr_support_genome.contains(ensembl2ucsc[ref_cellranger_ensembl])) {
+      return [ensembl2ucsc[ref_cellranger_ensembl], "ready_ensembl"]
     }
     if (archr_custom_bsgenome.contains(ref_fasta_ensembl)) {
       return [ref_fasta_ucsc, "need_build_ensembl"]

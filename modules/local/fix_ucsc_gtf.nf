@@ -21,7 +21,7 @@ process FIX_UCSC_GTF {
     // }
 
     // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/miniconda3_bio:0.1:0.1"
+    container "hukai916/miniconda3_bio:0.1"
 
     // cache false
 

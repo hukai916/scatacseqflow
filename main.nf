@@ -102,7 +102,7 @@ workflow  SCATACSEQFLOW {
       PREPROCESS_10XGENOMICS (ch_samplesheet)
       DOWNSTREAM (PREPROCESS_10XGENOMICS.out[2])
       SPLIT_BED (DOWNSTREAM.out[1])
-      SPLIT_BAM (PREPROCESS_10XGENOMICS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS_DEFAULT.out[4].collect(), "NA")
+      SPLIT_BAM (PREPROCESS_10XGENOMICS.out[3], DOWNSTREAM.out[2].collect(), PREPROCESS_10XGENOMICS.out[4].collect(), "NA")
     } else if (params.preprocess == "biorad") {
       exit 1, "biorad to be added"
     } else {

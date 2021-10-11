@@ -43,8 +43,12 @@ process CELLRANGER_ATAC_COUNT {
     def avail_mem = task.memory ? "${ (task.memory.toBytes().intdiv(1073741824) * 0.9).toInteger() }" : ''
 
     """
+    # rename the fastq_folder so that it wont contain special characters other than: digit, letter, underscore, or dashes
+    fastq_folder=$( echo $fastq_folder | tr '.' '_' )
+    cp $fastq_folder \$fastq_folder
+
     cellranger-atac count $options.args \
-    --id cellranger_atac_count_$fastq_folder \
+    --id cellranger_atac_count_\$fastq_folder \
     --fastqs $fastq_folder \
     --reference $reference \
     --localcores $task.cpus \

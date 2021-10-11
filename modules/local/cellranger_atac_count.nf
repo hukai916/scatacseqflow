@@ -44,7 +44,7 @@ process CELLRANGER_ATAC_COUNT {
 
     """
     # rename the fastq_folder so that it wont contain special characters other than: digit, letter, underscore, or dashes
-    fastq_folder=$( echo $fastq_folder | tr '.' '_' )
+    fastq_folder=\$( echo $fastq_folder | tr '.' '_' )
     cp $fastq_folder \$fastq_folder
 
     cellranger-atac count $options.args \

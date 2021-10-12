@@ -152,7 +152,8 @@ workflow PREPROCESS_DEFAULT {
     // log.info "INFO(2): --preprocess: default"
     GET_10XGENOMICS_FASTQ (ch_samplesheet)
     // module: fastQC
-    FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
+    FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq,
+    GET_10XGENOMICS_FASTQ.out.barcode_fastq)
 
     // module: barcode correction (optional) and add barcode: correct barcode fastq given whitelist and barcode fastq file
     if (!(params.barcode_whitelist)) {

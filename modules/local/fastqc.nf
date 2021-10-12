@@ -28,6 +28,7 @@ process FASTQC {
     val sample_name
     path read1_fastq
     path read2_fastq
+    path barcode_fastq
 
     output:
     path "*.html", emit: html
@@ -37,7 +38,7 @@ process FASTQC {
     script:
 
     """
-    fastqc $options.args --threads $task.cpus $read1_fastq $read2_fastq
+    fastqc $options.args --threads $task.cpus $read1_fastq $read2_fastq $barcode_fastq
 
     """
 }

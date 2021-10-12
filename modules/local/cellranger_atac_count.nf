@@ -56,8 +56,8 @@ process CELLRANGER_ATAC_COUNT {
     --localmem $avail_mem
 
     # rename the output bam file for split_bam module:
-    mv cellranger_atac_count_*/outs/possorted_bam.bam cellranger_atac_count_*/outs/${sample_name}_possorted_bam.bam
-    mv cellranger_atac_count_*/outs/possorted_bam.bam.bai cellranger_atac_count_*/outs/${sample_name}_possorted_bam.bam.bai
+    mv cellranger_atac_count_${sample_name}/outs/possorted_bam.bam cellranger_atac_count_${sample_name}/outs/${sample_name}_possorted_bam.bam
+    mv cellranger_atac_count_${sample_name}/outs/possorted_bam.bam.bai cellranger_atac_count_${sample_name}/outs/${sample_name}_possorted_bam.bam.bai
 
     """
 }

@@ -78,15 +78,17 @@ def get_bsgenome(archr_genome, archr_custom_genome, archr_txdb, archr_org, archr
   // Map: ensembl name to uscs name
   def ensembl2ucsc = [homo_sapiens: "hg38", mus_musculus: "mm10", bos_taurus: "bosTau9", caenorhabditis_elegans: "ce11", danio_rerio: "danRer11",  drosophila_melanogaster: "dm6", gallus_gallus: "galGal6", macaca_mulatta: "rheMac10", pan_troglodytes: "panTro6", rattus_norvegicus: "rn6", saccharomyces_cerevisiae: "sacCer3", sus_scrofa: "susScr11"
   ]
+
   if (archr_custom_genome == "yes") {
     // Check if txdb, org, and bsgenome are specified
-    if (archr_txdb == "" || archr_org == "" || archr_bsgenome == "") {
+    if (!(archr_txdb) || !(archr_org) || !(archr_bsgenome)) {
       exit 1, '--archr_custom_genome set to "yes", pls also supply --archr_txdb, --archr_org, and --archr_bsgenome.'
     } else {
       return ["custom", "custom"]
     }
   } else if (archr_custom_genome == "no") {
     if (archr_support_genome.contains(params.archr_genome)) {
+      log.info "inside function: contains"
       return [archr_genome, "ready"]
     }
     if (archr_custom_bsgenome.contains(params.archr_genome)) {

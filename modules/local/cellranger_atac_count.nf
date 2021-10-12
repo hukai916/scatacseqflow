@@ -36,7 +36,7 @@ process CELLRANGER_ATAC_COUNT {
     path "cellranger_atac_count_*/outs/fragments.tsv.gz", emit: fragments
     tuple val(sample_name), path("cellranger_atac_count_*/outs/fragments.tsv.gz"), emit: ch_fragment
     path "cellranger_atac_count_*", emit: cellranger_atac_count
-    path "cellranger_atac_count_*/outs/*.bam", emit: bam
+    path "cellranger_atac_count_*/outs/*_possorted_bam.bam", emit: bam
 
     script:
     // def avail_mem = task.memory ? "${ (task.memory.toBytes().intdiv(1073741824).intdiv(task.cpus) * 0.9).toInteger() }" : ''
@@ -54,6 +54,10 @@ process CELLRANGER_ATAC_COUNT {
     --reference $reference \
     --localcores $task.cpus \
     --localmem $avail_mem
+
+    # rename the output bam file for split_bam module:
+    mv cellranger_atac_count_*/outs/possorted_bam.bam cellranger_atac_count_*/outs/${sample_name}_possorted_bam.bam
+    mv cellranger_atac_count_*/outs/possorted_bam.bam.bai cellranger_atac_count_*/outs/${sample_name}_possorted_bam.bam.bai
 
     """
 }

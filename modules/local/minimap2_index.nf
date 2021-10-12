@@ -8,7 +8,7 @@ options        = initOptions(params.options)
  * Parse software version numbers
  */
 process MINIMAP2_INDEX {
-    label 'process_low'
+    label 'process_medium'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir: 'minimap2_index', publish_id:'') }
@@ -35,7 +35,7 @@ process MINIMAP2_INDEX {
     genome_basename = genome_fasta.getName()
 
     """
-    minimap2 $options.args -d ${genome_basename}.mmi $genome_fasta
+    minimap2 -t $task.cpus $options.args -d ${genome_basename}.mmi $genome_fasta
 
     """
 }

@@ -46,7 +46,7 @@ process CELLRANGER_ATAC_COUNT {
     # the fastq file name must not contain special characters other than dash, underscore, digit; dot is not allowed
     # the --id must not contain dot either:
 
-    fastq_folder=\$( echo $fastq_folder | tr '.' '_' )
+    fastq_folder=\$( echo $fastq_folder | tr '.' '_' ) # just in case
 
     cellranger-atac count $options.args \
     --id cellranger_atac_count_\$fastq_folder \

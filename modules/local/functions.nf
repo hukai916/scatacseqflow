@@ -89,6 +89,7 @@ def get_bsgenome(archr_genome, archr_custom_genome, archr_txdb, archr_org, archr
   } else if (archr_custom_genome == "no") {
     if (archr_support_genome.contains(params.archr_genome)) {
       log.info "inside function: contains"
+      println("insdie: contains")
       return [archr_genome, "ready"]
     }
     if (archr_custom_bsgenome.contains(params.archr_genome)) {

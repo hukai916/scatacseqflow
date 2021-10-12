@@ -542,6 +542,9 @@ workflow PREPROCESS {
       // use raw bam file since ArchR may take advantage of the duplication info.
       GET_FRAGMENTS (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
     } else if (params.preprocess == "10xgenomics") {
+      (bsgenome, genome_status) = get_bsgenome(params.archr_genome, params.archr_custom_genome, params.archr_txdb, params.archr_org, params.archr_bsgenome, params.ref_fasta_ucsc, params.ref_fasta_ensembl, params.ref_cellranger_ucsc, params.ref_cellranger_ensembl)
+      log.info "get_bsgenome: " + " bsgenome:" + bsgenome + " genoem_status:" + genome_status + " params.archr_genome: " + params.archr_genome + " params.ref_fasta_ucsc:" + params.ref_fasta_ucsc + " params.ref_cellranger_ucsc:" + params.ref_cellranger_ucsc
+
         if (!params.ref_cellranger) {
           log.info "Parameter --ref_cellranger not supplied, checking --ref_cellranger_ucsc/--ref_cellranger_ensembl!"
           if (params.ref_cellranger_ucsc) {
@@ -678,7 +681,7 @@ workflow DOWNSTREAM {
     log.info "INFO: --downstream: ArchR"
     // Module: check if ArchR genome matches with preprocess genome, and create custome Genome if needed.
     (bsgenome, genome_status) = get_bsgenome(params.archr_genome, params.archr_custom_genome, params.archr_txdb, params.archr_org, params.archr_bsgenome, params.ref_fasta_ucsc, params.ref_fasta_ensembl, params.ref_cellranger_ucsc, params.ref_cellranger_ensembl)
-    log.info "get_bsgenome: " + " bsgenome:" + bsgenome + " genoem_status:" + genome_status + " params.archr_genome: " + params.archr_genome + " params.ref_fasta_ucsc:" + params.ref_fasta_ucsc
+    log.info "get_bsgenome: " + " bsgenome:" + bsgenome + " genoem_status:" + genome_status + " params.archr_genome: " + params.archr_genome + " params.ref_fasta_ucsc:" + params.ref_fasta_ucsc + " params.ref_cellranger_ucsc:" + params.ref_cellranger_ucsc
     // Module: createArrowFile and addDoubletScores
     if (["custom"].contains(genome_status)) {
       log.info "INFO: ArchR will build gene/genomeAnnotation files with custom TxDb, Org, and BSgenome files supplied by user."

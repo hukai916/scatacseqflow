@@ -38,7 +38,7 @@ process CORRECT_BARCODE_PHENIQS {
     path "barcode_corrected*.R1.fastq.gz", emit: read1_fastq
     path "barcode_corrected*.R2.fastq.gz", emit: read2_fastq
     path "barcode_corrected*.R3.fastq.gz", emit: corrected_barcode
-    
+
     script:
 
     """
@@ -46,7 +46,7 @@ process CORRECT_BARCODE_PHENIQS {
     # step1, interleave read and index files
     pheniqs mux -R log_interleave.txt -i $read1_fastq -i $barcode_fastq -i $read2_fastq --output ${sample_name}.cram
 
-    # step2, retrieve valid barcode pool and concentration
+    # step2, retrieve valid barcode pool and concentration in raw counts
     get_barcode_pool.py $barcode_whitelist $barcode_fastq $options.read_count_cutoff valid_barcode_pool.txt
 
     # step3, make a json config file

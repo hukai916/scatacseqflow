@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Given full whitelist and index fastq, determine the valid barcode pool and its frequency.
+Given full whitelist and index fastq, determine the valid barcode pool and its count.
 
 Usage:
 python get_barcode_pool.py whitelist.txt.gz index.fastq.gz read_count_cutoff outfile.txt
@@ -51,7 +51,8 @@ else:
 
 for barcode in whitelist_dict:
     if whitelist_dict[barcode] > read_count_cutoff:
-        out_file.write("\t".join([barcode, str(whitelist_dict[barcode] / total_valid_barcode)]) + "\n")
+        # out_file.write("\t".join([barcode, str(whitelist_dict[barcode] / total_valid_barcode)]) + "\n") # for frequency
+        out_file.write("\t".join([barcode, str(whitelist_dict[barcode])]) + "\n") # for raw counts
 out_file.close()
 
 # output some statistics:

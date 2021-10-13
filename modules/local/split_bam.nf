@@ -38,7 +38,8 @@ process SPLIT_BAM {
     script:
 
     """
-    bam=rm_dup_${sample_name}.*.bam
+    #bam=rm_dup_${sample_name}.*.bam
+    bam=*${sample_name}*.bam
     tsv=(\$(ls *${sample_name}*.tsv))
 
     for (( i=0; i<\${#tsv[@]}; i++ )); do

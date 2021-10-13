@@ -39,14 +39,15 @@ def split_bed(f, cluster_dict, output_cluster_dict):
     for i, line in enumerate(f):
         if i % 1000000 == 0:
             print(str(int(i / 1000000) * 1000000) + " reads processed ...")
-        barcode = line.split()[-2]
-        try: # some barcode are not in teh cluster_dict
-            if cluster_dict[barcode] in output_cluster_dict:
-                output_cluster_dict[cluster_dict[barcode]].append(line)
-            else:
-                output_cluster_dict[cluster_dict[barcode]] = [line]
-        except:
-            continue
+        if not line.startswith("#"): # in case some software generated bed file starts with comment lines
+            try: # some barcode are not in the cluster_dict
+                barcode = line.split()[-2]
+                if cluster_dict[barcode] in output_cluster_dict:
+                    output_cluster_dict[cluster_dict[barcode]].append(line)
+                else:
+                    output_cluster_dict[cluster_dict[barcode]] = [line]
+            except:
+                continue
 
 def save_file(out_dir, output_cluster_dict):
     print("Saving to output ...")

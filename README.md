@@ -1,5 +1,23 @@
 # ![scATACpipe](docs/images/scATACpipe.png)
 
+## Table of Contents
+[Introduction](https://github.com/hukai916/scATACpipe/#introduction)
+
+[Pipeline summary](https://github.com/hukai916/scATACpipe/#pipeline-summary)
+- [PREPROCESS_DEFAULT](https://github.com/hukai916/scATACpipe/#preprocess_default)
+- [PREPROCESS_10XGENOMICS](https://github.com/hukai916/scATACpipe/#preprocess_10xgenomics)
+- [DOWNSTREAM](https://github.com/hukai916/scATACseqflow/#downstream)
+
+[Quick Start](https://github.com/hukai916/scATACpipe/#quick-start)
+
+[Documentation](https://github.com/hukai916/scATACpipe/#documentation)
+
+[Credits](https://github.com/hukai916/scATACpipe/#credits)
+
+[Support](https://github.com/hukai916/scATACpipe/#support)
+
+[Citations](https://github.com/hukai916/scATACpipe/#citations)
+
 ## Introduction
 
 **scATACpipe** is a bioinformatic pipeline for single-cell ATAC-seq (scATAC-seq) data analysis.
@@ -75,10 +93,12 @@ nextflow run main.nf -profile singularity,lsf --outdir res_test_data1 --input_pr
 
 7. Start running your own analysis:
 * for help info:
+
 ```bash
 nextflow run main.nf --help
 ```
 * for a typical command:
+
 ```bash
 nextflow run main.nf -profile <singularity/docker/lsf> --input_preprocess <path_to_samplesheet> --preprocess <default/10xgenomics> --outdir <path_to_result_dir> --ref_fasta_ucsc <UCSC_genome_name> --mapper <bwa/minimap2> --barcode_whitelist <path_to_barcode>
 ```

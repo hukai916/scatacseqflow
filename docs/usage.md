@@ -2,6 +2,10 @@
 ## Table of Contents
 [Introduction](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#introduction)
 
+[Mode 1: PREPROCESS_DEFAULT -> DOWNSTREAM](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#mode-1:-PREPROCESS-DEFAULT-->-DOWNSTREAM)
+
+[Mode 2: PREPROCESS_10XGENOMICS -> DOWNSTREAM](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#mode-2:-PREPROCESS-10XGENOMICS-->-DOWNSTREAM)
+
 ## Introduction
 
 scATACpipe aims to facilitate the analysis of scATAC-seq data by taking minimal input from user. Meanwhile, the Nextflow engine provides numerous config files making it easy to fine tune the performance of the pipeline.
@@ -55,15 +59,15 @@ There are 5 options:
 
 ```bash
 # If BWA index available, use together with "--mapper bwa":
---ref_bwa_index path_to_BWA_index_dir
+--ref_bwa_index <path_to_BWA_index_dir/false>
 # If Minimap2 index available, use together with "--mapper minimap2" (Minimap2 is not recommended here.)
---ref_minimap2_index path_to_Minimap2_index_dir
+--ref_minimap2_index <path_to_Minimap2_index_dir/false>
 # If want to use UCSC genome: hg19, mm10, etc.
---ref_fasta_ucsc UCSC_genome_name
+--ref_fasta_ucsc <UCSC_genome_name/false>
 # If want to use Ensemble genome: homo_sapiens, etc.
---ref_fasta_ensembl Ensemble_genome_name
+--ref_fasta_ensembl <Ensemble_genome_name/false>
 # If want to use custom fasta as genome:
---ref_fasta path_to_custome_fasta
+--ref_fasta <path_to_custome_fasta/false>
 ```
 For a full list of currently supported genome names, click [here]().
 
@@ -73,119 +77,198 @@ Note that, not all of the above genomes are equipped with all of the essential a
 
 These flags come with default values, but it is always good to go through them and make sure they actually make sense in your study.
 
-**barcode_whitelist**: a path to the white list barcode for barcode correction, default to `false`
+**Whitelist Barcode File**:
 ```bash
---barcode_whitelist assets/737K-cratac-v1.txt.gz
+--barcode_whitelist assets/barcode/737K-cratac-v1.txt.gz
+```
+A path to the white list barcode for barcode correction, set to `false` (without quotes) to skip barcode correction (not recommended).
+
+**Barcode Correction Method**:
+```bash
+--barcode_correction pheniqs
+```
+Barcode correction method, choose from `pheniqs` (recommended) or `naive`. The `naive` method uses our in-house R script to correct barcodes that are with 1-mismatch using frequency information only. Must be used together with `--barcode_whitelist` being set.
+
+**Read1 Adapter Sequence**:
+```bash
+--read1_adapter AGATCGGAAGAGC
+```
+For trimming, default to default to the first 13 bp of Illumina standard adapters.
+
+**Read2 Adapter Sequence**:
+```bash
+--read2_adapter AGATCGGAAGAGC
+```
+For trimming, default to default to the first 13 bp of Illumina (`AGATCGGAAGAGC`) standard adapters.
+
+**Mapping Tool**:
+```bash
+--mapper bwa
+```
+Choose from `bwa` (recommended) and `minimap2`.
+
+**BAM Filtering**:
+```bash
+--filter both
+```
+This flag tunes how the BAM files will be filtered before downstream analysis. Choose from `unproper` (where reads with low mapping quality, extreme fragment size(outside of 38 - 2000bp), *etc.* will be filtered out); `both` (default, both 'unproper' and mitochondrial reads will be filtered out); use `false` to skip filtering (not recommended).
+
+## Mode 2: PREPROCESS_10XGENOMICS -> DOWNSTREAM
+
+To enter this mode, need to specify:
+```bash
+--preprocess 10xgenomics
 ```
 
-barcode_whitelist = false // path to whitelist file; if false, skip correction
-barcode_correction = 'pheniqs' // correction method: 'pheniqs' or 'naive'
-barcode_regex     = false // if set, will be used for SPLIT_BAM
-read1_adapter     = 'AGATCGGAAGAGC' // for trimming, default to the first 13 bp of Illumina standard adapters
-read2_adapter     = 'AGATCGGAAGAGC'
-mapper            = 'bwa' // choose from 'bwa' (recommeded) or 'minimap2'
-filter            = 'both' // choose from false (no bam filtering will be performed), 'unproper' (reads with low mapping quality, extreme fragment size(outside ot 38 - 2000bp), etc. will be filtered out), and 'both' ('unproper' + mitochondrial reads will be filtered out.)
+### Samplesheet Input
+Same as Mode 1.
 
+### Reference Genome
+This is also an essential parameter.
 
-### Whitelist barcodes
+The 'Cell Ranger ATAC 2.0 pipelines' can only accept references built with their `cellranger-atac mkref`. Two prebuilt references are provided by 10XGENOMICS, namely, [GRCh38 and mm10](https://support.10xgenomics.com/single-cell-atac/software/downloads/latest). For other genomes, scATACpipe has a module to invoke `cellranger-atac mkref` as long as a genome name is specified.
 
-
-## Samplesheet input
-
-
-
+There are 3 options:
 ```bash
---input '[path to samplesheet file]'
+# If index (built with cellranger-atac mkref) available:
+ref_cellranger <path_to_index_dir/false>
+# If want to use UCSC genome:
+ref_cellranger_ucsc <UCSC_genome_name/false>
+# If want to use Ensemble:
+ref_cellranger_ensembl <Ensemble_genome_name/false>
 ```
 
-### Multiple runs of the same sample
+## Mode 3: DOWNSTREAM
 
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
-
+To enter this mode, need to specify:
 ```bash
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
+--preprocess false
 ```
 
-### Full samplesheet
+### Samplesheet Input
+You also need to supply the location to the sample sheet file:
+```bash
+--input_archr path_to_samplesheet
+```
+The sample sheet file should contain information about the fragment files. It has to be a tab-separated file with 2 columns, and a header row.
 
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 4 columns to match those defined in the table below.
+| Column        | Description |
+| ------------- | ----------- |
+| `sample_name` | Custom sample name. |
+| `file_path`   | Full path to the fragment file. File has to be bgzipped and have the extension ".tsv.gz" |
 
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
+Please note that the fragment file must be **bgzipped** ([how?](http://www.htslib.org/doc/bgzip.html)), "gzipped" files will not work.
 
-
+Below is an example sample sheet:
 
 ```bash
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
-TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
+sample_name,file_path
+scATAC_BMMC,/replace_with_full_path/scATAC_CD34_BMMC_R1.fragments.tsv.gz
+scATAC_PBMC,/replace_with_full_path/scATAC_PBMC_R1.fragments.tsv.gz
 ```
-Please note that all of the parameters can be configed inside the nextflow.config file.
 
+### ArchR Genome
+This is also an essential parameter.
 
-| Column         | Description                                                                                                                 |
-|----------------|-----------------------------------------------------------------------------------------------------------------------------|
-| `sample`       | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample.               |
-| `fastq_1`      | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".  |
-| `fastq_2`      | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".  |
+The DOWNSTREAM leverages ArchR package, which requires a compatible genome file. ArchR naively supports `hg38`, `hg19`, `mm10`, `mm9`.
 
-An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
+For other genomes that are with a BSgenome, TxDb, and Org file from Bioconductor, scATACpipe has a module to download those dependencies and build ArchR genome automatically.
 
-## Running the pipeline
+If the custom genome does not come with any of the 3 annotation files, users must build them and supply to the pipeline via `--archr_bsgenome`, `--archr_txdb`, and `--archr_org`.
 
-The typical command for running the pipeline is as follows:
+There are 2 options:
+```bash
+# If naively supported by ArchR or with BSgenome, TxDb, and Org from Bioconductor:
+--archr_genome <hg38/hg19/mm10/mm9/false>
+# Other custom genomes:
+--archr_custom_genome <'yes'/'no'> # if 'yes', must also supply the 3 annotation files below:
+--archr_bsgenome <path_to_BSgenome_object(.rds)/false>
+--archr_txdb <path_to_TxDb_object(.sqlite)/false>
+--archr_org <path_to_Org_object(.sqlite)/false>
+```
+
+### Other Parameters
+
+These flags come with default values, but it is always good to go through them and make sure they actually make sense in your study.
+
+**Number of Threads to Use**:
+```bash
+--archr_thread 4
+```
+
+**Filtering Doublets**:
+```bash
+--archr_filter_doublets_ratio 1.5
+```
+If set to `false`, skip filtering.
+
+**Integrating scRNA-seq data**:
+```bash
+--archr_scrnaseq false # path to RNAseq Seurat object
+--archr_scrnaseq_grouplist '' # used for constrained clustering, example: 'cTNK = c("19", "20", "21", "22", "23", "24", "25"), cNonTNK = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "15", "16", "17", "18")'
+```
+
+**Plotting Peaks in Browser**:
+```bash
+--marker_peak_geneSymbol '' # Example: 'GATA1'
+--marker_peak_clusters '' # Clustering by scATAC-seq data only, example: 'C1'
+--marker_peak_clusters2 '' # Clustering by integrated scRNA-seq data, example: '03_Late.Eryth'
+```
+
+**Pairwise Testing**:
+```bash
+--pairwise_test_clusters_1 '' # Clustering by scATAC-seq data only, example: 'C1'
+--pairwise_test_clusters_2 '' # Clustering by scATAC-seq data only, example: 'C2'
+--pairwise_test_clusters2_1 '' # Clustering by integrated scRNA-seq data, example: '03_Late.Eryth'
+--pairwise_test_clusters2_2 '' # Clustering by integrated scRNA-seq data, example: '16_Pre.B'
+```
+For pairwise clustering testing.
+
+**Motif Enrichment**:
+```bash
+--custom_peaks '' # Example: 'Encode_K562_GATA1 = "https://www.encodeproject.org/files/ENCFF632NQI/@@download/ENCFF632NQI.bed.gz", Encode_GM12878_CEBPB = "https://www.encodeproject.org/files/ENCFF761MGJ/@@download/ENCFF761MGJ.bed.gz", Encode_K562_Ebf1 = "https://www.encodeproject.org/files/ENCFF868VSY/@@download/ENCFF868VSY.bed.gz", Encode_K562_Pax5 = "https://www.encodeproject.org/files/ENCFF339KUO/@@download/ENCFF339KUO.bed.gz"'
+```
+Custom peaks used for motif enrichment. Example:
+
+**Trajectory Prediction**:
+```bash
+--trajectory_groups false # Example: '"01_HSC", "08_GMP.Neut", "11_CD14.Mono.1"'
+```
+Used for predicting cell trajectory.
+
+<!-- TODO: For a full list of genomes that are with all 3 annotation files, check here>-->
+
+<!-- TODO: Please note that all of the parameters can be configed inside the nextflow.config file.
+-->
+
+## Running scATACpipe
+
+To run the pipeline, choose from one of the three entry modes above and a typical command is as follows:
 
 ```bash
-nextflow run nf-core/scatacseqflow --input samplesheet.csv --genome GRCh37 -profile docker
+nextflow run main.nf -profile singularity,lsf --outdir res_test_data1 --input_preprocess assets/sample_sheet_test_data1.csv --preprocess default --ref_fasta_ucsc hg19 --mapper bwa --barcode_whitelist assets/barcode/737K-cratac-v1.txt.gz
 ```
 
-This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
+This will launch the pipeline with the `singularity` and `lsf` configuration profile. See below for more information about profiles.
 
 Note that the pipeline will create the following files in your working directory:
 
 ```bash
 work            # Directory containing the nextflow working files
-results         # Finished results (configurable, see below)
+res_test_data1  # Finished results
 .nextflow_log   # Log file from Nextflow
 # Other nextflow hidden files, eg. history of pipeline runs and old logs.
 ```
 
-## Updating the pipeline
+## Core Nextflow Arguments
 
-When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
+> These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
 
-```bash
-nextflow pull nf-core/scatacseqflow
-```
-
-## Reproducibility
-
-It's a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
-
-First, go to the [nf-core/scatacseqflow releases page](https://github.com/nf-core/scatacseqflow/releases) and find the latest version number - numeric only (eg. `1.3.1`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.3.1`.
-
-This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future.
-
-## Core Nextflow arguments
-
-> **NB:** These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
-
-### `-profile`
+#### `-profile`
 
 Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments.
 
-Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity, Podman, Shifter, Charliecloud, Conda) - see below.
-
-> We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility, however when this is not possible, Conda is also supported.
-
-The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to see if your system is available in these configs please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
+Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity, Podman, Shifter, Charliecloud, Conda). For scATACpipe, only Docker and Singularity are tested.
 
 Note that multiple profiles can be loaded, for example: `-profile test,docker` - the order of arguments is important!
 They are loaded in sequence, so later profiles can overwrite earlier profiles.
@@ -193,43 +276,27 @@ They are loaded in sequence, so later profiles can overwrite earlier profiles.
 If `-profile` is not specified, the pipeline will run locally and expect all software to be installed and available on the `PATH`. This is _not_ recommended.
 
 * `docker`
-  * A generic configuration profile to be used with [Docker](https://docker.com/)
-  * Pulls software from Docker Hub: [`nfcore/scatacseqflow`](https://hub.docker.com/r/nfcore/scatacseqflow/)
+  * A generic configuration profile to be used with [Docker](https://docker.com/).
+  * Pulls software from Docker Hub.
 * `singularity`
-  * A generic configuration profile to be used with [Singularity](https://sylabs.io/docs/)
-  * Pulls software from Docker Hub: [`nfcore/scatacseqflow`](https://hub.docker.com/r/nfcore/scatacseqflow/)
-* `podman`
-  * A generic configuration profile to be used with [Podman](https://podman.io/)
-  * Pulls software from Docker Hub: [`nfcore/scatacseqflow`](https://hub.docker.com/r/nfcore/scatacseqflow/)
-* `shifter`
-  * A generic configuration profile to be used with [Shifter](https://nersc.gitlab.io/development/shifter/how-to-use/)
-  * Pulls software from Docker Hub: [`nfcore/scatacseqflow`](https://hub.docker.com/r/nfcore/scatacseqflow/)
-* `charliecloud`
-  * A generic configuration profile to be used with [Charliecloud](https://hpc.github.io/charliecloud/)
-  * Pulls software from Docker Hub: [`nfcore/scatacseqflow`](https://hub.docker.com/r/nfcore/scatacseqflow/)
-* `conda`
-  * Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker, Singularity, Podman, Shifter or Charliecloud.
-  * A generic configuration profile to be used with [Conda](https://conda.io/docs/)
-  * Pulls most software from [Bioconda](https://bioconda.github.io/)
-* `test`
-  * A profile with a complete configuration for automated testing
-  * Includes links to test data so needs no other parameters
+  * A generic configuration profile to be used with [Singularity](https://sylabs.io/docs/).
+  * Pulls software from Docker Hub.
 
-### `-resume`
+#### `-resume`
 
 Specify this when restarting a pipeline. Nextflow will used cached results from any pipeline steps where the inputs are the same, continuing from where it got to previously.
 
 You can also supply a run name to resume a specific run: `-resume [run-name]`. Use the `nextflow log` command to show previous run names.
 
-### `-c`
+#### `-c`
 
-Specify the path to a specific config file (this is a core Nextflow command). See the [nf-core website documentation](https://nf-co.re/usage/configuration) for more information.
+Specify the path to a specific config file. See the [nf-core website documentation](https://nf-co.re/usage/configuration) for more information.
 
-## Custom resource requests
+## Custom Resource Requests
 
 Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the steps in the pipeline, if the job exits with an error code of `143` (exceeded requested resources) it will automatically resubmit with higher requests (2 x original, then 3 x original). If it still fails after three times then the pipeline is stopped.
 
-Whilst these default requirements will hopefully work for most people with most data, you may find that you want to customise the compute resources that the pipeline requests. You can do this by creating a custom config file. For example, to give the workflow process `star` 32GB of memory, you could use the following config:
+Whilst these default requirements will hopefully work for most people with most data, you may find that you want to customize the compute resources that the pipeline requests. You can do this by creating a custom config file. For example, to give the workflow process `star` 32GB of memory, you could use the following config:
 
 ```nextflow
 process {
@@ -243,11 +310,7 @@ To find the exact name of a process you wish to modify the compute resources, ch
 
 See the main [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more information.
 
-If you are likely to be running `nf-core` pipelines regularly it may be a good idea to request that your custom config file is uploaded to the `nf-core/configs` git repository. Before you do this please can you test that the config file works with your pipeline of choice using the `-c` parameter (see definition above). You can then create a pull request to the `nf-core/configs` repository with the addition of your config file, associated documentation file (see examples in [`nf-core/configs/docs`](https://github.com/nf-core/configs/tree/master/docs)), and amending [`nfcore_custom.config`](https://github.com/nf-core/configs/blob/master/nfcore_custom.config) to include your custom profile.
-
-If you have any questions or issues please send us a message on [Slack](https://nf-co.re/join/slack) on the [`#configs` channel](https://nfcore.slack.com/channels/configs).
-
-## Running in the background
+## Running in the Background
 
 Nextflow handles job submissions and supervises the running jobs. The Nextflow process must run until the pipeline is finished.
 
@@ -256,7 +319,7 @@ The Nextflow `-bg` flag launches Nextflow in the background, detached from your 
 Alternatively, you can use `screen` / `tmux` or similar tool to create a detached session which you can log back into at a later time.
 Some HPC setups also allow you to run nextflow within a cluster job submitted your job scheduler (from where it submits more jobs).
 
-## Nextflow memory requirements
+## Nextflow Memory Requirements
 
 In some cases, the Nextflow Java virtual machines can start to request a large amount of memory.
 We recommend adding the following line to your environment to limit this (typically in `~/.bashrc` or `~./bash_profile`):

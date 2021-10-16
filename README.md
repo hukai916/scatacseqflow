@@ -103,11 +103,11 @@ nextflow run main.nf --help
 nextflow run main.nf -profile <singularity/docker/lsf> --input_preprocess <path_to_samplesheet> --preprocess <default/10xgenomics> --outdir <path_to_result_dir> --ref_fasta_ucsc <UCSC_genome_name> --mapper <bwa/minimap2> --barcode_whitelist <path_to_barcode>
 ```
 
-See documentation [usage](https://github.com/hukai916/scATACpipe/docs/usage.md) for all of the available options when running the pipeline.
+See documentation [usage](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md) for all of the available options when running the pipeline.
 
 ## Documentation
 
-The scATACpipe workflow comes with documentation about the pipeline: [usage](https://github.com/hukai916/scATACpipe/docs/usage.md) and [output](https://github.com/hukai916/scATACpipe/docs/output.md).
+The scATACpipe workflow comes with documentation about the pipeline: [usage](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md) and [output](https://github.com/hukai916/scATACpipe/blob/main/docs/output.md).
 
 ## Credits
 

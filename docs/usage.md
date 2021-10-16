@@ -1,12 +1,98 @@
-# scATACpipe
+# scATACpipe: Usage
+## Table of Contents
+[Introduction](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#introduction)
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
+scATACpipe aims to facilitate the analysis of scATAC-seq data by taking minimal input from user. Meanwhile, the Nextflow engine provides numerous config files making it easy to fine tune the performance of the pipeline.
+
+The pipeline comes with 3 entry modes. If input raw fastq files:
+1.  PREPROCESS_DEFAULT -> DOWNSTREAM
+2.  PREPROCESS_10XGENOMICS -> DOWNSTREAM
+
+Alternatively, if fragment file is available:
+3.  DOWNSTREAM
+
+## Mode 1: PREPROCESS_DEFAULT -> DOWNSTREAM
+
+To enter this mode, need to specify:
+```bash
+--preprocess default
+```
+
+### Samplesheet Input
+You also need to supply the location to the sample sheet file:
+```bash
+--input_preprocess path_to_samplesheet
+```
+The sample sheet file should contain information about the raw fastq files. It has to be a comma-separated file with 4 columns, and a header row.
+
+| Column        | Description |
+| ------------- | ----------- |
+| `sample_name` | Custom sample name. |
+| `path_fastq_1`| Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". |
+| `path_fastq_2`| Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". |
+| `path_barcode`| Full path to FastQ file for Illumina cell barcode reads. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz". |
+
+An [example samplesheet](https://github.com/hukai916/scATACpipe/blob/main/assets/sample_sheet_test_data1.csv) has been provided with the pipeline.
+
+Please do not include dot (.) into the sample_name or the fastq file names, otherwise, the `--preprocess default` option may not work.
+
+If sample consists of multiple fastq files coming from different sequencing lanes, separate them by semi-colons (;) as in the example below. They will be concatenated into a single fastq file automatically.
+
+```bash
+sample_name,path_fastq_1,path_fastq_2,path_barcode
+pbmc_500_5p,/replace_with_full_path/test_data1/downsample_5p_atac_pbmc_500_nextgem_S1_L001_R1_001.fastq.gz;/replace_with_full_path/test_data1/downsample_5p_atac_pbmc_500_nextgem_S1_L002_R1_001.fastq.gz,/replace_with_full_path/test_data1/downsample_5p_atac_pbmc_500_nextgem_S1_L001_R3_001.fastq.gz;/replace_with_full_path/test_data1/downsample_5p_atac_pbmc_500_nextgem_S1_L002_R3_001.fastq.gz,/replace_with_full_path/test_data1/downsample_5p_atac_pbmc_500_nextgem_S1_L001_R2_001.fastq.gz;/replace_with_full_path/test_data1/downsample_5p_atac_pbmc_500_nextgem_S1_L002_R2_001.fastq.gz
+pbmc_500_10p,/replace_with_full_path/test_data1/downsample_10p_atac_pbmc_500_nextgem_S1_L001_R1_001.fastq.gz;/replace_with_full_path/test_data1/downsample_10p_atac_pbmc_500_nextgem_S1_L002_R1_001.fastq.gz,/replace_with_full_path/test_data1/downsample_10p_atac_pbmc_500_nextgem_S1_L001_R3_001.fastq.gz;/replace_with_full_path/test_data1/downsample_10p_atac_pbmc_500_nextgem_S1_L002_R3_001.fastq.gz,/replace_with_full_path/test_data1/downsample_10p_atac_pbmc_500_nextgem_S1_L001_R2_001.fastq.gz;/replace_with_full_path/test_data1/downsample_10p_atac_pbmc_500_nextgem_S1_L002_R2_001.fastq.gz
+```
+
+### Reference Genome
+This is also an essential parameter.
+
+You can supply the genome index files if they are available to save some execution time. Alternatively, you can simply input the genome names, the pipeline will download required files and build the index file automatically.
+
+There are 5 options:
+
+```bash
+# If BWA index available, use together with "--mapper bwa":
+--ref_bwa_index path_to_BWA_index_dir
+# If Minimap2 index available, use together with "--mapper minimap2" (Minimap2 is not recommended here.)
+--ref_minimap2_index path_to_Minimap2_index_dir
+# If want to use UCSC genome: hg19, mm10, etc.
+--ref_fasta_ucsc UCSC_genome_name
+# If want to use Ensemble genome: homo_sapiens, etc.
+--ref_fasta_ensembl Ensemble_genome_name
+# If want to use custom fasta as genome:
+--ref_fasta path_to_custome_fasta
+```
+For a full list of currently supported genome names, click [here]().
+
+Note that, not all of the above genomes are equipped with all of the essential annotation files needed to build a ArchR genome for DOWNSTREAM analysis; in that case, you will need to manually supply with your custom BSgenome (`--bsgenome`), TxDb (`--txdb`), and Org (`--org`) objects so that ArchR genome can be built.
+
+## Other Parameters
+
+These flags come with default values, but it is always good to go through them and make sure they actually make sense in your study.
+
+**barcode_whitelist**: a path to the white list barcode for barcode correction, default to `false`
+```bash
+--barcode_whitelist assets/737K-cratac-v1.txt.gz
+```
+
+barcode_whitelist = false // path to whitelist file; if false, skip correction
+barcode_correction = 'pheniqs' // correction method: 'pheniqs' or 'naive'
+barcode_regex     = false // if set, will be used for SPLIT_BAM
+read1_adapter     = 'AGATCGGAAGAGC' // for trimming, default to the first 13 bp of Illumina standard adapters
+read2_adapter     = 'AGATCGGAAGAGC'
+mapper            = 'bwa' // choose from 'bwa' (recommeded) or 'minimap2'
+filter            = 'both' // choose from false (no bam filtering will be performed), 'unproper' (reads with low mapping quality, extreme fragment size(outside ot 38 - 2000bp), etc. will be filtered out), and 'both' ('unproper' + mitochondrial reads will be filtered out.)
+
+
+### Whitelist barcodes
+
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+
 
 ```bash
 --input '[path to samplesheet file]'
@@ -29,6 +115,8 @@ The pipeline will auto-detect whether a sample is single- or paired-end using th
 
 A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
 
+
+
 ```bash
 sample,fastq_1,fastq_2
 CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
@@ -39,6 +127,8 @@ TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
 TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
 TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
 ```
+Please note that all of the parameters can be configed inside the nextflow.config file.
+
 
 | Column         | Description                                                                                                                 |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------|

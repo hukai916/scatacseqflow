@@ -26,7 +26,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 The development of the pipeline is guided by  [nf-core TEMPLATE](https://github.com/nf-core/tools/tree/master/nf_core/pipeline-template).
 
-## Pipeline summary
+## Pipeline Summary
 
 The pipeline consists of 3 sub-workflows: PREPROCESS_DEFAULT, PREPROCESS_10XGENOMICS, and DOWNSTREAM, which is illustrated below:
 ![scATACpipe](docs/images/workflow.png)

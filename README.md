@@ -58,12 +58,14 @@ The **test_data1** is prepared by downsampling (5% and 10%) a dataset named "*50
 5. Edit the `replace_with_full_path` in the assets/sample_sheet_test_data1.csv to use **full path**.
 
 6. Test the pipeline on this minimal test_data1:
+
 **with Docker:**
 ```bash
 nextflow run main.nf -profile docker --outdir res_test_data1 --input_preprocess assets/sample_sheet_test_data1.csv --preprocess default --ref_fasta_ucsc hg19 --mapper bwa --barcode_whitelist assets/barcode/737K-cratac-v1.txt.gz
 ```
 * By default, the `local` [executor](https://www.nextflow.io/docs/latest/executor.html) will be used. This can be configured with `-profile` flag.
 * Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see what other custom config files can be supplied.
+
 **with Singularity:**
 ```bash
 nextflow run main.nf -profile singularity,lsf --outdir res_test_data1 --input_preprocess assets/sample_sheet_test_data1.csv --preprocess default --ref_fasta_ucsc hg19 --mapper bwa --barcode_whitelist assets/barcode/737K-cratac-v1.txt.gz

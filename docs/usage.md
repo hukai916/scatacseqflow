@@ -2,9 +2,31 @@
 ## Table of Contents
 [Introduction](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#introduction)
 
-[Mode 1: PREPROCESS_DEFAULT -> DOWNSTREAM](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#mode-1:-PREPROCESS-DEFAULT-->-DOWNSTREAM)
+[Mode 1: PREPROCESS_DEFAULT -> DOWNSTREAM](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#mode-1-preprocess_default---downstream)
+- [Samplesheet Input](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#samplesheet-input)
+- [Reference Genome](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#reference-genome)
+- [Other Parameters](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#other-parameters)
 
-[Mode 2: PREPROCESS_10XGENOMICS -> DOWNSTREAM](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#mode-2:-PREPROCESS-10XGENOMICS-->-DOWNSTREAM)
+[Mode 2: PREPROCESS_10XGENOMICS -> DOWNSTREAM](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#mode-2-preprocess_10xgenomics---downstream)
+- [Samplesheet Input](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#samplesheet-input-1)
+- [Reference Genome](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#reference-genome-1)
+
+[Mode 3: DOWNSTREAM](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#mode-3-downstream)
+- [Samplesheet Input](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#samplesheet-input-2)
+- [ArchR Genome](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#archr-genome)
+- [Other Parameters](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#other-parameters-1)
+
+[Running scATACpipe](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#running-scatacpipe)
+
+[Core Nextflow Arguments](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#core-nextflow-arguments)
+
+[Custom Resource Requests](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#custom-resource-requests)
+
+[Running in the Background](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#running-in-the-background)
+
+[Nextflow Memory Requirements](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#nextflow-memory-requirements)
+
+[Nextflow edge releases](https://github.com/hukai916/scATACpipe/blob/main/docs/usage.md#nextflow-edge-releases)
 
 ## Introduction
 

@@ -40,15 +40,15 @@ The pipeline also splits BED and/or BAM files according to ArchR clusterings and
 1. Install [`nextflow`](https://nf-co.re/usage/installation)(>=21.06.0).
 2. Install either [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) for full pipeline reproducibility. Please specify `-profile singularity` or `-profile docker` when running the pipeline, otherwise, the default `local` will be used that instructs the pipeline to be executed locally expecting all software dependencies to be installed and are on the PATH. **This is not recommended!**
 3. Download the pipeline:
-```bash
-git clone https://github.com/hukai916/scATACpipe.git
-```
+  ```bash
+  git clone https://github.com/hukai916/scATACpipe.git
+  ```
 4. Download a minimal test dataset:
-```bash
-cd scATACpipe
-wget https://www.dropbox.com/s/melktgtd2lb1yrt/test_data1.zip
-unzip test_data1.zip
-```
+  ```bash
+  cd scATACpipe
+  wget https://www.dropbox.com/s/melktgtd2lb1yrt/test_data1.zip
+  unzip test_data1.zip
+  ```
   The **test_data1** is prepared by downsampling (5% and 10%) a dataset named "*500 Peripheral blood mononuclear cells (PBMCs) from a healthy donor (Next GEM v1.1)*" provided by [10xgenomics](https://www.10xgenomics.com/resources/datasets?query=&page=1&configure%5Bfacets%5D%5B0%5D=chemistryVersionAndThroughput&configure%5Bfacets%5D%5B1%5D=pipeline.version&configure%5BhitsPerPage%5D=500&menu%5Bproducts.name%5D=Single%20Cell%20ATAC). Note that, in test_data1, I1 refers to index1, which is for sample demultiplexing and not relevant to our case; R1 refers to Read1; **R2 refers to index2**, which represents the cell barcode fastq; R3 refers to Read2.
 5. Edit the `replace_with_full_path` in the assets/sample_sheet_test_data1.csv to use **full path**.
 6. Test the pipeline on this minimal test_data1:

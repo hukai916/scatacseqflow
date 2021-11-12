@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles; getSoftwareName; get_ensembl_filename } from './functions'
+include { initOptions; saveFiles; getSoftwareName } from './functions'
 
 params.options = [:]
 options        = initOptions(params.options)
@@ -27,7 +27,7 @@ process DOWNLOAD_FROM_ENSEMBL {
 
     input:
     val genome_name
-    val ensembl_release
+    path dict_json
 
     output:
     path "*.fa.gz", emit: genome_fasta
@@ -35,28 +35,31 @@ process DOWNLOAD_FROM_ENSEMBL {
     val genome_name, emit: genome_name
 
     script:
-    dict_name_name = get_ensembl_filename()
-    download_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/fasta/" + genome_name + "/dna/" + dict_genome_name[genome_name] + ".fa.gz"
-
-    md5_link = "http://ftp.ensembl.org/pub/release-" + ensembl_release + "/fasta/" + genome_name + "/dna/CHECKSUMS"
-
     """
-    wget $md5_link -o logfile.md5.txt
-    wget $download_link -o logfile.genome.txt
+    md5_link=\$(get_download_url.py $dict_json $genome_name genome_md5sum)
+    genome_link=\$(get_download_url.py $dict_json $genome_name genome)
 
-    (cat \$(basename $md5_link) | grep \$( basename $download_link) || true) > md5_to_check.txt
+    wget \$md5_link -o logfile.md5.txt
+    wget \$genome_link -o logfile.genome.txt
+
+    (cat \$(basename \$md5_link) | grep \$( basename \$genome_link) || true) > md5_to_check.txt
 
     if [ -s md5_to_check.txt ]
     then
       real=\$(cat md5_to_check.txt | cut -f 1,2 -d " ")
-      measure=\$(sum \$( basename $download_link))
+      measure=\$(sum \$( basename \$genome_link) | cut -f 1,2 -d " ")
 
-      if [ "\$real" == "\$measure" ]
+      real1=\$(cat md5_to_check.txt | cut -f 1 -d " " | sed 's/^0*//')
+      real2=\$(cat md5_to_check.txt | cut -f 2 -d " " | sed 's/^0*//')
+      measure1=\$(sum \$( basename \$genome_link) | cut -f 1 -d " " | sed 's/^0*//')
+      measure2=\$(sum \$( basename \$genome_link) | cut -f 2 -d " " | sed 's/^0*//')
+
+      #if [ "\$real" == "\$measure" ]
+      if [ "\$real1" == "\$measure1" ] && [ "\$real2" == "\$measure2" ]
       then
-        echo "\$real,\$measure"
         exit 0
       else
-        echo "\$real,\$measure"
+        echo "\$real1,\$measure1,\$real2,\$measure2, md5check not pass"
         exit 1
       fi
     fi

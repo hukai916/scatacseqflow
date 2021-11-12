@@ -8,12 +8,21 @@ filename = sys.argv[1]
 dict = OrderedDict()
 
 for line in open(filename):
-    gene_id = line.split("\t")[8].split(";")[0]
-    if not gene_id in dict:
-        dict[gene_id] = [line]
+    if line.startswith("#"):
+        print(line, end = "")
     else:
-        dict[gene_id].append(line)
+        for x in line.split("\t")[8].split(";"):
+            if "gene_id" in x.lower():
+                if not x in dict:
+                    dict[x] = [line]
+                else:
+                    dict[x].append(line)
+                break
 
-for key in dict:
-    for x in dict[key]:
-        print(x, end="")
+if len(dict) == 0:
+    for line in open(filename):
+        print(line, end = "")
+else:
+    for key in dict:
+        for x in dict[key]:
+            print(x, end = "")

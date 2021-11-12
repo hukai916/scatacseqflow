@@ -27,6 +27,7 @@ process DOWNLOAD_FROM_UCSC {
 
     input:
     val genome_name
+    path dict_json
 
     output:
     path "*.fa.gz", emit: genome_fasta
@@ -34,14 +35,16 @@ process DOWNLOAD_FROM_UCSC {
     val genome_name, emit: genome_name
 
     script:
-    download_link = "https://hgdownload.soe.ucsc.edu/goldenPath/" + genome_name + "/bigZips/" + genome_name + ".fa.gz"
-    md5_link = "https://hgdownload.soe.ucsc.edu/goldenPath/" + genome_name + "/bigZips/md5sum.txt"
-
     """
-    wget $md5_link -o logfile.md5.txt
-    wget $download_link -o logfile.genome.txt
+    md5_link=\$(get_download_url.py $dict_json $genome_name md5sum)
+    genome_link=\$(get_download_url.py $dict_json $genome_name genome)
 
-    (cat \$(basename $md5_link) | grep \$( basename $download_link) || true) > md5_to_check.txt
+    # if [[ md5_link -eq 0 ]]; then { echo "Genome not supported!"; exit; } fi
+
+    wget \$md5_link -o logfile.md5.txt
+    wget \$genome_link -o logfile.genome.txt
+
+    (cat \$(basename \$md5_link) | grep \$( basename \$genome_link) || true) > md5_to_check.txt
 
     if [ -s md5_to_check.txt ]
     then

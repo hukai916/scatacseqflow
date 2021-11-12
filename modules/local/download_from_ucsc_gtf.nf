@@ -27,15 +27,15 @@ process DOWNLOAD_FROM_UCSC_GTF {
 
     input:
     val genome_name
+    path dict_json
 
     output:
     path "*.gtf.gz", emit: gtf
 
     script:
-    download_link = "https://hgdownload.soe.ucsc.edu/goldenPath/" + genome_name + "/bigZips/genes/" + genome_name + ".ncbiRefSeq.gtf.gz"
-
     """
-    wget $download_link -o logfile.gtf.txt
+    gtf_link=\$(get_download_url.py $dict_json $genome_name gtf)
+    wget \$gtf_link -o logfile.gtf.txt
 
     """
 }

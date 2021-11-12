@@ -19,19 +19,6 @@ params.summary_params = [:]
 // Check mandatory parameters
 log.info "TEST: " + params.preprocess + params.input_preprocess
 
-if (params.preprocess) {
-  if (params.input_preprocess) {
-    ch_input = file(params.input_preprocess)
-  } else {
-      exit 1, 'Input samplesheet not specified!'
-  }
-} else {
-    if (params.input_archr) {
-    } else {
-        exit 1, "--input_archr samplesheet must be specified!"
-    }
-}
-
 ////////////////////////////////////////////////////
 /* --          CONFIG FILES                    -- */
 ////////////////////////////////////////////////////
@@ -49,7 +36,28 @@ def modules = params.modules.clone()
 // def multiqc_options   = modules['multiqc']
 // multiqc_options.args += params.multiqc_title ? " --title \"$params.multiqc_title\"" : ''
 //
-include { get_bsgenome } from '../modules/local/functions'
+// include { get_bsgenome } from '../modules/local/functions'
+
+// include the supported genomes
+include { get_genome_ucsc } from '../modules/local/genome_ucsc'
+include { get_genome_ensembl } from '../modules/local/genome_ensembl'
+genome_ensembl_list = get_genome_ensembl()
+genome_ucsc_list = get_genome_ucsc()
+if (params.ref_fasta_ensembl) {
+  if (!genome_ensembl_list.contains(params.ref_fasta_ensembl)) {
+    exit 1, "Pls use --support_genome to show a list of supported genomes!"
+  }
+}
+if (params.ref_fasta_ucsc) {
+  if (!genome_ucsc_list.contains(params.ref_fasta_ucsc)) {
+    exit 1, "Pls use --support_genome to show a list of supported genomes!"
+  }
+}
+if (params.archr_genome) {
+  if (!genome_ensembl_list.contains(params.archr_genome) && !genome_ucsc_list.contains(params.archr_genome)) {
+    exit 1, "Pls use --support_genome to show a list of supported genomes!"
+  }
+}
 
 // Modules: local
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'   addParams( options: [publish_files : ['csv':'']] )
@@ -72,11 +80,20 @@ include { BIORAD_ATAC_SEQ_FILTER_BEADS   } from '../modules/local/biorad_atac_se
 include { ADD_BARCODE_TO_READS       } from '../modules/local/add_barcode_to_reads'    addParams( options: modules['add_barcode_to_reads'] )
 include { CUTADAPT         } from '../modules/local/cutadapt'    addParams( options: modules['cutadapt'] )
 
-include { DOWNLOAD_FROM_UCSC        } from '../modules/local/download_from_ucsc'    addParams( options: modules['download_from_ucsc'] )
-include { DOWNLOAD_FROM_ENSEMBL     } from '../modules/local/download_from_ensembl'    addParams( options: modules['download_from_ensembl'] )
+include { DOWNLOAD_FROM_UCSC; DOWNLOAD_FROM_UCSC as DOWNLOAD_FROM_UCSC2 } from '../modules/local/download_from_ucsc'    addParams( options: modules['download_from_ucsc'] )
+include { DOWNLOAD_FROM_ENSEMBL } from '../modules/local/download_from_ensembl'    addParams( options: modules['download_from_ensembl'] )
+// can be removed
 include { GET_PRIMARY_GENOME        } from '../modules/local/get_primary_genome'    addParams( options: modules['get_primary_genome'] )
 include { BWA_INDEX        } from '../modules/local/bwa_index'    addParams( options: modules['bwa_index'] )
 include { BWA_MAP          } from '../modules/local/bwa_map'    addParams( options: modules['bwa_map'] )
+
+include { BUILD_BSGENOME } from '../modules/local/build_bsgenome'
+include { BUILD_TXDB } from '../modules/local/build_txdb'
+include { PREP_GENOME } from '../modules/local/prep_genome'
+include { PREP_GTF; PREP_GTF as PREP_GTF_ARCHR } from '../modules/local/prep_gtf'
+include { BUILD_GENE_ANNOTATION } from '../modules/local/build_gene_annotation' addParams( options: modules['build_gene_annotation'] )
+include { BUILD_GENOME_ANNOTATION } from '../modules/local/build_genome_annotation' addParams( options: modules['build_genome_annotation'] )
+include { PREP_FRAGMENT } from '../modules/local/prep_fragment'
 
 include { MINIMAP2_INDEX   } from '../modules/local/minimap2_index'    addParams( options: modules['minimap2_index'] )
 include { MINIMAP2_MAP     } from '../modules/local/minimap2_map'    addParams( options: modules['minimap2_map'] )
@@ -86,14 +103,14 @@ include { REMOVE_DUPLICATE } from '../modules/local/remove_duplicate'    addPara
 include { QUALIMAP         } from '../modules/local/qualimap'    addParams( options: modules['qualimap'] )
 include { GET_FRAGMENTS    } from '../modules/local/get_fragments'    addParams( options: modules['get_fragments'] )
 
-include { DOWNLOAD_FROM_UCSC_GTF } from '../modules/local/download_from_ucsc_gtf'    addParams( options: modules['download_from_ucsc_gtf'] )
+include { DOWNLOAD_FROM_UCSC_GTF; DOWNLOAD_FROM_UCSC_GTF as DOWNLOAD_FROM_UCSC_GTF2 } from '../modules/local/download_from_ucsc_gtf'    addParams( options: modules['download_from_ucsc_gtf'] )
 include { FIX_UCSC_GTF } from '../modules/local/fix_ucsc_gtf'    addParams( options: modules['fix_ucsc_gtf'] )
-include { DOWNLOAD_FROM_ENSEMBL_GTF } from '../modules/local/download_from_ensembl_gtf'    addParams( options: modules['download_from_ensembl_gtf'] )
+include { DOWNLOAD_FROM_ENSEMBL_GTF; DOWNLOAD_FROM_ENSEMBL_GTF as DOWNLOAD_FROM_ENSEMBL_GTF2 } from '../modules/local/download_from_ensembl_gtf'    addParams( options: modules['download_from_ensembl_gtf'] )
 include { CELLRANGER_INDEX } from '../modules/local/cellranger_index'             addParams( options: modules['cellranger_index'] )
 
 // For ArchR functions:
-include { ARCHR_GET_ANNOTATION } from '../modules/local/archr_get_annotation' addParams( options: modules['archr_get_annotation'] )
-include { ARCHR_GET_ANNOTATION_CUSTOM } from '../modules/local/archr_get_annotation_custom' addParams( options: modules['archr_get_annotation_custom'] )
+// include { ARCHR_GET_ANNOTATION } from '../modules/local/archr_get_annotation' addParams( options: modules['archr_get_annotation'] )
+include { ARCHR_GET_ANNOTATION_BIOC } from '../modules/local/archr_get_annotation_bioc' addParams( options: modules['archr_get_annotation_bioc'] )
 include { ARCHR_CREATE_ARROWFILES } from '../modules/local/archr_create_arrowfiles' addParams( options: modules['archr_create_arrowfiles'] )
 include { ARCHR_CREATE_ARROWFILES_ANNOTATION } from '../modules/local/archr_create_arrowfiles_annotation' addParams( options: modules['archr_create_arrowfiles_annotation'] )
 include { ARCHR_ADD_DOUBLETSCORES } from '../modules/local/archr_add_doubletscores' addParams( options: modules['archr_add_doubletscores'] )
@@ -132,12 +149,61 @@ include { ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2 } from '../modules/local/arc
 include { ARCHR_TRAJECTORY_CLUSTERS2 } from '../modules/local/archr_trajectory_clusters2' addParams( options: modules['archr_trajectory_clusters2'] )
 include { ARCHR_GET_CLUSTERING_TSV } from '../modules/local/archr_get_clustering_tsv' addParams( options: modules['archr_get_clustering_tsv'] )
 
+// functions must be defined outside of workflow definiation
+
+// prepare for archr_input_type and archr_input_list WO preprocess:
+// potential bug: process in NF function can't be properly handled.
+def parse_archr_genome_null() {
+  // println "TEST start:"
+  // DOWNLOAD_FROM_ENSEMBL (params.archr_genome, Channel.fromPath('assets/genome_ensembl.json'))
+  // exit 1, "heloo"
+  // println "TEST end!"
+
+  if (["hg38", "hg19", "mm10", "mm9"].contains(params.archr_genome)) {
+    log.info "INFO: natively supported ArchR genome supplied."
+    return ["naive", []]
+  } else {
+    // genome_ensembl_list = get_genome_ensembl()
+    // genome_ucsc_list = get_genome_ucsc()
+
+    if (genome_ensembl_list.contains(params.archr_genome)) {
+      println "here"
+      DOWNLOAD_FROM_ENSEMBL (params.archr_genome, Channel.fromPath('assets/genome_ensembl.json'))
+      DOWNLOAD_FROM_ENSEMBL_GTF2 (params.archr_genome, Channel.fromPath('assets/genome_ensembl.json'))
+      DOWNLOAD_FROM_ENSEMBL.out.genome_name.view()
+      // return ["genome_gtf", [DOWNLOAD_FROM_ENSEMBL.out.genome_name, DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL_GTF2.out.gtf]]
+    } else if (genome_ucsc_list.contains(params.archr_genome)) {
+      if (params.archr_gtf) {
+        DOWNLOAD_FROM_UCSC (params.archr_genome, Channel.fromPath('assets/genome_ucsc.json'))
+        return ["genome_gtf", [DOWNLOAD_FROM_UCSC.out.genome_name, DOWNLOAD_FROM_UCSC.out.genome_fasta, params.archr_gtf]]
+      } else {
+        exit 1, "Pls supply a GTF file with --archr_gtf since UCSC official GTF files are messy for ArchR!"
+      }
+    } else {
+      exit 1, "Pls use --support_genome to show a list of supported genomes!"
+    }
+  }
+}
+
 // // Modules: nf-core/modules
 // include { FASTQC                } from '../modules/nf-core/software/fastqc/main'  addParams( options: modules['fastqc']            )
 // include { MULTIQC               } from '../modules/nf-core/software/multiqc/main' addParams( options: multiqc_options              )
 //
 // // Subworkflows: local
 // include { INPUT_CHECK           } from '../subworkflows/local/input_check'        addParams( options: [:]                          )
+
+// if (params.preprocess) {
+//   if (params.input_preprocess) {
+//     ch_input = file(params.input_preprocess)
+//   } else {
+//       exit 1, 'Input samplesheet not specified!'
+//   }
+// } else {
+//     if (params.input_archr) {
+//     } else {
+//         exit 1, "--input_archr samplesheet must be specified!"
+//     }
+// }
 
 ////////////////////////////////////////////////////
 /* --           RUN MAIN WORKFLOW              -- */
@@ -188,77 +254,78 @@ workflow PREPROCESS_DEFAULT {
     // bwa or minimap2
     if (params.mapper == 'bwa') {
       log.info "INFO: --mapper: bwa"
-
-      if (!params.ref_bwa_index) {
-        log.info "INFO: --ref_bwa_index not provided, checking --ref_fasta and --ref_fasta_ucsc/--ref_fasta_ensembl ..."
-
-        if (params.ref_fasta) {
-          log.info "INFO: --ref_fasta provided, use it for building bwa index."
-          // module : bwa_index
-          BWA_INDEX (params.ref_fasta)
-          // mapping with the built index
-        } else if (params.ref_fasta_ucsc) {
-          // exit 1, 'WARNING: --ref_fasta_ucsc is not supported yet, pls use --ref_fasta_ensembl!'
-          log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build bwa index, and map with bwa ..."
-          // module : download_from_ucsc
-          DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
-          // module : extract primary sequence
-          GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
-          // module : bwa_index
-          BWA_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
-        } else if (params.ref_fasta_ensembl) {
-          log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
-          // module : download_from_ucsc
-          DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
-          // module : bwa_index
-          BWA_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
-        } else {
-          exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
-        }
+      if (params.ref_bwa_index) {
+        BWA_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, params.ref_bwa_index)
+      } else if (params.ref_fasta) {
+        log.info "INFO: --ref_fasta provided, use it for building bwa index."
+        // module : prep_genome
+        PREP_GENOME (params.ref_fasta, "custom_genome")
+        // module : bwa_index
+        BWA_INDEX (PREP_GENOME.out.genome_fasta)
+        // module : bwa_map
+        BWA_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, BWA_INDEX.out.bwa_index_folder)
+      } else if (params.ref_fasta_ensembl) {
+        log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+        // module : download_from_ensembl
+        DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, Channel.fromPath('assets/genome_ensembl.json'))
+        // module: prep_genome
+        PREP_GENOME (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
+        // module : bwa_index
+        BWA_INDEX (PREP_GENOME.out.genome_fasta)
+      } else if (params.ref_fasta_ucsc) {
+        log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build bwa index, and map with bwa ..."
+        // module : download_from_ucsc
+        DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc, Channel.fromPath('assets/genome_ucsc.json'))
+        // module : prep_genome
+        PREP_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta, DOWNLOAD_FROM_UCSC.out.genome_name)
+        // module : extract primary sequence
+        // GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+        // module : bwa_index
+        BWA_INDEX (PREP_GENOME.out.genome_fasta)
         // module : bwa_map
         BWA_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, BWA_INDEX.out.bwa_index_folder)
       } else {
-        // use user provided bwa index for mapping, module : bwa_map
-        BWA_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, params.ref_bwa_index)
+        exit 1, 'Parameter --ref_fasta_ensembl/--ref_fasta_ucsc: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
       }
     } else if (params.mapper == "minimap2") {
       log.info "INFO: --mapper: minimap2"
-
-      if (!params.ref_minimap2_index) {
-        log.info "INFO: --ref_minimap2_index not provided, check --ref_fasta and --ref_fasta_uscs/--ref_fasta_ensembl ..."
-
-        if (params.ref_fasta) {
-          log.info "INFO: --ref_fasta provided, use it to build minimap2 index."
-          // module : bwa_index
-          MINIMAP2_INDEX (params.ref_fasta)
-          // mapping with the built index
-        } else if (params.ref_fasta_ucsc) {
-          log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
-          // module : download_from_ucsc
-          DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
-          // module : get_primary_genome
-          GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
-          // module : bwa_index
-          MINIMAP2_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
-        } else if (params.ref_fasta_ensembl) {
-            log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
-
-            // module : download_from_ensembl
-            DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
-            // module : bwa_index
-            MINIMAP2_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
-        } else {
-            exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
-        }
+      if (params.ref_minimap2_index) {
+        // use user provided bwa index for mapping
+        // module : minimap2_map
+        MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, params.ref_minimap2_index)
+      } else if (params.ref_fasta) {
+        log.info "INFO: --ref_fasta provided, use it to build minimap2 index."
+        // module : prep_genome
+        PREP_GENOME (params.ref_fasta, "custom_genome")
+        // module : bwa_index
+        MINIMAP2_INDEX (PREP_GENOME.out.genome_fasta)
+        // module : minimap2_map
+        MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, MINIMAP2_INDEX.out.minimap2_index)
+      } else if (params.ref_fasta_ensembl) {
+        log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+        // module : download_from_ensembl
+        DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, Channel.fromPath('assets/genome_ensembl.json'))
+        // module: PREP_GENOME
+        PREP_GENOME (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
+        // module : bwa_index
+        MINIMAP2_INDEX (PREP_GENOME.out.genome_fasta)
+        // module : minimap2_map
+        MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, MINIMAP2_INDEX.out.minimap2_index)
+      } else if (params.ref_fasta_ucsc) {
+        log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
+        // module : download_from_ucsc
+        DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc, Channel.fromPath('assets/genome_ucsc.json'))
+        // module : prep_genome
+        PREP_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta, DOWNLOAD_FROM_UCSC.out.genome_gtf)
+        // module : get_primary_genome
+        // GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+        // module : bwa_index
+        MINIMAP2_INDEX (PREP_GENOME.out.genome_fasta)
         // module : minimap2_map
         MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, MINIMAP2_INDEX.out.minimap2_index)
       } else {
-          // use user provided bwa index for mapping
-          // module : minimap2_map
-          MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, params.ref_minimap2_index)
+        exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
       }
-    } else {
-        exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
     }
 
     // module: filter out poorly mapped reads
@@ -333,44 +400,73 @@ workflow PREPROCESS_10XGENOMICS {
     ch_samplesheet
 
   main:
-    if (!params.ref_cellranger) {
-      log.info "Parameter --ref_cellranger not supplied, checking --ref_cellranger_ucsc/--ref_cellranger_ensembl!"
-      if (params.ref_cellranger_ucsc) {
-        log.info "Parameter --ref_cellranger_ucsc provided, will download genome, gtf, and build index with cellranger-atac."
-        // Module: download ucsc genome
-        DOWNLOAD_FROM_UCSC (params.ref_cellranger_ucsc)
-        // Module: extract primary genome
-        GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
-        // Module: download ucsc gtf
-        DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
-        // Module: fix gtf
-        FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf, GET_PRIMARY_GENOME.out.genome_fasta)
-        // Module: prepare cellranger index
-        CELLRANGER_INDEX (GET_PRIMARY_GENOME.out.genome_fasta, FIX_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
-        // Module: prepare fastq folder
-        GET_10XGENOMICS_FASTQ (ch_samplesheet)
-        // Module: run cellranger-atac count
-        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
-      } else if (params.ref_cellranger_ensembl) {
-        // Module: download ensembl genome
-        DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, params.ensembl_release)
-        // Module: download ensembl gtf
-        DOWNLOAD_FROM_ENSEMBL_GTF (params.ref_cellranger_ensembl, params.ensembl_release)
-        // Module: prepare cellranger index
-        CELLRANGER_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
-        // Module: prepare fastq folder
-        GET_10XGENOMICS_FASTQ (ch_samplesheet)
-        // Module: run cellranger-atac count
-        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
-        } else {
-            exit 1, "--ref_cellranger_ucsc/--ref_cellranger_ensembl must be specified!"
-          }
-    } else {
+    if (params.ref_cellranger) {
+      // if cellranger index folder provided:
       log.info "Parameter --ref_cellranger supplied, will use it as index folder."
       GET_10XGENOMICS_FASTQ (ch_samplesheet)
       CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
-      // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
-      // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
+    } else if (params.ref_fasta) {
+      if (params.ref_gtf) {
+        log.info "Parameter --ref_fasta/ref_gtf supplied, will build index."
+        // Module: prep_genome
+        PREP_GENOME (params.ref_fasta, "custom_genome")
+        // Module: prep_gtf
+        PREP_GTF (PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_name, params.ref_gtf)
+        // Module: prepare cellranger index
+        CELLRANGER_INDEX (PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf, PREP_GENOME.out.genome_name)
+        // Module: prepare fastq folder
+        GET_10XGENOMICS_FASTQ (ch_samplesheet)
+        // Module: run cellranger-atac count
+        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+      } else {
+        exit 1, "Pls supply --ref_gtf."
+      }
+    } else if (params.ref_cellranger_ensembl) {
+      if (genome_ensembl_list.contains(params.ref_cellranger_ensembl)) {
+        // if ensembl name supplied:
+        // Module: download ensembl genome
+        DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, Channel.fromPath('assets/genome_ensembl.json'))
+        // Module: prep_genome
+        PREP_GENOME (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
+        // Module: download ensembl gtf
+        DOWNLOAD_FROM_ENSEMBL_GTF (params.ref_cellranger_ensembl, Channel.fromPath('assets/genome_ensembl.json'))
+        // Module: prep_gtf
+        PREP_GTF (PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_name, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf)
+        // Module: prepare cellranger index
+        CELLRANGER_INDEX (PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf, PREP_GENOME.out.genome_name)
+        // Module: prepare fastq folder
+        GET_10XGENOMICS_FASTQ (ch_samplesheet)
+        // Module: run cellranger-atac count
+        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+      } else {
+        exit 1, "Pls use --support_genome to show a list of supported genomes!"
+      }
+    } else if (params.ref_cellranger_ucsc) {
+      genome_ucsc_list = get_genome_ucsc()
+      if (genome_ucsc_list.contains(params.ref_cellranger_ucsc)) {
+        // Module: download ucsc genome
+        DOWNLOAD_FROM_UCSC (params.ref_cellranger_ucsc, Channel.fromPath('assets/genome_ucsc.json'))
+        // Module: prep_genome
+        PREP_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta, DOWNLOAD_FROM_UCSC.out.genome_gtf)
+        // Module: extract primary genome
+        // GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
+        // Module: download ucsc gtf
+        DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
+        // Module: prep_gtf
+        PREP_GTF (PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_gtf, DOWNLOAD_FROM_UCSC_GTF.out.gtf)
+        // Module: fix gtf
+        // FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf, GET_PRIMARY_GENOME.out.genome_fasta)
+        // Module: prepare cellranger index
+        CELLRANGER_INDEX (PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf, PREP_GENOME.out.genome_name)
+        // Module: prepare fastq folder
+        GET_10XGENOMICS_FASTQ (ch_samplesheet)
+        // Module: run cellranger-atac count
+        CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
+      } else {
+        exit 1, "Pls use --support_genome to show a list of supported genomes!"
+      }
+    } else {
+      exit 1, "PREPROCESS_10XGENOMICS: --ref_cellranger_ucsc, or --ref_cellranger_ensembl, or --ref_fasta/ref_gtf must be specified!"
     }
 
     res_files = Channel.empty()
@@ -383,352 +479,185 @@ workflow PREPROCESS_10XGENOMICS {
     CELLRANGER_ATAC_COUNT.out.bam // out[4]: for split bam
 }
 
-workflow PREPROCESS {
-  take:
-    ch_samplesheet
-
-  main:
-    // Log: check and see which parameter modules are specified
-    if (params.preprocess == "default") {
-      log.info "INFO: --preprocess: default"
-    } else if (params.preprocess == "10xgenomics") {
-        log.info "INFO: --preprocess: 10xgenomics"
-    } else if (params.preprocess == "biorad") {
-        log.info "INFO: --preprocess: biorad"
-        log.info "INFO: must use biorad compatible sequencing data!"
-    } else {
-        log.info "ERROR: for parameter --preprocess, choose from default, 10xgenomics, biorad."
-    }
-
-    // Perform preprocess accordingly
-    if (params.preprocess == "default") {
-      if (!(params.barcode_whitelist)) {
-        log.info "NOTICE: --barcode_whitelist: not supplied, skip barcode correction!"
-      }
-      // log.info "INFO(2): --preprocess: default"
-      GET_10XGENOMICS_FASTQ (ch_samplesheet)
-      // module: fastQC
-      FASTQC (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
-
-      // module: barcode correction (optional) and add barcode: correct barcode fastq given whitelist and barcode fastq file
-      if (!(params.barcode_whitelist)) {
-        // log.info "NOTICE(2): --barcode_whitelist: not supplied, skip barcode correction!"
-        ADD_BARCODE_TO_READS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
-      } else {
-        // Allow users to choose from barcode_correction.R or Pheniqs:
-        if (params.barcode_correction == "naive") {
-          CORRECT_BARCODE (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
-        // MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
-        // Note that the above might be problematic, since MATCH_READS would take inputs from two channels, the instance of samples may not match.
-          MATCH_READS (CORRECT_BARCODE.out.sample_name, CORRECT_BARCODE.out.corrected_barcode, CORRECT_BARCODE.out.read1_fastq, CORRECT_BARCODE.out.read2_fastq)
-
-          ADD_BARCODE_TO_READS (MATCH_READS.out.sample_name, MATCH_READS.out.barcode_fastq, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq)
-        } else {
-          // use pheniqs:
-          CORRECT_BARCODE_PHENIQS (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.barcode_fastq, params.barcode_whitelist, GET_10XGENOMICS_FASTQ.out.read1_fastq, GET_10XGENOMICS_FASTQ.out.read2_fastq)
-
-          MATCH_READS (CORRECT_BARCODE_PHENIQS.out.sample_name, CORRECT_BARCODE_PHENIQS.out.corrected_barcode, CORRECT_BARCODE_PHENIQS.out.read1_fastq, CORRECT_BARCODE_PHENIQS.out.read2_fastq)
-        }
-      }
-
-      // module: trimming off adapter
-      if ((params.barcode_whitelist) && (params.barcode_correction == "pheniqs")) {
-        CUTADAPT (MATCH_READS.out.sample_name, MATCH_READS.out.read1_fastq, MATCH_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
-      } else {
-        CUTADAPT (ADD_BARCODE_TO_READS.out.sample_name, ADD_BARCODE_TO_READS.out.read1_fastq, ADD_BARCODE_TO_READS.out.read2_fastq, params.read1_adapter, params.read2_adapter)
-      }
-
-      // module: MATCH_READS_TRIMMED: in case user choose to trim based on quality and read pair gets unbalanced.
-      MATCH_READS_TRIMMED (CUTADAPT.out.sample_name, CUTADAPT.out.trimed_read1_fastq, CUTADAPT.out.trimed_read2_fastq)
-
-      // TODO: fragment generation should take input from deduplcated bam files so that fragments will be garanteed unique. Make the duplicate removal as a default cause it won't hurt. Otherwise visualizaiton is problematic.
-      // For fragement files, sinto will take care of the duplication because each line is unique? (need confirm).
-      // After mapping, if we need to split the bam files based on clusters, we need to remove duplicates, which is determined by the barcode information: PICARD or SAMTOOLS.
-      // Duplication should be determined: barcode (cell), start and end coordination, should also shift the soft-trimming starting position.
-
-      // module: mapping with bwa or minimap2: mark duplicate
-      // bwa or minimap2
-      if (params.mapper == 'bwa') {
-        log.info "INFO: --mapper: bwa"
-
-        if (!params.ref_bwa_index) {
-          log.info "INFO: --ref_bwa_index not provided, checking --ref_fasta and --ref_fasta_ucsc/--ref_fasta_ensembl ..."
-
-          if (params.ref_fasta) {
-            log.info "INFO: --ref_fasta provided, use it for building bwa index."
-            // module : bwa_index
-            BWA_INDEX (params.ref_fasta)
-            // mapping with the built index
-          } else if (params.ref_fasta_ucsc) {
-            // exit 1, 'WARNING: --ref_fasta_ucsc is not supported yet, pls use --ref_fasta_ensembl!'
-            log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build bwa index, and map with bwa ..."
-            // module : download_from_ucsc
-            DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
-            // module : extract primary sequence
-            GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
-            // module : bwa_index
-            BWA_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
-          } else if (params.ref_fasta_ensembl) {
-            log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
-            // module : download_from_ucsc
-            DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
-            // module : bwa_index
-            BWA_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
-          } else {
-            exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
-          }
-          // module : bwa_map
-          BWA_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, BWA_INDEX.out.bwa_index_folder)
-        } else {
-          // use user provided bwa index for mapping, module : bwa_map
-          BWA_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, params.ref_bwa_index)
-        }
-      } else if (params.mapper == "minimap2") {
-        log.info "INFO: --mapper: minimap2"
-
-        if (!params.ref_minimap2_index) {
-          log.info "INFO: --ref_minimap2_index not provided, check --ref_fasta and --ref_fasta_uscs/--ref_fasta_ensembl ..."
-
-          if (params.ref_fasta) {
-            log.info "INFO: --ref_fasta provided, use it to build minimap2 index."
-            // module : bwa_index
-            MINIMAP2_INDEX (params.ref_fasta)
-            // mapping with the built index
-          } else if (params.ref_fasta_ucsc) {
-            log.info "INFO: --ref_fasta_ucsc provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
-            // module : download_from_ucsc
-            DOWNLOAD_FROM_UCSC (params.ref_fasta_ucsc)
-            // module : get_primary_genome
-            GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
-            // module : bwa_index
-            MINIMAP2_INDEX (GET_PRIMARY_GENOME.out.genome_fasta)
-          } else if (params.ref_fasta_ensembl) {
-              log.info "INFO: --ref_fasta_ensembl provided, will download genome, and then build minimap2 index, and map with minimap2 ..."
-
-              // module : download_from_ensembl
-              DOWNLOAD_FROM_ENSEMBL (params.ref_fasta_ensembl, params.ensembl_release)
-              // module : bwa_index
-              MINIMAP2_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta)
-          } else {
-              exit 1, 'Parameter --ref_fasta_ucsc/--ref_fasta_ensembl: pls supply a genome name, like hg19, mm10 (if ucsc), or homo_sapiens, mus_musculus (if ensembl)!'
-          }
-          // module : minimap2_map
-          MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, MINIMAP2_INDEX.out.minimap2_index)
-        } else {
-            // use user provided bwa index for mapping
-            // module : minimap2_map
-            MINIMAP2_MAP (MATCH_READS_TRIMMED.out.sample_name, MATCH_READS_TRIMMED.out.read1_fastq, MATCH_READS_TRIMMED.out.read2_fastq, params.ref_minimap2_index)
-        }
-      } else {
-          exit 1, 'Parameter --mapper: pls supply a mapper to use, eiter bwa or minimap2!'
-      }
-
-      // module: filter out poorly mapped reads
-      if (params.mapper == 'bwa') {
-        BAM_FILTER (BWA_MAP.out.sample_name, BWA_MAP.out.bam, params.filter)
-      } else if (params.mapper == "minimap2") {
-          BAM_FILTER (MINIMAP2_MAP.out.sample_name, MINIMAP2_MAP.out.bam, params.filter)
-      }
-
-      // module: remove duplicates based on cell barcode, start, end
-      REMOVE_DUPLICATE(BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
-
-      // module: bamqc with qualimap for raw bam files
-      // TODO: Run Qualimap on the final filtered deduplicated bam file.
-      QUALIMAP (REMOVE_DUPLICATE.out.sample_name, REMOVE_DUPLICATE.out.bam)
-
-      // module: generate fragment file with sinto
-      // use raw bam file since ArchR may take advantage of the duplication info.
-      GET_FRAGMENTS (BAM_FILTER.out.sample_name, BAM_FILTER.out.bam)
-    } else if (params.preprocess == "10xgenomics") {
-        if (!params.ref_cellranger) {
-          log.info "Parameter --ref_cellranger not supplied, checking --ref_cellranger_ucsc/--ref_cellranger_ensembl!"
-          if (params.ref_cellranger_ucsc) {
-            log.info "Parameter --ref_cellranger_ucsc provided, will download genome, gtf, and build index with cellranger-atac."
-            // Module: download ucsc genome
-            DOWNLOAD_FROM_UCSC (params.ref_cellranger_ucsc)
-            // Module: extract primary genome
-            GET_PRIMARY_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta)
-            // Module: download ucsc gtf
-            DOWNLOAD_FROM_UCSC_GTF (params.ref_cellranger_ucsc)
-            // Module: fix gtf
-            FIX_UCSC_GTF (DOWNLOAD_FROM_UCSC_GTF.out.gtf, GET_PRIMARY_GENOME.out.genome_fasta)
-            // Module: prepare cellranger index
-            CELLRANGER_INDEX (GET_PRIMARY_GENOME.out.genome_fasta, FIX_UCSC_GTF.out.gtf, DOWNLOAD_FROM_UCSC.out.genome_name)
-            // Module: prepare fastq folder
-            GET_10XGENOMICS_FASTQ (ch_samplesheet)
-            // Module: run cellranger-atac count
-            CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
-          } else if (params.ref_cellranger_ensembl) {
-            // Module: download ensembl genome
-            DOWNLOAD_FROM_ENSEMBL (params.ref_cellranger_ensembl, params.ensembl_release)
-            // Module: download ensembl gtf
-            DOWNLOAD_FROM_ENSEMBL_GTF (params.ref_cellranger_ensembl, params.ensembl_release)
-            // Module: prepare cellranger index
-            CELLRANGER_INDEX (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
-            // Module: prepare fastq folder
-            GET_10XGENOMICS_FASTQ (ch_samplesheet)
-            // Module: run cellranger-atac count
-            CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, CELLRANGER_INDEX.out.index_folder)
-            } else {
-                exit 1, "--ref_cellranger_ucsc/--ref_cellranger_ensembl must be specified!"
-              }
-        } else {
-          log.info "Parameter --ref_cellranger supplied, will use it as index folder."
-          GET_10XGENOMICS_FASTQ (ch_samplesheet)
-          CELLRANGER_ATAC_COUNT (GET_10XGENOMICS_FASTQ.out.sample_name, GET_10XGENOMICS_FASTQ.out.fastq_folder, params.ref_cellranger)
-          // sample_name = PARSEUMI.out.umi.toSortedList( { a, b -> a.getName() <=> b.getName() } ).flatten()
-          // sample_fastq_folder = GET_10XGENOMICS_FASTQ.out.fastq.to
-        }
-    } else if (params.preprocess == "biorad") {
-      // log.info "INFO: --preprocess: biorad"
-      // log.info "INFO: must use biorad compatible sequencing data!"
-      if (!params.ref_bwa_index) {
-        exit 1, 'Parameter --ref_bwa_index: pls supply full path to bwa index folder!'
-      }
-      if (!params.ref_fasta) {
-        exit 1, 'Parameter --ref_fasta: pls supply full path to reference fasta file!'
-      }
-      if (!params.biorad_genome) {
-        exit 1, 'Parameter --biorad_genome: pls choose from "hg19", "hg38","mm10", or "hg19-mm10"!'
-      }
-
-      GET_BIORAD_FASTQ (ch_samplesheet)
-      BIORAD_FASTQC (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
-      BIORAD_ATAC_SEQ_DEBARCODE (GET_BIORAD_FASTQ.out.sample_name, GET_BIORAD_FASTQ.out.fastq_folder)
-      // Note that BIORAD_ATAC_SEQ_TRIM_READS must be performed after debarcode.
-      BIORAD_ATAC_SEQ_TRIM_READS (BIORAD_ATAC_SEQ_DEBARCODE.out.sample_name, BIORAD_ATAC_SEQ_DEBARCODE.out.debarcoded_reads)
-      BIORAD_ATAC_SEQ_BWA (BIORAD_ATAC_SEQ_TRIM_READS.out.sample_name, BIORAD_ATAC_SEQ_TRIM_READS.out.trimmed_reads, params.ref_bwa_index)
-      BIORAD_ATAC_SEQ_ALIGNMENT_QC (BIORAD_ATAC_SEQ_BWA.out.sample_name, BIORAD_ATAC_SEQ_BWA.out.alignments, params.ref_fasta)
-      BIORAD_ATAC_SEQ_FILTER_BEADS (BIORAD_ATAC_SEQ_BWA.out.sample_name, BIORAD_ATAC_SEQ_BWA.out.alignments, params.biorad_genome)
-    }
-
-    // Collect all output results for MultiQC report:
-    res_files = Channel.empty()
-    // res_files = res_files.mix(Channel.from(ch_multiqc_config))
-    // res_files = res_files.mix(Channel.from(ch_multiqc_custom_config).collect().ifEmpty([]))
-
-    // Use try-catch since if certain module is not run, module.out becomes undefined.
-    // FASTQC module:
-    try {
-      res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
-    } catch (Exception ex) {}
-    // CORRECT_BARCODE module:
-    try {
-      res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
-    } catch (Exception ex) {}
-    // CORRECT_BARCODE_PHENIQS module:
-    try {
-      res_files = res_files.mix(CORRECT_BARCODE_PHENIQS.out.corrected_barcode_summary.collect().ifEmpty([]))
-    } catch (Exception ex) {}
-    // REMOVE_DUPLICATE module:
-    try {
-      res_files = res_files.mix(REMOVE_DUPLICATE.out.remove_duplicate_summary.collect().ifEmpty([]))
-    } catch (Exception ex) {}
-    // CUTADAPT module:
-    try {
-      res_files = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))
-    } catch (Exception ex) {}
-    // QUALIMAP module:
-    try {
-      res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
-    } catch (Exception ex) {}
-    // CELLRANGER_INDEX module:
-    try {
-      res_files.mix(CELLRANGER_INDEX.out.bwa_index_folder.collect().ifEmpty([]))
-    } catch (Exception ex) {
-    }
-    // CELLRANGER_ATAC_COUNT module:
-    try {
-      res_files = res_files.mix(CELLRANGER_ATAC_COUNT.out.cellranger_atac_count.collect().ifEmpty([]))
-    } catch (Exception ex) {
-    }
-
-    // if (params.preprocess == "default") {
-    //     res_files = res_files.mix(FASTQC.out.zip.collect().ifEmpty([]))
-    //   if (params.barcode_correction == "pheniqs") {
-    //     res_files = res_files.mix(CORRECT_BARCODE_PHENIQS.out.corrected_barcode_summary.collect().ifEmpty([]))
-    //   } else if (params.barcode_correction == "naive") {
-    //     res_files = res_files.mix(CORRECT_BARCODE.out.corrected_barcode_summary.collect().ifEmpty([]))
-    //   }
-    //   res_files = res_files.mix(CUTADAPT.out.log.collect().ifEmpty([]))
-    //   res_files = res_files.mix(QUALIMAP.out.bamqc.collect().ifEmpty([]))
-    // } else if (params.preprocess == "10xgenomics") {
-    //   res_files = res_files.mix(CELLRANGER_ATAC_COUNT.out.cellranger_atac_count.collect().ifEmpty([]))
-    //   if (!params.ref_cellranger) {
-    //     res_files.mix(CELLRANGER_INDEX.out.bwa_index_folder.collect().ifEmpty([]))
-    //   }
-    // }
-
-  emit:
-    res_files // out[0]: res folders for MultiQC report
-    // GET_FRAGMENTS.out.fragments // out[1]: for split bed
-    // GET_FRAGMENTS.out.ch_fragment // out[2]: fragment ch for ArchR
-    // REMOVE_DUPLICATE.out.sample_name // out[3]: for split bam
-    // REMOVE_DUPLICATE.out.bam // out[4]: for split bam
-}
-
 workflow DOWNSTREAM {
   take:
     ch_samplesheet_archr
+    with_preprocess
 
   main:
     ch_software_versions = Channel.empty()
     log.info "INFO: --downstream: ArchR"
-    // Module: check if ArchR genome matches with preprocess genome, and create custome Genome if needed.
-    (bsgenome, genome_status) = get_bsgenome(params.archr_genome, params.archr_custom_genome, params.archr_txdb, params.archr_org, params.archr_bsgenome, params.ref_fasta_ucsc, params.ref_fasta_ensembl, params.ref_cellranger_ucsc, params.ref_cellranger_ensembl)
-    log.info "get_bsgenome: " + " bsgenome:" + bsgenome + " genoem_status:" + genome_status + " params.archr_genome: " + params.archr_genome + " params.ref_fasta_ucsc:" + params.ref_fasta_ucsc + " params.ref_cellranger_ucsc:" + params.ref_cellranger_ucsc
-    // Module: createArrowFile and addDoubletScores
-    if (["custom"].contains(genome_status)) {
-      log.info "INFO: ArchR will build gene/genomeAnnotation files with custom TxDb, Org, and BSgenome files supplied by user."
 
-      ARCHR_GET_ANNOTATION_CUSTOM(params.archr_txdb, params.archr_org, params.archr_bsgenome)
-      ARCHR_CREATE_ARROWFILES_ANNOTATION(ch_samplesheet_archr, ARCHR_GET_ANNOTATION_CUSTOM.out.geneAnnotation, ARCHR_GET_ANNOTATION_CUSTOM.out.genomeAnnotation, ARCHR_GET_ANNOTATION_CUSTOM.out.user_rlib, params.archr_thread)
-      // Module: add DoubletScores
-      ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES_ANNOTATION.out.sample_name, ARCHR_CREATE_ARROWFILES_ANNOTATION.out.arrowfile)
-      ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
-      ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
-    } else if (["ready", "ready_ucsc", "ready_ensembl"].contains(genome_status)) {
-      // "ready" means ArchR natively supported genome
-      if (genome_status == "ready_ensembl") {
-        // log.info "INFO: ArchR will use natively supported ArchR genome (though ensembl genome supplied): " + bsgenome
-        exit 1, "INFO: ensembl genome supplied, need to build ArchR genome first, pls supply corresponding TxDb, Org, and BSgenome objects via --txdb, --org, and --bsgenome parameters."
-      } else {
-        log.info "INFO: ArchR will use natively supported ArchR genome: " + bsgenome
+    def archr_input_type = "" // "naive", "genome_gtf", "bsgenome_txdb_org"
+    def archr_input_list = []
+    // for "genome_gtf": [genome_name, genome_fasta, gtf]
+    // for "bsgenome_txdb_org"" [bsgenome, txdb, org]
+
+    if (params.archr_bsgenome && params.archr_org && params.archr_txdb) {
+      log.info "INFO: --archr_bsgenome, --archr_txdb, and --archr_org supplied."
+      archr_input_type = "bsgenome_txdb_org"
+      archr_input_list = [params.archr_bsgenome, params.archr_txdb, params.archr_org]
+    } else if (params.archr_genome_fasta && params.archr_gtf) {
+      log.info "INFO: --archr_genome_fasta and --archr_gtf supplied."
+      PREP_GENOME(Channel.fromPath(params.test_fasta), "custom_genome")
+      PREP_GTF(PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_name, params.archr_gtf)
+
+      archr_input_type = "genome_gtf"
+      archr_input_list = [PREP_GENOME.out.genome_name, PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf]
+    } else {
+      exit_msg = "ArchR genome required but not supplied!\nOption1:\n  --ref_fasta_ucsc [a genome name]\nOption2:\n  --ref_fasta_ensembl [a genome name]\nOption3:\n  --ref_fasta [path to genome fasta]\n  --archr_gtf [path to gtf file]\nOption4:\n  --archr_genome_fasta [path to genome fasta]\n  --archr_gtf [path to gtf file]\n  --archr_blacklist [optional, path to blacklist file]\nOption5:\n  --archr_bsgenome [path to BSgenome obj]\n  --archr_txdb [path to TxDb obj]\n  --archr_org [path to OrgDb obj]\n  --archr_blacklist [optional, path to blacklist file]\nPlease supply the above params to continue.\n"
+      if (with_preprocess == "preprocess_null") {
+        if (params.archr_genome) {
+          log.info "INFO: --archr_genome supplied."
+
+          if (["hg38", "hg19", "mm10", "mm9"].contains(params.archr_genome)) {
+            log.info "INFO: natively supported ArchR genome supplied."
+
+            archr_input_type = "naive"
+            archr_input_list = [params.archr_genome, "NA", "NA"]
+          } else if (genome_ensembl_list.contains(params.archr_genome)) {
+              DOWNLOAD_FROM_ENSEMBL (params.archr_genome, Channel.fromPath('assets/genome_ensembl.json'))
+              DOWNLOAD_FROM_ENSEMBL_GTF (params.archr_genome, Channel.fromPath('assets/genome_ensembl.json'))
+              PREP_GENOME (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
+              PREP_GTF (PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_name, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf)
+
+              archr_input_type = "genome_gtf"
+              archr_input_list = [PREP_GENOME.out.genome_name, PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf]
+          } else if (genome_ucsc_list.contains(params.archr_genome)) {
+              DOWNLOAD_FROM_UCSC (params.archr_genome, Channel.fromPath('assets/genome_ucsc.json'))
+              DOWNLOAD_FROM_UCSC_GTF(params.archr_genome, Channel.fromPath('assets/genome_ucsc.json'))
+              PREP_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta, DOWNLOAD_FROM_UCSC.out.genome_name)
+              PREP_GTF (PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_name, DOWNLOAD_FROM_UCSC_GTF.out.gtf)
+
+              archr_input_type = "genome_gtf"
+              archr_input_list = [PREP_GENOME.out.genome_name, PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf]
+          } else {
+              exit 1, "Pls use the --support_genome to show a list of supported genomes!"
+          }
+        } else {
+          exit 1, "ArchR genome required but not supplied!\nOption1:\n  --archr_genome [a genome name]\nOption2:\n  --archr_genome_fasta [path to genome fasta]\n  --archr_gtf [path to gtf file]\n  --archr_blacklist [optional, path to blacklist file]\nOption3:\n  --archr_bsgenome [path to BSgenome obj]\n  --archr_txdb [path to TxDb obj]\n  --archr_org [path to OrgDb obj]\n  --archr_blacklist [optional, path to blacklist file]\nPlease supply the above params to continue.\n"
+        }
+      } else if (with_preprocess == "preprocess_default" || with_preprocess == "preprocess_10xgenomics") {
+        if (params.ref_bwa_index || params.ref_minimap2_index || params.ref_cellranger) {
+          // Need to download genome and gtf:
+          if (params.ref_fasta_ensembl) {
+            DOWNLOAD_FROM_ENSEMBL(params.ref_fasta_ensembl, Channel.fromPath('assets/genome_ensembl.json'))
+            DOWNLOAD_FROM_ENSEMBL_GTF(params.ref_fasta_ensembl, Channel.fromPath('assets/genome_ensembl.json'))
+            PREP_GENOME (DOWNLOAD_FROM_ENSEMBL.out.genome_fasta, DOWNLOAD_FROM_ENSEMBL.out.genome_name)
+            PREP_GTF (PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_name, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf)
+
+            archr_input_type = "genome_gtf"
+            archr_input_list = [PREP_GENOME.out.genome_name, PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf]
+          } else if (params.ref_fasta_ucsc) {
+            DOWNLOAD_FROM_UCSC(params.ref_fasta_ucsc, Channel.fromPath('assets/genome_ucsc.json'))
+            DOWNLOAD_FROM_UCSC_GTF(params.ref_fasta_ucsc, Channel.fromPath('assets/genome_ucsc.json'))
+            PREP_GENOME (DOWNLOAD_FROM_UCSC.out.genome_fasta, DOWNLOAD_FROM_UCSC.out.genome_name)
+            PREP_GTF (PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_name, DOWNLOAD_FROM_UCSC_GTF.out.gtf)
+
+            archr_input_type = "genome_gtf"
+            archr_input_list = [PREP_GENOME.out.genome_name, PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf]
+          } else {
+            exit 1, exit_msg
+          }
+        } else if (params.ref_fasta) {
+          // PREP_GENOME should have been performed
+          if (params.archr_gtf) {
+            // Use PREP_GTF_ARCHR here because for preprocess_default, PREP_GTF has already been used.
+            PREP_GTF_ARCHR (PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_name, params.archr_gtf)
+            archr_input_type = "genome_gtf"
+            archr_input_list = [PREP_GENOME.out.genome_name, PREP_GENOME.out.genome_fasta, PREP_GTF_ARCHR.out.gtf]
+          } else {
+            exit 1, "Pls also supply --archr_gtf."
+          }
+        } else if (params.ref_fasta_ensembl) {
+          // If preprocess_default, need download GTF:
+          if (with_preprocess == "preprocess_default") {
+            DOWNLOAD_FROM_ENSEMBL_GTF(params.ref_fasta_ensembl, Channel.fromPath('assets/genome_ensembl.json'))
+            PREP_GTF (PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_name, DOWNLOAD_FROM_ENSEMBL_GTF.out.gtf)
+
+            archr_input_type = "genome_gtf"
+            archr_input_list = [PREP_GENOME.out.genome_name, PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf]
+          } else if (with_preprocess == "preprocess_10xgenomics") {
+            // If preprocess_10xgenomics, should already performed PREP_GENOME and PREP_GTF
+            archr_input_type = "genome_gtf"
+            archr_input_list = [PREP_GENOME.out.genome_name, PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf]
+          }
+        } else if (params.ref_fasta_ucsc) {
+          // If preprocess_default, need download GTF:
+          if (with_preprocess == "preprocess_default") {
+            DOWNLOAD_FROM_UCSC_GTF(params.ref_fasta_ucsc, Channel.fromPath('assets/genome_ucsc.json'))
+            PREP_GTF (PREP_GENOME.out.genome_fasta, PREP_GENOME.out.genome_name, DOWNLOAD_FROM_UCSC_GTF.out.gtf)
+
+            archr_input_type = "genome_gtf"
+            archr_input_list = [PREP_GENOME.out.genome_name, PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf]
+          } else if (with_preprocess == "preprocess_10xgenomics") {
+            // If preprocess_10xgenomics, should already performed PREP_GENOME and PREP_GTF
+            archr_input_type = "genome_gtf"
+            archr_input_list = [PREP_GENOME.out.genome_name, PREP_GENOME.out.genome_fasta, PREP_GTF.out.gtf]
+          }
+        } else {
+          exit 1, exit_msg
+        }
       }
-      ARCHR_CREATE_ARROWFILES(ch_samplesheet_archr, bsgenome, params.archr_thread)
+    }
+    log.info "archr_input_type: " + archr_input_type
+    // Depending on ArchR input type, prepare ArchR annotation files accordingly:
+    if (archr_input_type == "naive") {
+      // Run ArchR normally:
+      log.info "Naively supported ArchR genome: " + archr_input_list[0] + " will be used."
+
+      ARCHR_CREATE_ARROWFILES(ch_samplesheet_archr, archr_input_list[0], params.archr_thread)
       // Module: add DoubletScores
       ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES.out.sample_name, ARCHR_CREATE_ARROWFILES.out.arrowfile)
-      ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
+      // ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
       ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
-    } else if (["need_build", "need_build_ucsc", "need_build_ensembl"].contains(genome_status)) {
-        // "need_build" means ArchR needs to build gene/genomeAnnotation files first
-        if (genome_status == "need_build_ensembl") {
-          // log.info "INFO: ArchR will build gene/genomeAnnotation files with (though ensembl genome supplied): " + bsgenome
-          exit 1, "INFO: ensembl genome supplied, need to build ArchR genome first, pls supply corresponding TxDb, Org, and BSgenome objects via --txdb, --org, and --bsgenome parameters."
+
+      ARCHR_ARCHRPROJECT(ch_arrowfile_list, archr_input_list[0], params.archr_thread)
+      ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.archr_project)
+    } else if (archr_input_type == "bsgenome_txdb_org") {
+      // Note that for this option, all supplied package names must be available from Bioconductor per .requirePackage() requirement.
+      // Run ArchR with ANNOTATION option
+      log.info "INFO: ArchR will build gene/genomeAnnotation files with custom TxDb, Org, and BSgenome files supplied by user."
+
+      ARCHR_GET_ANNOTATION_BIOC(params.archr_txdb, params.archr_org, params.archr_bsgenome)
+      ARCHR_CREATE_ARROWFILES_ANNOTATION(ch_samplesheet_archr, ARCHR_GET_ANNOTATION_BIOC.out.geneAnnotation, ARCHR_GET_ANNOTATION_BIOC.out.genomeAnnotation, ARCHR_GET_ANNOTATION_BIOC.out.user_rlib, params.archr_thread)
+      // Module: add DoubletScores
+      ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES_ANNOTATION.out.sample_name, ARCHR_CREATE_ARROWFILES_ANNOTATION.out.arrowfile)
+      // ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
+      ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
+
+      ARCHR_ARCHRPROJECT_ANNOTATION(ch_arrowfile_list, ARCHR_GET_ANNOTATION_BIOC.out.geneAnnotation, ARCHR_GET_ANNOTATION_BIOC.out.genomeAnnotation)
+      ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project)
+    } else if (archr_input_type == "genome_gtf") {
+      if (params.species_latin_name) {
+        // Build BSgenome:
+        BUILD_BSGENOME(PREP_GENOME.out.genome_fasta)
+
+        // Build ArchR gene annotation file:
+        BUILD_TXDB (BUILD_BSGENOME.out.bsgenome, PREP_GTF.out.gtf)
+        BUILD_GENE_ANNOTATION(BUILD_TXDB.out.txdb, PREP_GTF.out.gtf, params.species_latin_name)
+
+        // Build ArchR genome annotation file:
+        if (params.archr_blacklist_bed) {
+          BUILD_GENOME_ANNOTATION(BUILD_BSGENOME.out.bsgenome, BUILD_GENE_ANNOTATION.out.gene_annotation, params.archr_blacklist_bed)
         } else {
-          log.info "INFO: ArchR will build gene/genomeAnnotation files with: " + bsgenome
+          BUILD_GENOME_ANNOTATION(BUILD_BSGENOME.out.bsgenome, BUILD_GENE_ANNOTATION.out.gene_annotation, "$projectDir/assets/file_token.txt")
         }
-        ARCHR_GET_ANNOTATION(params.archr_genome)
-        ARCHR_CREATE_ARROWFILES_ANNOTATION(ch_samplesheet_archr, ARCHR_GET_ANNOTATION.out.geneAnnotation, ARCHR_GET_ANNOTATION.out.genomeAnnotation, ARCHR_GET_ANNOTATION.out.user_rlib, params.archr_thread)
+
+        // Match fragment file against gtf file:
+        PREP_FRAGMENT(ch_samplesheet_archr, archr_input_list[2])
+        PREP_FRAGMENT.out.fragment.view()
+        ARCHR_CREATE_ARROWFILES_ANNOTATION(PREP_FRAGMENT.out.fragment, BUILD_GENE_ANNOTATION.out.gene_annotation, BUILD_GENOME_ANNOTATION.out.genome_annotation, BUILD_BSGENOME.out.user_rlib, params.archr_thread)
         // Module: add DoubletScores
         ARCHR_ADD_DOUBLETSCORES(ARCHR_CREATE_ARROWFILES_ANNOTATION.out.sample_name, ARCHR_CREATE_ARROWFILES_ANNOTATION.out.arrowfile)
-        ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
+        // ch_samplename_list = ARCHR_ADD_DOUBLETSCORES.out.sample_name.toSortedList()
         ch_arrowfile_list = ARCHR_ADD_DOUBLETSCORES.out.arrowfile.toSortedList( { a, b -> a.getName() <=> b.getName() })
-    } else {
-        exit 1, "Must supply ArchR genomes!"
-    }
 
-    // Module: create ArchRProject and ArchRProjectQC
-    if (["custom"].contains(genome_status)) {
-      ARCHR_ARCHRPROJECT_ANNOTATION(ch_arrowfile_list, ARCHR_GET_ANNOTATION_CUSTOM.out.geneAnnotation, ARCHR_GET_ANNOTATION_CUSTOM.out.genomeAnnotation, ARCHR_GET_ANNOTATION_CUSTOM.out.user_rlib)
-      ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project)
-    } else if (["ready", "ready_ucsc"].contains(genome_status)) {
-      ARCHR_ARCHRPROJECT(ch_arrowfile_list, bsgenome, params.archr_thread)
-      ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT.out.archr_project)
-    } else if (["need_build", "need_build_ucsc"].contains(genome_status)) {
-      ARCHR_ARCHRPROJECT_ANNOTATION(ch_arrowfile_list, ARCHR_GET_ANNOTATION.out.geneAnnotation, ARCHR_GET_ANNOTATION.out.genomeAnnotation, ARCHR_GET_ANNOTATION.out.user_rlib)
-      ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project)
+        ARCHR_ARCHRPROJECT_ANNOTATION(ch_arrowfile_list, BUILD_GENE_ANNOTATION.out.gene_annotation, BUILD_GENOME_ANNOTATION.out.genome_annotation)
+        ARCHR_ARCHRPROJECT_QC(ARCHR_ARCHRPROJECT_ANNOTATION.out.archr_project)
+      } else {
+        exit 1, "Pls also supply --species_latin_name."
+      }
     }
 
     // Module: filterDoublets depending on user option.
@@ -943,7 +872,6 @@ workflow DOWNSTREAM {
       }
     }
 
-
     // Module: prepare clustering tsv file for spliting using sinto fragment
     if (params.groupby_cluster == "Clusters") {
       ARCHR_GET_CLUSTERING_TSV(ARCHR_CLUSTERING.out.archr_project, ch_samplesheet_archr, "Clusters")
@@ -951,17 +879,8 @@ workflow DOWNSTREAM {
       ARCHR_GET_CLUSTERING_TSV(ARCHR_PSEUDO_BULK_CLUSTERS2.out.archr_project, ch_samplesheet_archr, "Clusters2")
     }
 
-    // Module: split fragment bed files:
-    // ch_tsv = ARCHR_GET_CLUSTERING_TSV.out.tsv // each instance may output more than 1 clustering tsv file.
-    // SPLIT_BED(ARCHR_GET_CLUSTERING_TSV.out.tsv, ARCHR_GET_CLUSTERING_TSV.out.fragment)
-
-    // Module: split bam files if available:
-    // SPLIT_BAM()
-
     // Collect all output results for MultiQC report:
     res_files = Channel.empty()
-    // res_files = res_files.mix(Channel.from(ch_multiqc_config))
-    // res_files = res_files.mix(Channel.from(ch_multiqc_custom_config).collect().ifEmpty([]))
 
     // ARCHR_CREATE_ARROWFILES module:
     try {
@@ -1061,15 +980,12 @@ workflow DOWNSTREAM {
       res_files = res_files.mix(ARCHR_GET_POSITIVE_TF_REGULATOR_CLUSTERS2.out.report.collect().ifEmpty([]))
     } catch (Exception ex) {}
 
-    // Note some module may not run and therefore may not have out and therefore erro
-    // res_folders = res_folders.mix(ARCHR_PEAK2GENELINKAGE_CLUSTERS2.out.res_dir.collect().ifEmpty([]))
-    // res_folders = res_folders.mix(ARCHR_TRAJECTORY_CLUSTERS2.out.res_dir.collect().ifEmpty([]))
-
   emit:
     res_files.collect()
     ARCHR_GET_CLUSTERING_TSV.out.res // Here if using collect(), only the first element will be used for split_bed module. For split bed
     ARCHR_GET_CLUSTERING_TSV.out.tsv // for split bam
-    // [ARCHR_GET_CLUSTERING_TSV.out.sample_name, ARCHR_GET_CLUSTERING_TSV.out.tsv]
+}
+
 /*
    * SUBWORKFLOW: Read in samplesheet, validate and stage input files
    */
@@ -1119,7 +1035,6 @@ workflow DOWNSTREAM {
   // )
   // multiqc_report       = MULTIQC.out.report.toList()
   // ch_software_versions = ch_software_versions.mix(MULTIQC.out.version.ifEmpty(null))
-}
 
 ////////////////////////////////////////////////////
 /* --              COMPLETION EMAIL            -- */

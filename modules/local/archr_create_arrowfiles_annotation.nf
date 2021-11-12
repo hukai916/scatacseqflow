@@ -21,7 +21,7 @@ process ARCHR_CREATE_ARROWFILES_ANNOTATION {
     // }
 
     // container "hukai916/bcl2fastq:2.20.0-centos7"
-    container "hukai916/r_sc:0.5"
+    container "hukai916/r_archr:0.1"
 
     // cache false
 
@@ -44,7 +44,11 @@ process ARCHR_CREATE_ARROWFILES_ANNOTATION {
     """
     echo '
     library(ArchR)
-    .libPaths("user_rlib")
+
+    # Include the installed custom BSgenome if supplied:
+    if (!("$user_rlib" == "file_token.txt")) {
+      .libPaths("user_rlib")
+    }
 
     inputFiles <- "$fragment"
     names(inputFiles) <- "$sample_name"
@@ -80,7 +84,8 @@ process ARCHR_CREATE_ARROWFILES_ANNOTATION {
 
     # For reporting:
     mkdir -p report_archr_create_arrowfiles_annotation_$sample_name/archr_create_arrowfiles_annotation
-    cp -r Plots/jpeg report_archr_create_arrowfiles_annotation_$sample_name/archr_create_arrowfiles_annotation
+    cp -r QualityControl_$sample_name/jpeg report_archr_create_arrowfiles_annotation_$sample_name/archr_create_arrowfiles_annotation
+
 
     """
 }

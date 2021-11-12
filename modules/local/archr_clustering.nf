@@ -46,14 +46,14 @@ process ARCHR_CLUSTERING {
 
     proj2 <- addClusters(
       input = proj,
-      reducedDims = "IterativeLSI",
+      reducedDims = "Harmony",
       method = "Seurat",
       name = "Clusters",
       $options.args
     )
     proj2 <- addClusters(
       input = proj2,
-      reducedDims = "IterativeLSI",
+      reducedDims = "Harmony",
       method = "scran",
       name = "ScranClusters",
       $options.args2
